@@ -1,0 +1,309 @@
+record_id,learner_id,grade,year,term,learning_area,task,level,score,task_date,logged_date,teacher,source
+R-04467,HT-0001,9,2026,3,English,Reading comprehension,M.E.,71,2026-09-14,2026-09-30,T-ENG1,cba_portal_export
+R-04468,HT-0001,9,2026,3,Kiswahili ,Ufahamu,AE,49,29/09/2026,2026-10-19,T-KIS1,cba_portal_export
+R-04469,HT-0001,9,2026,3,Mathematics,Data handling quiz,ae,37,2026-09-13,2026-09-22,T-MAT1,cba_portal_export
+R-04470,HT-0001,9,2026,3,Integrated Science,Science quiz,AE,42,11-09-26,2026-09-18,T-SCI1,cba_portal_export
+R-04471,HT-0001,9,2026,3,Social Studies,Community project,ME,59,2026-09-16,2026-09-26,T-SOC1,cba_portal_export
+R-04472,HT-0001,9,2026,3,Pre-Technical Studies,Safety quiz,AE,32,2026-09-24,2026-09-29,T-PRE1,cba_portal_export
+R-04473,HT-0001,9,2026,3,CAS,Drawing and painting,AE,42,2026-10-03,2026-10-19,T-CRE1,cba_portal_export
+R-04474,HT-0002,9,2026,3,English,Oral presentation,AE,43,2026-10-05,2026-10-16,T-ENG1,cba_portal_export
+R-04475,HT-0002,9,2026,3,Kiswahili,Mazungumzo,ee,88,2026-10-04,14/10/2026,T-KIS1,cba_portal_export
+R-04476,HT-0002,9,2026,3,Mathematics,Fractions task,EE,85,2026-10-03,2026-10-20,T-MAT1,cba_portal_export
+R-04477,HT-0002,9,2026,3,Integrated Science,Practical investigation,AE,39,2026-09-13,2026-10-04,T-SCI1,cba_portal_export
+R-04478,HT-0002,9,2026,3,Social Studies,Citizenship quiz,ME,54,2026-10-01,2026-10-11,T-SOC1,cba_portal_export
+R-04479,HT-0002,9,2026,3,Pre-Technical Studies,Safety quiz,BE,15,2026-09-29,05/10/2026,T-PRE1,cba_portal_export
+R-04480,HT-0002,9,2026,3,Agriculture,Kitchen garden project,EE,88,2026-09-16,2026-10-04,T-AGR1,cba_portal_export
+R-04481,HT-0002,9,2026,3,Creative Arts and Sports,Craft project,AE,31,2026-09-23,,T-CRE1,cba_portal_export
+R-04482,HT-0003,9,2026,3,English,Oral presentation,AE,34,2026-09-26,2026-10-17,T-ENG1,cba_portal_export
+R-04483,HT-0003,9,2026,3,Kiswahili,Mazungumzo,AE,36,2026-09-25,2026-11-10,T-KIS1,cba_portal_export
+R-04484,HT-0003,9,2026,3,Mathematics,Geometry project,BE,12,23/09/2026,,T-MAT1,cba_portal_export
+R-04485,HT-0003,9,2026,3,Integrated Science,Science quiz,E.E,96,2026-09-22,2026-10-04,T-SCI1,cba_portal_export
+R-04486,HT-0003,9,2026,3,SST,Citizenship quiz,AE,44,2026-09-12,2026-10-03,T-SOC1,cba_portal_export
+R-04487,HT-0003,9,2026,3,Pre-Technical Studies,Technical drawing,A.E,28,2026-09-16,2026-10-05,T-PRE1,cba_portal_export
+R-04488,HT-0003,9,2026,3,Agriculture,Kitchen garden project,ME,61,2026-09-29,2026-10-06,T-AGR1,cba_portal_export
+R-04489,HT-0003,9,2026,3,Creative Arts & Sports,Craft project,ME,63,2026-09-28,2026-10-10,T-CRE1,cba_portal_export
+R-04490,HT-0004,9,2026,3,English,Composition,E.E,79,2026-09-13,2026-10-02,T-ENG1,cba_portal_export
+R-04491,HT-0004,9,2026,3,Kiswahili,Mazungumzo,ME,57,2026-10-05,2026-10-08,T-KIS1,cba_portal_export
+R-04492,HT-0004,9,2026,3,Mathematics,Fractions task,ME,56,2026-09-21,2026-10-05,T-MAT1,cba_portal_export
+R-04493,HT-0004,9,2026,3,Integrated Science,Practical investigation,AE,35,2026-09-24,2026-10-04,T-SCI1,cba_portal_export
+R-04494,HT-0004,9,2026,3,Social Studies,Map work,AE,39,05/10/2026,2026-10-11,T-SOC1,cba_portal_export
+R-04495,HT-0004,9,2026,3,Pre-Technical Studies,Technical drawing,ME,57,2026-09-27,2026-10-12,T-PRE1,cba_portal_export
+R-04496,HT-0004,9,2026,3,Agriculture,Soil study,BE,24,2026-09-29,2026-10-07,T-AGR1,cba_portal_export
+R-04497,HT-0004,9,2026,3,Creative Arts and Sports,Drawing and painting,ME,58,2026-09-22,2026-10-07,T-CRE1,cba_portal_export
+R-04498,HT-0005,9,2026,3,English,Composition,meeting exp,52,2026-10-03,2026-10-21,T-ENG1,cba_portal_export
+R-04499,HT-0005,9,2026,3,Kiswahili,Sarufi,EE,95,17/09/2026,2026-10-03,T-KIS1,cba_portal_export
+R-04500,HT-0005,9,2026,3,Integrated Science,Lab report,A.E,39,2026-09-22,2026-11-29,T-SCI1,cba_portal_export
+R-04501,HT-0005,9,2026,3,Social Studies,Community project,BE,16,01/10/2026,2026-10-14,T-SOC1,cba_portal_export
+R-04502,HT-0005,9,2026,3,Pre-Technical Studies,Safety quiz,AE,39,2026-09-12,2026-09-27,T-PRE1,cba_portal_export
+R-04503,HT-0005,9,2026,3,Agriculture,Agriculture quiz,AE,48,2026-09-14,2026-09-30,T-AGR1,cba_portal_export
+R-04504,HT-0005,9,2026,3,Creative Arts and Sports,PE skills,ME,51,2026-09-24,2026-10-01,T-CRE1,cba_portal_export
+R-04505,HT-0006,9,2026,3,English,Oral presentation,AE,46,13/09/2026,2026-09-26,T-ENG1,cba_portal_export
+R-04506,HT-0006,9,2026,3,Kiswahili,Sarufi,AE,47,2026-10-03,2026-10-14,T-KIS1,cba_portal_export
+R-04507,HT-0006,9,2026,3,Mathematics,Algebra SBA,1,23,2026-09-27,,T-MAT1,cba_portal_export
+R-04508,HT-0006,9,2026,3,Integrated Science,Lab report,Approaching,29,2026-10-01,2026-10-22,T-SCI1,cba_portal_export
+R-04509,HT-0006,9,2026,3,Social Studies,Map work,AE,31,2026-09-24,2026-09-28,T-SOC1,cba_portal_export
+R-04510,HT 0006,9,2026,3,Pre-Technical Studies,Safety quiz,ME,52,2026-09-18,2026-09-21,T-PRE1,cba_portal_export
+R-04511,HT-0006,9,2026,3,Agriculture,Soil study,ME,56,2026-09-29,2026-10-13,T-AGR1,cba_portal_export
+R-04512,HT-0006,9,2026,3,Creative Arts and Sports,Drawing and painting,ME,59,2026-10-04,2026-10-06,T-CRE1,cba_portal_export
+R-04513,HT-0007,9,2026,3,English,Composition,EE,98,2026-09-16,2026-09-22,T-ENG1,cba_portal_export
+R-04514,HT-0007,9,2026,3,Kiswahili ,Mazungumzo,AE,27,2026-09-18,2026-09-22,T-KIS1,cba_portal_export
+R-04515,HT-0007,9,2026,3,Mathematics,Data handling quiz,BE,14,30/09/2026,2026-10-01,T-MAT1,cba_portal_export
+R-04516,HT-0007,9,2026,3,Integrated Science,Model building,AE,48,2026-09-20,2026-09-24,T-SCI1,cba_portal_export
+R-04517,HT-0007,9,2026,3,Social Studies,Map work,ME,65,2026-09-27,2026-10-02,T-SOC1,cba_portal_export
+R-04518,HT-0007,9,2026,3,Pre-Technical Studies,Safety quiz,EE,95,2026-09-20,2026-10-09,T-PRE1,cba_portal_export
+R-04519,HT-0007,9,2026,3,Agriculture,Agriculture quiz,ME,57,2026-09-24,2026-09-26,T-AGR1,cba_portal_export
+R-04520,HT-0007,9,2026,3,Creative Arts and Sports,Drawing and painting,Exceeding,90,2026-09-10,2026-09-19,T-CRE1,cba_portal_export
+R-04521,HT-0008,9,2026,3,Kiswahili,Insha,BE,7,2026-09-29,2026-10-12,T-KIS1,cba_portal_export
+R-04522,HT-0008,9,2026,3,Mathematics,Data handling quiz,EE,96,2026-09-16,2026-10-05,T-MAT1,cba_portal_export
+R-04523,HT-0008,9,2026,3,Social Studies,Citizenship quiz,AE,34,2026-10-04,2026-10-15,T-SOC1,cba_portal_export
+R-04524,HT-0008,9,2026,3,Pre-Technical Studies,Technical drawing,ME,74,2026-09-11,2026-10-02,T-PRE1,cba_portal_export
+R-04525,HT-0008,9,2026,3,Agriculture,Soil study,ME,72,2026-09-30,2026-10-10,T-AGR1,cba_portal_export
+R-04526,HT-0008,9,2026,3,Creative Arts and Sports,Music performance,ME,59,2026-09-27,2026-10-08,T-CRE1,cba_portal_export
+R-04527,HT-0009,9,2026,3,English,Composition,meeting exp,66,09/09/2026,2026-09-25,T-ENG1,cba_portal_export
+R-04528,HT-0009,9,2026,3,Mathematics,Fractions task,M.E.,68,2026-10-03,05/10/2026,T-MAT1,cba_portal_export
+R-04529,HT-0009,9,2026,3,Integrated Sci,Lab report,meeting exp,72,2026-09-26,2026-10-05,T-SCI1,cba_portal_export
+R-04530,HT-0009,9,2026,3,Social Studies,Map work,AE,32,2026-09-30,2026-10-10,T-SOC1,cba_portal_export
+R-04531,HT-0009,9,2026,3,Pre-Technical Studies,Technical drawing,EE,86,26-09-26,2026-09-27,T-PRE1,cba_portal_export
+R-04532,HT-0009,9,2026,3,Agriculture,Soil study,ME,64,2026-09-13,2026-09-24,T-AGR1,cba_portal_export
+R-04533,HT-0009,9,2026,3,Creative Arts and Sports,Drawing and painting,AE,25,2026-09-26,2026-10-06,T-CRE1,cba_portal_export
+R-04534,HT-0010,9,2026,3,English,Oral presentation,,66,2026-10-04,2026-10-21,T-ENG1,cba_portal_export
+R-04535,HT-0010,9,2026,3,Kiswahili,Insha,3,55,2026-09-20,07/10/2026,T-KIS1,cba_portal_export
+R-04536,HT-0010,9,2026,3,Mathematics,Fractions task,Exceeding,82,18/09/2026,2026-09-23,T-MAT1,cba_portal_export
+R-04537,HT-0010,9,2026,3,Integrated Science,Lab report,ae,27,2026-09-20,2026-09-28,T-SCI1,cba_portal_export
+R-04538,HT-0010,9,2026,3,Social studies,Community project,EE,86,2026-09-16,25/09/2026,T-SOC1,cba_portal_export
+R-04539,HT-0010,9,2026,3,Pre-Technical Studies,Woodwork project,ME,62,2026-10-02,2026-10-12,T-PRE1,cba_portal_export
+R-04540,HT-0010,9,2026,3,Agriculture,Kitchen garden project,AE,42,2026-10-02,2026-10-18,T-AGR1,cba_portal_export
+R-04541,HT-0010,9,2026,3,Creative Arts and Sports,Drawing and painting,3,58,2026-09-29,01/10/2026,T-CRE1,cba_portal_export
+R-04542,HT-0011,9,2026,3,English,Oral presentation,M.E.,54,2026-09-15,2026-09-30,T-ENG1,cba_portal_export
+R-04543,HT-0011,9,2026,3,Kiswahili,Mazungumzo,AE,29,2026-10-01,2026-10-10,T-KIS1,cba_portal_export
+R-04544,HT-0011,9,2026,3,Math,Algebra SBA,2,28,2026-09-27,2026-10-12,T-MAT1,cba_portal_export
+R-04545,HT-0011,9,2026,3,Integrated Science,Science quiz,Approaching Expectations,30,2026-09-14,2026-10-02,T-SCI1,cba_portal_export
+R-04546,HT-0011,9,2026,3,SST,Community project,AE,45,2026-09-21,2026-09-26,T-SOC1,cba_portal_export
+R-04547,HT-0011,9,2026,3,Pre-Technical Studies,Technical drawing,M.E.,51,2026-09-27,2026-10-15,T-PRE1,cba_portal_export
+R-04548,HT-0011,9,2026,3,Agriculture,Kitchen garden project,ME,63,2026-09-18,,T-AGR1,cba_portal_export
+R-04549,HT-0011,9,2026,3,Creative Arts and Sports,Craft project,AE,38,2026-09-25,2026-09-26,T-CRE1,cba_portal_export
+R-04550,HT-0012,9,2026,3,English,Oral presentation,BE,7,2026-09-17,2026-09-28,T-ENG1,cba_portal_export
+R-04551,HT-0012,9,2026,3,Kiswahili ,Sarufi,EE,89,2026-10-03,2026-10-19,T-KIS1,cba_portal_export
+R-04552,HT-0012,9,2026,3,MATHEMATICS,Geometry project,AE,49,2026-09-30,2026-10-11,T-MAT1,cba_portal_export
+R-04553,HT-0012,9,2026,3,Integrated Science,Lab report,AE,33,2026-09-23,2026-10-08,T-SCI1,cba_portal_export
+R-04554,HT-0012,9,2026,3,Social Studies,Community project,EE,89,2026-09-20,2026-10-02,T-SOC1,cba_portal_export
+R-04555,HT-0012,9,2026,3,Pre-Technical Studies,Woodwork project,BE,22,2026-10-04,11-10-26,T-PRE1,cba_portal_export
+R-04556,HT-0012,9,2026,3,Agriculture,Soil study,,64,2026-09-15,2026-09-21,T-AGR1,cba_portal_export
+R-04557,HT-0012,9,2026,3,Creative Arts and Sports,Drawing and painting,BE,9,2026-09-10,2026-09-22,T-CRE1,cba_portal_export
+R-04558,HT-0013,9,2026,3,English,Composition,ME,62,30-09-26,2026-10-04,T-ENG1,cba_portal_export
+R-04559,HT-0013,9,2026,3,Kiswahili,Sarufi,3,71,2026-09-25,2026-09-28,T-KIS1,cba_portal_export
+R-04560,HT-0013,9,2026,3,Mathematics,Geometry project,AE,27,05/10/2026,11/10/2026,T-MAT1,cba_portal_export
+R-04561,HT-0013,9,2026,3,Integrated Science,Science quiz,ME,50,2026-09-21,2026-09-28,T-SCI1,cba_portal_export
+R-04562,HT-0013,9,2026,3,Social studies,Map work,AE,33,2026-09-30,27/11/2026,T-SOC1,cba_portal_export
+R-04563,HT-0013,9,2026,3,Pre-Technical Studies,Safety quiz,AE,48,2026-09-09,2026-09-14,T-PRE1,cba_portal_export
+R-04564,HT-0013,9,2026,3,Agriculture,Kitchen garden project,ME,64,2026-09-13,2026-09-20,T-AGR1,cba_portal_export
+R-04565,HT-0013,9,2026,3,Creative Arts and Sports,Craft project,A.E,48,2026-10-02,2026-11-30,T-CRE1,cba_portal_export
+R-04566,HT-0014,9,2026,3,English,Oral presentation,ME,50,2026-09-09,30/09/2026,T-ENG1,cba_portal_export
+R-04567,HT-0014,9,2026,3,Kiswahili ,Sarufi,AE,34,2026-10-05,2026-10-26,T-KIS1,cba_portal_export
+R-04568,HT-0014,9,2026,3,Mathematics,Algebra SBA,ME,70,2026-09-17,2026-10-08,T-MAT1,cba_portal_export
+R-04569,HT-0014,9,2026,3,Integrated Science,Practical investigation,ME,69,2026-10-04,2026-10-25,T-SCI1,cba_portal_export
+R-04570,HT-0014,9,2026,3,Social Studies,Community project,AE,33,2026-09-14,2026-10-05,T-SOC1,cba_portal_export
+R-04571,HT-0014,9,2026,3,Pre-Technical Studies,Safety quiz,M.E.,55,12-09-26,14/09/2026,T-PRE1,cba_portal_export
+R-04572,HT-0014,9,2026,3,Agriculture,Kitchen garden project,ME,66,2026-09-10,2026-09-12,T-AGR1,cba_portal_export
+R-04573,HT-0014,9,2026,3,Creative Arts and Sports,Craft project,M.E.,51,2026-09-16,2026-10-03,T-CRE1,cba_portal_export
+R-04574,HT-0015,9,2026,3,English,Reading comprehension,ME,71,2026-09-26,2026-10-11,T-ENG1,cba_portal_export
+R-04575,HT-0015,9,2026,3,Kiswahili,Insha,EE,83,2026-09-30,2026-10-09,T-KIS1,cba_portal_export
+R-04576,HT-0015,9,2026,3,Mathematics,Geometry project,ME,58,2026-09-26,29/09/2026,T-MAT1,cba_portal_export
+R-04577,HT-0015,9,2026,3,Integrated Science,Model building,AE,34,2026-09-11,2026-09-28,T-SCI1,cba_portal_export
+R-04578,HT-0015,9,2026,3,Social Studies,Community project,,27,2026-10-05,2026-10-16,T-SOC1,cba_portal_export
+R-04579,HT-0015,9,2026,3,Pre-Technical Studies,Safety quiz,A.E,37,2026-10-04,18/10/2026,T-PRE1,cba_portal_export
+R-04580,HT-0015,9,2026,3,Agriculture,Soil study,EE,75,2026-10-02,2026-10-14,T-AGR1,cba_portal_export
+R-04581,HT-0015,9,2026,3,Creative Arts and Sports,PE skills,BE,23,2026-09-28,2026-10-05,T-CRE1,cba_portal_export
+R-04582,HT-0016,9,2026,3,English,Oral presentation,Meeting Expectations,64,2026-09-25,2026-10-05,T-ENG1,cba_portal_export
+R-04583,HT-0016,9,2026,3,Kiswahili,Sarufi,M.E.,50,2026-10-04,2026-10-16,T-KIS1,cba_portal_export
+R-04584,HT-0016,9,2026,3,Mathematics,Geometry project,AE,38,2026-09-17,2026-09-26,T-MAT1,cba_portal_export
+R-04585,HT-0016,9,2026,3,Integrated Science,Model building,ME,65,2026-09-11,29/09/2026,T-SCI1,cba_portal_export
+R-04586,HT-0016,9,2026,3,Social Studies,Citizenship quiz,AE,41,2026-09-30,2026-10-06,T-SOC1,cba_portal_export
+R-04587,HT-0016,9,2026,3,Pre-Technical Studies,Technical drawing,A.E,46,2026-09-13,17/09/2026,T-PRE1,cba_portal_export
+R-04588,HT-0016,9,2026,3,Agriculture,Soil study,AE,47,2026-10-02,2026-10-12,T-AGR1,cba_portal_export
+R-04589,HT-0017,9,2026,3,English,Reading comprehension,2,29,2026-09-24,03-10-26,T-ENG1,cba_portal_export
+R-04590,HT-0017,9,2026,3,Kiswahili ,Sarufi,AE,38,2026-09-27,2026-10-13,T-KIS1,cba_portal_export
+R-04591,HT-0017,9,2026,3,Maths,Geometry project,3,14,2026-09-09,21/09/2026,T-MAT1,cba_portal_export
+R-04592,HT-0017,9,2026,3,Integrated Science,Practical investigation,ee,97,2026-09-19,25/09/2026,T-SCI1,cba_portal_export
+R-04593,HT-0017,9,2026,3,SST,Citizenship quiz,BE,24,2026-09-27,30/09/2026,T-SOC1,cba_portal_export
+R-04594,HT-0017,9,2026,3,Agriculture,Kitchen garden project,AE,33,2026-10-01,07-10-26,T-AGR1,cba_portal_export
+R-04595,HT-0017,9,2026,3,Creative Arts and Sports,Drawing and painting,M.E.,66,21/09/2026,2026-09-30,T-CRE1,cba_portal_export
+R-04596,HT-0018,9,2026,3,English,Composition,Meeting Expectations,67,2026-09-16,2026-10-02,T-ENG1,cba_portal_export
+R-04597,HT-0018,9,2026,3,KISWAHILI,Ufahamu,ME,74,2026-09-26,2026-10-08,T-KIS1,cba_portal_export
+R-04598,HT-0018,9,2026,3,Mathematics,Data handling quiz,AE,30,2026-09-28,2026-10-13,T-MAT1,cba_portal_export
+R-04599,HT-0018,9,2026,3,Integrated Science,Lab report,EE,84,2026-09-09,2026-09-12,T-SCI1,cba_portal_export
+R-04600,HT-0018,9,2026,3,Social studies,Citizenship quiz,meeting exp,64,2026-09-10,22/09/2026,T-SOC1,cba_portal_export
+R-04601,HT-0018,9,2026,3,Pre-Technical Studies,Technical drawing,,64,2026-09-26,2026-09-27,T-PRE1,cba_portal_export
+R-04602,HT-0018,9,2026,3,Agriculture,Soil study,BE,18,2026-10-03,2026-10-14,T-AGR1,cba_portal_export
+R-04603,HT-0018,9,2026,3,Creative Arts and Sports,Craft project,AE,30,2026-09-26,2026-10-15,T-CRE1,cba_portal_export
+R-04604,HT-0019,9,2026,3,English,Reading comprehension,EE,82,2026-09-22,2026-09-27,T-ENG1,cba_portal_export
+R-04605,HT-0019,9,2026,3,Mathematics,Fractions task,ME,52,2026-10-04,2026-11-23,T-MAT1,cba_portal_export
+R-04606,HT-0019,9,2026,3,Integrated Science,Science quiz,2,39,2026-09-09,,T-SCI1,cba_portal_export
+R-04607,HT-0019,9,2026,3,Social Studies,Map work,AE,33,2026-09-15,20-09-26,T-SOC1,cba_portal_export
+R-04608,HT-0019,9,2026,3,Pre-Technical Studies,Technical drawing,AE,37,2026-09-23,08/10/2026,T-PRE1,cba_portal_export
+R-04609,HT-0019,9,2026,3,Agriculture,Agriculture quiz,2,29,2026-09-24,2026-10-03,T-AGR1,cba_portal_export
+R-04610,HT-0019,9,2026,3,Creative Arts and Sports,Music performance,AE,37,2026-10-04,2026-10-21,T-CRE1,cba_portal_export
+R-04611,HT-0020,9,2026,3,English,Composition,BE,82,13/09/2026,2026-09-30,T-ENG1,cba_portal_export
+R-04612,HT-0020,9,2026,3,KISWAHILI,Insha,2,37,2026-09-25,2026-10-11,T-KIS1,cba_portal_export
+R-04613,HT-0020,9,2026,3,Mathematics,Geometry project,M.E.,55,2026-09-22,2026-10-08,T-MAT1,cba_portal_export
+R-04614,HT-0020,9,2026,3,Integrated Science,Practical investigation,ME,70,2026-09-17,2026-10-05,T-SCI1,cba_portal_export
+R-04615,HT-0020,9,2026,3,Social Studies,Citizenship quiz,3,58,2026-09-13,2026-10-04,T-SOC1,cba_portal_export
+R-04616,HT-0020,9,2026,3,Pre-Technical Studies,Technical drawing,Meeting Expectations,59,2026-09-26,2026-10-05,T-PRE1,cba_portal_export
+R-04617,HT-0020,9,2026,3,Agriculture,Kitchen garden project,AE,32,09/09/2026,2026-09-24,T-AGR1,cba_portal_export
+R-04618,HT-0020,9,2026,3,Creative Arts and Sports,Craft project,ME,67,2026-09-27,2026-10-07,T-CRE1,cba_portal_export
+R-04619,HT-0021,9,2026,3,English,Reading comprehension,ME,59,2026-09-16,20/09/2026,T-ENG1,cba_portal_export
+R-04620,HT-0021,9,2026,3,Kisw.,Mazungumzo,ME,64,2026-09-15,2026-09-21,T-KIS1,cba_portal_export
+R-04621,HT-0021,9,2026,3,Mathematics,Geometry project,ME,71,2026-09-10,2026-09-16,T-MAT1,cba_portal_export
+R-04622,HT-0021,9,2026,3,Integrated Science,Science quiz,me,53,2026-10-04,2026-10-14,T-SCI1,cba_portal_export
+R-04623,HT-0021,9,2026,3,Pre-Technical Studies,Technical drawing,AE,31,2026-09-26,2026-10-07,T-PRE1,cba_portal_export
+R-04624,HT-0021,9,2026,3,Agriculture,Agriculture quiz,BE,85,2026-09-12,2026-09-24,T-AGR1,cba_portal_export
+R-04625,HT-0021,9,2026,3,Creative Arts and Sports,Music performance,A.E,32,2026-10-05,2026-10-20,T-CRE1,cba_portal_export
+R-04626,HT-0022,9,2026,3,English,Oral presentation,EE,81,2026-10-02,2026-10-08,T-ENG1,cba_portal_export
+R-04627,HT-0022,9,2026,3,Kisw.,Ufahamu,EE,91,2026-10-01,2026-10-07,T-KIS1,cba_portal_export
+R-04628,HT-0022,9,2026,3,Mathematics,Algebra SBA,ME,53,2026-09-25,2026-10-16,T-MAT1,cba_portal_export
+R-04629,HT-0022,9,2026,3,Integrated Science,Practical investigation,AE,45,2026-10-03,2026-10-22,T-SCI1,cba_portal_export
+R-04630,HT-0022,9,2026,3,Social Studies,Citizenship quiz,2,33,2026-09-25,2026-10-09,T-SOC1,cba_portal_export
+R-04631,HT-0022,9,2026,3,Pre-Technical Studies,Woodwork project,ME,54,2026-09-29,2026-12-03,T-PRE1,cba_portal_export
+R-04632,HT-0022,9,2026,3,Agriculture,Agriculture quiz,ME,27,2026-09-18,09-11-26,T-AGR1,cba_portal_export
+R-04633,HT-0022,9,2026,3,Creative Arts & Sports,Craft project,ME,55,2026-09-26,2026-10-17,T-CRE1,cba_portal_export
+R-04634,HT-0023,9,2026,3,English,Grammar quiz,,57,2026-10-01,2026-10-18,T-ENG1,cba_portal_export
+R-04635,HT-0023,9,2026,3,Kiswahili,Ufahamu,AE,26,2026-09-26,2026-10-04,T-KIS1,cba_portal_export
+R-04636,HT-0023,9,2026,3,Mathematics,Geometry project,A.E,25,2026-10-03,2026-10-10,T-MAT1,cba_portal_export
+R-04637,HT-0023,9,2026,3,Integrated Science,Practical investigation,ME,74,2026-09-26,2026-10-01,T-SCI1,cba_portal_export
+R-04638,HT-0023,9,2026,3,Social Studies,Citizenship quiz,BE,17,2026-09-20,2026-10-07,T-SOC1,cba_portal_export
+R-04639,HT-0023,9,2026,3,Pre-Technical Studies,Safety quiz,Exceeding Expectations,88,2026-09-13,14/09/2026,T-PRE1,cba_portal_export
+R-04640,HT-0023,9,2026,3,Agriculture,Soil study,ME,52,2026-09-26,2026-10-03,T-AGR1,cba_portal_export
+R-04641,HT-0023,9,2026,3,Creative Arts and Sports,Music performance,Exceeding Expectations,96,2026-09-25,2026-10-13,T-CRE1,cba_portal_export
+R-04642,HT-0024,9,2026,3,English,Oral presentation,BE,7,2026-10-01,2026-10-17,T-ENG1,cba_portal_export
+R-04643,HT-0024,9,2026,3,Kiswahili,Mazungumzo,AE,41,2026-10-05,2026-10-11,T-KIS1,cba_portal_export
+R-04644,HT-0024,9,2026,3,Mathematics,Fractions task,AE,25,13/09/2026,25/09/2026,T-MAT1,cba_portal_export
+R-04645,HT-0024,9,2026,3,Integrated Science,Practical investigation,EE,84,2026-10-02,2026-10-15,T-SCI1,cba_portal_export
+R-04646,HT-0024,9,2026,3,Social Studies,Map work,ME,72,23/09/2026,14/10/2026,T-SOC1,cba_portal_export
+R-04647,HT-0024,9,2026,3,Pre-Technical Studies,Woodwork project,M.E.,64,2026-09-13,2026-10-01,T-PRE1,cba_portal_export
+R-04648,HT-0024,9,2026,3,Creative Arts and Sports,Craft project,ME,58,2026-09-20,2026-09-22,T-CRE1,cba_portal_export
+R-04649,HT-0025,9,2026,3,English,Composition,me,65,2026-09-23,2026-10-01,T-ENG1,cba_portal_export
+R-04650,HT-0025,9,2026,3,Kiswahili,Insha,ME,68,2026-10-01,2026-10-14,T-KIS1,cba_portal_export
+R-04651,HT-0025,9,2026,3,Mathematics,Fractions task,EE,81,2026-09-18,2026-09-21,T-MAT1,cba_portal_export
+R-04652,HT-0025,9,2026,3,Integrated Science,Lab report,Approaching,48,2026-10-03,2026-10-18,T-SCI1,cba_portal_export
+R-04653,HT-0025,9,2026,3,Social studies,Map work,ME,63,2026-09-24,,T-SOC1,cba_portal_export
+R-04654,HT-0025,9,2026,3,Pre-Technical Studies,Technical drawing,me,74,2026-10-01,2026-10-16,T-PRE1,cba_portal_export
+R-04655,HT-0025,9,2026,3,Agriculture,Soil study,3,62,2026-09-20,2026-09-23,T-AGR1,cba_portal_export
+R-04656,HT-0025,9,2026,3,Creative Arts and Sports,PE skills,AE,30,12/09/2026,2026-09-23,T-CRE1,cba_portal_export
+R-04657,HT-0026,9,2026,3,English,Reading comprehension,,69,2026-09-28,2026-10-06,T-ENG1,cba_portal_export
+R-04658,HT-0026,9,2026,3,Kiswahili,Sarufi,EE,98,13/09/2026,2026-10-03,T-KIS1,cba_portal_export
+R-04659,HT-0026,9,2026,3,Integrated Science,Practical investigation,AE,45,2026-09-23,14/10/2026,T-SCI1,cba_portal_export
+R-04660,HT-0026,9,2026,3,Social studies,Map work,Meeting Expectations,62,2026-10-05,2026-10-26,T-SOC1,cba_portal_export
+R-04661,HT-0026,9,2026,3,Pre-Technical Studies,Technical drawing,Approaching Expectations,49,2026-09-16,2026-10-01,T-PRE1,cba_portal_export
+R-04662,HT-0026,9,2026,3,Agriculture,Agriculture quiz,ee,90,2026-09-14,2026-09-27,T-AGR1,cba_portal_export
+R-04663,HT-0026,9,2026,3,Creative Arts and Sports,Craft project,meeting exp,67,2026-09-19,2026-10-07,T-CRE1,cba_portal_export
+R-04664,HT-0027,9,2026,3,English,Oral presentation,Approaching Expectations,32,2026-09-16,2026-09-28,T-ENG1,cba_portal_export
+R-04665,HT-0027,9,2026,3,Kiswahili,Ufahamu,AE,45,20-09-26,2026-10-01,T-KIS1,cba_portal_export
+R-04666,HT-0027,9,2026,3,Maths,Geometry project,AE,26,12/09/2026,2026-11-06,T-MAT1,cba_portal_export
+R-04667,HT-0027,9,2026,3,Integrated Science,Model building,A.E,39,2026-09-20,11/10/2026,T-SCI1,cba_portal_export
+R-04668,HT-0027,9,2026,3,Social Studies,Map work,AE,29,2026-09-18,02-10-26,T-SOC1,cba_portal_export
+R-04669,HT-0027,9,2026,3,Pre-Technical Studies,Technical drawing,meeting exp,68,2026-09-28,2026-10-04,T-PRE1,cba_portal_export
+R-04670,HT-0027,9,2026,3,Agriculture,Soil study,A.E,48,2026-10-03,2026-10-10,T-AGR1,cba_portal_export
+R-04671,HT-0027,9,2026,3,CAS,Music performance,Exceeding Expectations,96,16/09/2026,2026-10-03,T-CRE1,cba_portal_export
+R-04672,HT-0028,9,2026,3,English,Grammar quiz,AE,48,2026-09-27,2026-10-17,T-ENG1,cba_portal_export
+R-04673,HT-0028,9,2026,3,Kiswahili,Mazungumzo,ME,63,2026-09-11,2026-10-02,T-KIS1,cba_portal_export
+R-04674,HT-0028,9,2026,3,Mathematics,Algebra SBA,Approaching Expectations,37,2026-09-16,18/09/2026,T-MAT1,cba_portal_export
+R-04675,HT-0028,9,2026,3,Integrated Sci,Practical investigation,BE,16,2026-09-28,2026-10-12,T-SCI1,cba_portal_export
+R-04676,HT-0028,9,2026,3,Social Studies,Citizenship quiz,ae,34,2026-10-03,2026-10-18,T-SOC1,cba_portal_export
+R-04677,HT-0028,9,2026,3,Pre-Technical Studies,Safety quiz,EE,96,2026-09-28,09/10/2026,T-PRE1,cba_portal_export
+R-04678,HT-0028,9,2026,3,Agriculture,Soil study,2,25,2026-09-09,10/09/2026,T-AGR1,cba_portal_export
+R-04679,HT-0028,9,2026,3,Creative Arts and Sports,PE skills,AE,31,2026-09-12,2026-09-16,T-CRE1,cba_portal_export
+R-04680,HT-0029,9,2026,3,English,Composition,AE,31,2026-09-16,2026-09-28,T-ENG1,cba_portal_export
+R-04681,HT-0029,9,2026,3,Kiswahili,Mazungumzo,2,29,2026-10-03,04/10/2026,T-KIS1,cba_portal_export
+R-04682,HT-0029,9,2026,3,Mathematics,Geometry project,EE,93,2026-09-09,2026-09-11,T-MAT1,cba_portal_export
+R-04683,HT-0029,9,2026,3,Integrated Sci,Science quiz,ME,66,2026-09-28,2026-10-01,T-SCI1,cba_portal_export
+R-04684,HT-0029,9,2026,3,Social Studies,Community project,ME,56,2026-09-30,17/10/2026,T-SOC1,cba_portal_export
+R-04685,HT-0029,9,2026,3,Pre-Technical Studies,Woodwork project,AE,34,03/10/2026,2026-10-23,T-PRE1,cba_portal_export
+R-04686,HT-0029,9,2026,3,Agriculture,Kitchen garden project,ME,73,2026-09-25,2026-09-27,T-AGR1,cba_portal_export
+R-04687,HT-0029,9,2026,3,Creative Arts and Sports,PE skills,Meeting Expectations,64,2026-09-21,09/10/2026,T-CRE1,cba_portal_export
+R-04688,HT-0030,9,2026,3,English,Grammar quiz,ME,70,2026-09-15,2026-09-21,T-ENG1,cba_portal_export
+R-04689,HT-0030,9,2026,3,Kiswahili,Sarufi,ME,64,2026-09-22,2026-10-02,T-KIS1,cba_portal_export
+R-04690,HT-0030,9,2026,3,Mathematics,Geometry project,AE,39,2026-09-13,2026-09-27,T-MAT1,cba_portal_export
+R-04691,HT-0030,9,2026,3,Integrated Science,Lab report,AE,46,2026-09-19,2026-10-10,T-SCI1,cba_portal_export
+R-04692,HT-0030,9,2026,3,Social Studies,Map work,Below Expectation,20,2026-09-27,2026-10-05,T-SOC1,cba_portal_export
+R-04693,HT-0030,9,2026,3,Pre-Technical Studies,Woodwork project,me,59,2026-09-30,2026-10-05,T-PRE1,cba_portal_export
+R-04694,HT-0030,9,2026,3,Agriculture,Agriculture quiz,AE,41,2026-09-14,2026-10-05,T-AGR1,cba_portal_export
+R-04695,HT-0030,9,2026,3,Creative Arts and Sports,Craft project,AE,43,2026-10-05,2026-12-08,T-CRE1,cba_portal_export
+R-04696,HT-0031,9,2026,3,English,Grammar quiz,ME,59,01/10/2026,2026-10-07,T-ENG1,cba_portal_export
+R-04697,HT-0031,9,2026,3,Kiswahili,Mazungumzo,AE,37,2026-09-30,2026-10-02,T-KIS1,cba_portal_export
+R-04698,HT-0031,9,2026,3,Mathematics,Algebra SBA,ME,58,2026-09-14,2026-09-18,T-MAT1,cba_portal_export
+R-04699,HT-0031,9,2026,3,Integrated Science,Practical investigation,EE,90,2026-09-17,29/09/2026,T-SCI1,cba_portal_export
+R-04700,HT-0031,9,2026,3,Social Studies,Community project,AE,46,2026-09-15,2026-09-27,T-SOC1,cba_portal_export
+R-04701,HT-0031,9,2026,3,Pre-Technical Studies,Woodwork project,ME,25,2026-09-13,2026-09-16,T-PRE1,cba_portal_export
+R-04702,HT-0031,9,2026,3,Agriculture,Agriculture quiz,ME,54,2026-09-10,2026-09-16,T-AGR1,cba_portal_export
+R-04703,HT-0031,9,2026,3,Creative Arts and Sports,Drawing and painting,ME,74,2026-10-03,2026-12-04,T-CRE1,cba_portal_export
+R-04704,HT-0032,9,2026,3,English,Reading comprehension,ME,63,18/09/2026,2026-10-04,T-ENG1,cba_portal_export
+R-04705,HT-0032,9,2026,3,Kiswahili,Mazungumzo,EE,79,2026-09-15,24/09/2026,T-KIS1,cba_portal_export
+R-04706,HT-0032,9,2026,3,Mathematics,Fractions task,AE,46,2026-10-02,2026-10-03,T-MAT1,cba_portal_export
+R-04707,HT-0032,9,2026,3,Integrated Science,Science quiz,ME,69,2026-09-13,2026-09-27,T-SCI1,cba_portal_export
+R-04708,HT-0032,9,2026,3,Social Studies,Map work,ME,55,2026-10-05,2026-10-17,T-SOC1,cba_portal_export
+R-04709,HT-0032,9,2026,3,Pre-Technical Studies,Safety quiz,EE,77,2026-09-10,2026-09-18,T-PRE1,cba_portal_export
+R-04710,HT-0032,9,2026,3,Agriculture,Agriculture quiz,Approaching Expectations,44,2026-10-01,2026-10-16,T-AGR1,cba_portal_export
+R-04711,HT-0032,9,2026,3,Creative Arts & Sports,Music performance,ME,54,10/09/2026,2026-09-27,T-CRE1,cba_portal_export
+R-04712,HT-0033,9,2026,3,English,Composition,ME,55,2026-09-20,08/10/2026,T-ENG1,cba_portal_export
+R-04713,HT-0033,9,2026,3,Kiswahili,Insha,2,47,2026-09-13,2026-09-20,T-KIS1,cba_portal_export
+R-04714,HT-0033,9,2026,3,Mathematics,Fractions task,ME,55,2026-09-28,2026-10-03,T-MAT1,cba_portal_export
+R-04715,HT-0033,9,2026,3,Integrated Science,Practical investigation,AE,33,2026-09-15,2026-10-01,T-SCI1,cba_portal_export
+R-04716,HT-0033,9,2026,3,Social Studies,Citizenship quiz,ME,74,2026-09-26,2026-10-11,T-SOC1,cba_portal_export
+R-04717,HT-0033,9,2026,3,Pre-Technical,Woodwork project,AE,31,2026-09-30,15/10/2026,T-PRE1,cba_portal_export
+R-04718,HT-0033,9,2026,3,Agriculture,Soil study,AE,27,2026-09-14,27/09/2026,T-AGR1,cba_portal_export
+R-04719,HT-0033,9,2026,3,Creative Arts and Sports,Drawing and painting,EE,92,2026-09-18,2026-10-09,T-CRE1,cba_portal_export
+R-04720,HT-0034,9,2026,3,English,Composition,ME,74,10/09/2026,2026-09-27,T-ENG1,cba_portal_export
+R-04721,HT-0034,9,2026,3,Kiswahili,Ufahamu,ME,68,2026-09-10,2026-09-18,T-KIS1,cba_portal_export
+R-04722,HT-0034,9,2026,3,Mathematics,Data handling quiz,ae,26,2026-09-19,2026-09-27,T-MAT1,cba_portal_export
+R-04723,HT-0034,9,2026,3,Integrated Science,Model building,ME,54,2026-10-01,2026-10-03,T-SCI1,cba_portal_export
+R-04724,HT-0034,9,2026,3,SST,Citizenship quiz,ME,66,2026-09-12,2026-09-20,T-SOC1,cba_portal_export
+R-04725,HT-0034,9,2026,3,Pre-Technical,Safety quiz,Meeting Expectations,61,2026-10-05,2026-10-12,T-PRE1,cba_portal_export
+R-04726,HT-0034,9,2026,3,Agriculture,Soil study,M.E.,59,18/09/2026,2026-10-08,T-AGR1,cba_portal_export
+R-04727,HT-0034,9,2026,3,Creative Arts and Sports,PE skills,EE,78,2026-09-22,2026-11-09,T-CRE1,cba_portal_export
+R-04728,HT-0035,9,2026,3,English,Grammar quiz,AE,45,2026-09-20,2026-10-03,T-ENG1,cba_portal_export
+R-04729,HT-0035,9,2026,3,Kiswahili,Ufahamu,ME,53,12/09/2026,2026-09-21,T-KIS1,cba_portal_export
+R-04730,HT-0035,9,2026,3,MATHEMATICS,Algebra SBA,ME,59,2026-10-04,2026-10-13,T-MAT1,cba_portal_export
+R-04731,HT-0035,9,2026,3,Integrated Science,Model building,1,12,2026-10-05,2026-10-09,T-SCI1,cba_portal_export
+R-04732,HT-0035,9,2026,3,Social Studies,Community project,ME,63,2026-09-26,2026-10-05,T-SOC1,cba_portal_export
+R-04733,HT-0035,9,2026,3,Pre-Technical Studies,Technical drawing,ME,56,2026-09-21,2026-09-22,T-PRE1,cba_portal_export
+R-04734,HT-0035,9,2026,3,Agriculture,Soil study,M.E.,59,2026-09-13,2026-09-26,T-AGR1,cba_portal_export
+R-04735,HT-0035,9,2026,3,Creative Arts and Sports,Music performance,Meeting Expectations,50,2026-09-30,05/10/2026,T-CRE1,cba_portal_export
+R-04736,HT-0036,9,2026,3,English,Grammar quiz,Approaching,35,2026-09-10,2026-11-25,T-ENG1,cba_portal_export
+R-04737,HT-0036,9,2026,3,Kiswahili,Mazungumzo,E.E,82,27/09/2026,2026-12-06,T-KIS1,cba_portal_export
+R-04738,HT-0036,9,2026,3,Mathematics,Data handling quiz,Meeting Expectations,53,2026-09-25,2026-12-11,T-MAT1,cba_portal_export
+R-04739,HT-0036,9,2026,3,Integrated Sci,Model building,AE,37,2026-10-04,2026-12-15,T-SCI1,cba_portal_export
+R-04740,HT-0036,9,2026,3,Social Studies,Citizenship quiz,AE,49,2026-09-10,2026-09-28,T-SOC1,cba_portal_export
+R-04741,HT-0036,9,2026,3,Pre-Technical Studies,Woodwork project,ME,73,2026-09-18,2026-11-26,T-PRE1,cba_portal_export
+R-04742,HT-0036,9,2026,3,Agriculture,Kitchen garden project,E.E,98,2026-09-25,26-09-26,T-AGR1,cba_portal_export
+R-04743,HT-0036,9,2026,3,Creative Arts and Sports,Drawing and painting,AE,30,2026-10-05,07/10/2026,T-CRE1,cba_portal_export
+R-04744,HT-0037,9,2026,3,English,Grammar quiz,Approaching,47,2026-09-24,2026-10-05,T-ENG1,cba_portal_export
+R-04745,HT-0037,9,2026,3,Kiswahili,Sarufi,1,7,2026-09-09,2026-09-30,T-KIS1,cba_portal_export
+R-04746,HT-0037,9,2026,3,Mathematics,Geometry project,Meeting Expectations,59,2026-09-13,2026-09-20,T-MAT1,cba_portal_export
+R-04747,HT-0037,9,2026,3,Integrated Science,Science quiz,2,49,2026-09-19,2026-09-23,T-SCI1,cba_portal_export
+R-04748,HT-0037,9,2026,3,Social Studies,Citizenship quiz,ME,55,2026-10-05,23/10/2026,T-SOC1,cba_portal_export
+R-04749,HT-0037,9,2026,3,Pre Tech,Woodwork project,Approaching,29,2026-09-15,2026-09-20,T-PRE1,cba_portal_export
+R-04750,HT-0037,9,2026,3,Agriculture,Agriculture quiz,ME,61,2026-09-11,27/09/2026,T-AGR1,cba_portal_export
+R-04751,HT-0037,9,2026,3,Creative Arts and Sports,PE skills,AE,44,2026-09-19,2026-09-21,T-CRE1,cba_portal_export
+R-04752,HT-0038,9,2026,3,English,Oral presentation,ME,72,2026-09-29,2026-10-16,T-ENG1,cba_portal_export
+R-04753,HT-0038,9,2026,3,Kiswahili,Ufahamu,ee,80,2026-09-13,2026-09-15,T-KIS1,cba_portal_export
+R-04754,HT-0038,9,2026,3,Mathematics,Fractions task,2,41,2026-10-02,2026-10-13,T-MAT1,cba_portal_export
+R-04755,HT-0038,9,2026,3,Integrated Science,Science quiz,AE,46,2026-09-21,2026-09-24,T-SCI1,cba_portal_export
+R-04756,HT-0038,9,2026,3,Social Studies,Community project,ME,52,2026-09-15,2026-10-03,T-SOC1,cba_portal_export
+R-04757,HT-0038,9,2026,3,Pre-Technical Studies,Safety quiz,ME,58,2026-09-15,2026-10-02,T-PRE1,cba_portal_export
+R-04758,HT-0038,9,2026,3,Agriculture,Agriculture quiz,BE,6,21/09/2026,2026-10-04,T-AGR1,cba_portal_export
+R-04759,HT-0038,9,2026,3,Creative Arts and Sports,PE skills,3,65,2026-09-21,2026-10-12,T-CRE1,cba_portal_export
+R-04760,HT-0039,9,2026,3,English,Reading comprehension,ME,60,2026-09-24,2026-10-01,T-ENG1,cba_portal_export
+R-04761,HT-0039,9,2026,3,Kiswahili,Mazungumzo,EE,80,2026-09-28,2026-10-02,T-KIS1,cba_portal_export
+R-04762,HT-0039,9,2026,3,Mathematics,Fractions task,Approaching Expectations,48,2026-09-15,2026-09-20,T-MAT1,cba_portal_export
+R-04763,HT-0039,9,2026,3,Integrated Science,Model building,AE,35,03/10/2026,2026-10-12,T-SCI1,cba_portal_export
+R-04764,HT-0039,9,2026,3,Social Studies,Map work,AE,48,2026-09-26,2026-10-07,T-SOC1,cba_portal_export
+R-04765,HT-0039,9,2026,3,Pre-Technical Studies,Safety quiz,me,73,2026-10-04,2026-10-18,T-PRE1,cba_portal_export
+R-04766,HT-0039,9,2026,3,Creative Arts and Sports,Craft project,meeting exp,53,2026-10-05,2026-10-19,T-CRE1,cba_portal_export
+R-04767,HT-0040,9,2026,3,English,Grammar quiz,ME,54,15-09-26,2026-11-16,T-ENG1,cba_portal_export
+R-04768,HT-0040,9,2026,3,Kiswahili,Sarufi,AE,47,2026-09-16,06/10/2026,T-KIS1,cba_portal_export
+R-04769,HT-0040,9,2026,3,Mathematics,Geometry project,AE,26,2026-09-16,19/09/2026,T-MAT1,cba_portal_export
+R-04770,HT-0040,9,2026,3,Integrated Science,Practical investigation,EE,80,2026-09-30,2026-10-09,T-SCI1,cba_portal_export
+R-04771,HT-0040,9,2026,3,Social Studies,Citizenship quiz,AE,26,02/10/2026,2026-10-09,T-SOC1,cba_portal_export
+R-04772,HT-0040,9,2026,3,Pre-Technical Studies,Woodwork project,AE,41,2026-09-24,2026-09-28,T-PRE1,cba_portal_export
+R-04773,HT-0040,9,2026,3,Agriculture,Agriculture quiz,ME,62,2026-10-03,2026-10-23,T-AGR1,cba_portal_export
+R-04774,HT-0040,9,2026,3,Creative Arts and Sports,Music performance,AE,33,2026-10-02,20/10/2026,T-CRE1,cba_portal_export

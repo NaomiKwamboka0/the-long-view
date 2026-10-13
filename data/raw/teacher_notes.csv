@@ -1,0 +1,260 @@
+note_id,learner_id,grade,year,term,learning_area,date,teacher,text
+N-0001,HT-0001,7,2024,1,,2024-01-22,T-PRE1,Hesitant to answer orally.
+N-0002,HT-0001,4,2021,3,,2021-09-13,T-MAT2,Participates well in group work.
+N-0003,HT-0001,9,2026,1,,2026-02-10,T-AGR1,Participates well in group work.
+N-0004,HT-0001,7,2024,2,Pre-Technical Studies,2024-07-06,T-PRE1,Needs support with multi-step questions.
+N-0005,HT-0002,9,2026,2,Math,24/06/2026,T-MAT1,Finished the task early and helped peers.
+N-0006,HT-0002,7,2024,3,Mathematics,12/09/2024,T-MAT1,Ana ujuzi mzuri sana katika kazi hii.
+N-0007,HT-0002,9,2026,2,Integrated Science,2026-06-27,T-SCI1,Steady effort this term.
+N-0008,HT-0002,4,2021,2,Social Studies,23/06/2021,T-SOC2,Needs support with multi-step questions.
+N-0009,HT-0002,5,2022,3,Social Studies,2022-09-27,T-SOC1,Completes work on time.
+N-0010,HT-0002,6,2023,2,Science and Technology,2023-05-31,T-SCI2,Completes work on time.
+N-0011,HT-0002,4,2021,1,Creative Arts,2021-02-17,T-CRE2,Hesitant to answer orally.
+N-0012,HT-0002,9,2026,2,Pre-Technical Studies,2026-05-19,T-PRE1,Anahitaji msaada zaidi katika kusoma.
+N-0013,HT-0002,9,2026,2,Agriculture,2026-05-13,T-AGR1,Ana ujuzi mzuri sana katika kazi hii.
+N-0014,HT-0003,4,2021,3,,2021-09-10,T-KIS2,Hesitant to answer orally.
+N-0015,HT-0003,4,2021,1,Kiswahili,27/02/2021,T-KIS2,Often leaves the task incomplete.
+N-0016,HT-0003,8,2025,1,Integrated Science,2025-03-04,T-SCI2,Ana ujuzi mzuri sana katika kazi hii.
+N-0017,HT-0003,7,2024,2,Integrated Science,2024-05-21,T-SCI1,Participates well in group work.
+N-0018,HT-0003,4,2021,3,,2021-09-22,T-ENG2,Steady effort this term.
+N-0019,HT-0003,4,2021,2,Kiswahili,25/05/2021,T-KIS2,Completes work on time.
+N-0020,HT-0003,4,2021,1,Creative Arts,2021-03-02,T-CRE2,Asks deep questions during practicals.
+N-0021,HT-0004,6,2023,3,,2023-09-25,T-ENG2,Completes work on time.
+N-0022,HT-0004,6,2023,3,Social Studies,2023-09-25,T-SOC2,Hesitant to answer orally.
+N-0023,HT-0004,8,2025,1,,2025-03-11,T-KIS2,Steady effort this term.
+N-0024,HT-0004,4,2021,1,English,2021-02-15,T-ENG2,Steady effort this term.
+N-0025,HT-0004,4,2021,3,Kiswahili,18/09/2021,T-KIS2,Anahitaji msaada zaidi katika kusoma.
+N-0026,HT-0005,8,2025,1,,2025-02-16,T-KIS2,Participates well in group work.
+N-0027,HT-0005,7,2024,3,English,2024-10-01,T-ENG1,Often leaves the task incomplete.
+N-0028,HT-0005,7,2024,1,English,2024-03-04,T-ENG1,Needs support with multi-step questions.
+N-0029,HT-0005,9,2026,2,Kiswahili,2026-06-04,T-KIS1,Asks deep questions during practicals.
+N-0030,HT-0005,8,2025,3,English,2025-09-19,T-ENG2,Needs support with multi-step questions.
+N-0031,HT-0005,7,2024,1,Social Studies,2024-02-16,T-SOC1,Needs one-to-one support.
+N-0032,HT-0006,7,2024,1,Mathematics,2024-02-23,T-MAT1,Struggled to start the task without help.
+N-0033,HT-0006,6,2023,2,Mathematics,2023-05-30,T-MAT2,Anapata shida kubwa katika kazi hii.
+N-0034,HT-0006,9,2026,2,,09-06-26,T-KIS1,Often leaves the task incomplete.
+N-0035,HT-0006,9,2026,1,Agriculture,2026-02-09,T-AGR1,Needs support with multi-step questions.
+N-0036,HT-0006,9,2026,1,SST,2026-02-23,T-SOC1,Anahitaji msaada zaidi katika kusoma.
+N-0037,HT-0006,5,2022,2,,2022-05-14,T-KIS1,Often leaves the task incomplete.
+N-0038,HT-0006,7,2024,2,Creative Arts and Sports,04/07/2024,T-CRE1,Anafanya kazi yake vizuri.
+N-0039,HT-0006,7,2024,3,Integrated Science,2024-09-19,T-SCI1,Hesitant to answer orally.
+N-0040,HT-0007,4,2021,3,Mathematics,2021-10-05,T-MAT2,Anapata shida kubwa katika kazi hii.
+N-0041,HT-0007,9,2026,1,Pre-Technical Studies,2026-02-15,T-PRE1,Finished the task early and helped peers.
+N-0042,HT-0007,4,2021,1,Science and Technology,2021-02-25,T-SCI2,Anafanya kazi yake vizuri.
+N-0043,HT-0007,7,2024,2,Agriculture,2024-06-29,T-AGR1,Anafanya kazi yake vizuri.
+N-0044,HT-0007,5,2022,3,Social Studies,2022-09-22,T-SOC1,Participates well in group work.
+N-0045,HT-0007,8,2025,3,Kiswahili,2025-09-16,T-KIS2,Hesitant to answer orally.
+N-0046,HT-0008,8,2025,2,Integrated Science,2025-06-02,T-SCI2,Did not complete most items.
+N-0047,HT-0008,5,2022,3,KISWAHILI,26/09/2022,T-KIS1,Hesitant to answer orally.
+N-0048,HT-0008,4,2021,3,,2021-09-16,T-CRE2,Anahitaji msaada zaidi katika kusoma.
+N-0049,HT-0008,9,2026,1,,2026-01-23,T-CRE1,Hesitant to answer orally.
+N-0050,HT-0008,7,2024,2,Integrated Science,06-07-24,T-SCI1,Hesitant to answer orally.
+N-0051,HT-0008,4,2021,1,Mathematics,2021-02-20,T-MAT2,Ana ujuzi mzuri sana katika kazi hii.
+N-0052,HT-0008,4,2021,3,English,15/09/2021,T-ENG2,Participates well in group work.
+N-0053,HT-0009,7,2024,2,Agriculture,11-06-24,T-AGR1,Steady effort this term.
+N-0054,HT-0009,4,2021,3,Science and Technology,2021-09-14,T-SCI2,Hesitant to answer orally.
+N-0055,HT-0009,7,2024,3,Creative Arts and Sports,2024-10-04,T-CRE1,Needs one-to-one support.
+N-0056,HT-0009,8,2025,2,Agriculture,2025-07-04,T-AGR2,Completes work on time.
+N-0057,HT-0010,6,2023,2,Science and Technology,2023-05-26,T-SCI2,Steady effort this term.
+N-0058,HT-0010,7,2024,3,Creative Arts and Sports,2024-10-01,T-CRE1,Completes work on time.
+N-0059,HT-0010,8,2025,1,Creative Arts and Sports,2025-01-22,T-CRE2,Steady effort this term.
+N-0060,HT-0010,8,2025,3,,2025-09-21,T-ENG2,Needs support with multi-step questions.
+N-0061,HT-0010,5,2022,2,English,2022-06-10,T-ENG1,Often leaves the task incomplete.
+N-0062,HT-0010,8,2025,2,Mathematics,11/06/2025,T-MAT2,Ana ujuzi mzuri sana katika kazi hii.
+N-0063,HT-0010,9,2026,1,Social Studies,19/03/2026,T-SOC1,Steady effort this term.
+N-0064,HT-0011,4,2021,1,Mathematics,17/02/2021,T-MAT2,Needs support with multi-step questions.
+N-0065,HT-0011,9,2026,2,,2026-05-23,T-MAT1,Needs support with multi-step questions.
+N-0066,HT-0011,5,2022,1,Mathematics,2022-02-21,T-MAT1,Often leaves the task incomplete.
+N-0067,HT-0011,6,2023,2,,2023-06-12,T-ENG2,Steady effort this term.
+N-0068,HT-0011,6,2023,2,Science and Technology,2023-05-13,T-SCI2,Anahitaji msaada zaidi katika kusoma.
+N-0069,HT-0011,6,2023,1,,2023-01-26,T-ENG2,Anafanya kazi yake vizuri.
+N-0070,HT-0012,6,2023,3,Kiswahili,2023-09-28,T-KIS2,Often leaves the task incomplete.
+N-0071,HT-0012,7,2024,1,Kiswahili,2024-02-13,T-KIS1,Anahitaji msaada zaidi katika kusoma.
+N-0072,HT-0012,4,2021,3,Kisw.,2021-09-16,T-KIS2,Hesitant to answer orally.
+N-0073,HT-0012,9,2026,2,Mathematics,2026-05-27,T-MAT1,Anahitaji msaada zaidi katika kusoma.
+N-0074,HT-0012,6,2023,3,,27/09/2023,T-CRE2,Anahitaji msaada zaidi katika kusoma.
+N-0075,HT-0013,7,2024,2,Creative Arts and Sports,2024-06-10,T-CRE1,Needs support with multi-step questions.
+N-0076,HT-0013,6,2023,1,Kiswahili,2023-01-31,T-KIS2,Participates well in group work.
+N-0077,HT-0013,5,2022,2,Mathematics,07-06-22,T-MAT1,Needs support with multi-step questions.
+N-0078,HT-0013,9,2026,1,Integrated Science,2026-01-29,T-SCI1,Hesitant to answer orally.
+N-0079,HT-0013,4,2021,2,Creative Arts,2021-06-16,T-CRE2,Hesitant to answer orally.
+N-0080,HT-0013,8,2025,1,Integrated Sci,2025-03-13,T-SCI2,Participates well in group work.
+N-0081,HT-0013,8,2025,1,Pre-Technical Studies,2025-02-08,T-PRE2,Often leaves the task incomplete.
+N-0082,HT-0013,9,2026,1,,2026-02-24,T-ENG1,Steady effort this term.
+N-0083,HT-0014,5,2022,3,English,2022-10-05,T-ENG1,Steady effort this term.
+N-0084,HT-0014,7,2024,3,Pre-Technical Studies,2024-10-02,T-PRE1,Steady effort this term.
+N-0085,HT-0014,7,2024,3,,2024-09-16,T-SOC1,Needs support with multi-step questions.
+N-0086,HT-0014,7,2024,3,English,2024-09-12,T-ENG1,Steady effort this term.
+N-0087,HT-0014,4,2021,1,English,2021-01-29,T-ENG2,Anahitaji msaada zaidi katika kusoma.
+N-0088,HT-0014,6,2023,3,Mathematics,2023-09-16,T-MAT2,Steady effort this term.
+N-0089,HT-0014,9,2026,2,Creative Arts and Sports,2026-06-24,T-CRE1,Steady effort this term.
+N-0090,HT-0014,7,2024,1,Agriculture,05/03/2024,T-AGR1,Steady effort this term.
+N-0091,HT-0015,7,2024,1,English,2024-02-08,T-ENG1,Anafanya kazi yake vizuri.
+N-0092,HT-0015,7,2024,3,Agriculture,2024-09-10,T-AGR1,Finished the task early and helped peers.
+N-0093,HT-0015,4,2021,1,Mathematics,2021-03-04,T-MAT2,Anafanya kazi yake vizuri.
+N-0094,HT-0015,4,2021,3,,2021-09-18,T-KIS2,Anahitaji msaada zaidi katika kusoma.
+N-0095,HT-0016,9,2026,2,,2026-06-14,T-CRE1,Completes work on time.
+N-0096,HT-0016,7,2024,3,,25-09-24,T-SCI1,Steady effort this term.
+N-0097,HT-0016,7,2024,2,Social Studies,2024-06-12,T-SOC1,Anafanya kazi yake vizuri.
+N-0098,HT-0016,6,2023,2,Creative Arts,2023-05-26,T-CRE2,Anafanya kazi yake vizuri.
+N-0099,HT-0016,4,2021,2,,2021-05-17,T-CRE2,Steady effort this term.
+N-0100,HT-0017,7,2024,3,Integrated Science,2024-09-11,T-SCI1,Finished the task early and helped peers.
+N-0101,HT-0017,5,2022,3,Mathematics,2022-09-15,T-MAT1,Completes work on time.
+N-0102,HT-0017,8,2025,2,Pre-Technical Studies,2025-05-30,T-PRE2,Steady effort this term.
+N-0103,HT-0017,6,2023,1,Kisw.,2023-01-28,T-KIS2,Hesitant to answer orally.
+N-0104,HT-0017,8,2025,1,Pre-Technical Studies,2025-03-08,T-PRE2,Steady effort this term.
+N-0105,HT-0017,7,2024,3,,25/09/2024,T-CRE1,Completes work on time.
+N-0106,HT-0018,5,2022,2,Creative Arts,2022-06-15,T-CRE1,Anahitaji msaada zaidi katika kusoma.
+N-0107,HT-0018,7,2024,2,,22/06/2024,T-AGR1,Anahitaji msaada zaidi katika kusoma.
+N-0108,HT-0018,7,2024,1,SST,2024-03-01,T-SOC1,Anafanya kazi yake vizuri.
+N-0109,HT-0018,8,2025,3,Int. Science,2025-09-23,T-SCI2,Asks deep questions during practicals.
+N-0110,HT-0018,9,2026,2,Agriculture,2026-06-26,T-AGR1,Struggled to start the task without help.
+N-0111,HT-0019,9,2026,2,,2026-06-05,T-SCI1,Needs support with multi-step questions.
+N-0112,HT-0019,4,2021,2,Math,2021-06-20,T-MAT2,Often leaves the task incomplete.
+N-0113,HT-0019,7,2024,3,Integrated Sci,2024-09-24,T-SCI1,Anahitaji msaada zaidi katika kusoma.
+N-0114,HT-0019,8,2025,3,Social Studies,2025-10-01,T-SOC2,Often leaves the task incomplete.
+N-0115,HT-0019,9,2026,1,Creative Arts and Sports,2026-02-07,T-CRE1,Often leaves the task incomplete.
+N-0116,HT-0020,4,2021,3,Maths,2021-09-25,T-MAT2,Anahitaji msaada zaidi katika kusoma.
+N-0117,HT-0020,8,2025,2,Agriculture,2025-05-30,T-AGR2,Often leaves the task incomplete.
+N-0118,HT-0020,9,2026,2,English,2026-06-07,T-ENG1,Struggled to start the task without help.
+N-0119,HT-0020,4,2021,3,Social Studies,2021-09-11,T-SOC2,Needs support with multi-step questions.
+N-0120,HT-0021,5,2022,2,,2022-07-05,T-CRE1,Needs support with multi-step questions.
+N-0121,HT-0021,9,2026,1,Integrated Science,2026-02-17,T-SCI1,Anafanya kazi yake vizuri.
+N-0122,HT-0021,4,2021,1,Kiswahili,2021-03-04,T-KIS2,Anafanya kazi yake vizuri.
+N-0123,HT-0021,7,2024,2,Pre Tech,2024-05-24,T-PRE1,Participates well in group work.
+N-0124,HT-0021,8,2025,2,Pre-Technical Studies,2025-07-03,T-PRE2,Needs support with multi-step questions.
+N-0125,HT-0021,7,2024,1,,2024-02-06,T-SOC1,Completes work on time.
+N-0126,HT-0021,4,2021,3,Kiswahili,16/09/2021,T-KIS2,Steady effort this term.
+N-0127,HT-0021,4,2021,1,Social Studies,2021-02-13,T-SOC2,Finished the task early and helped peers.
+N-0128,HT-0022,8,2025,1,Agriculture,2025-03-16,T-AGR2,Participates well in group work.
+N-0129,HT-0022,6,2023,3,,2023-09-28,T-ENG2,Explains reasoning clearly to the group.
+N-0130,HT-0022,5,2022,2,Science and Technology,27-05-22,T-SCI1,Steady effort this term.
+N-0131,HT-0022,5,2022,3,,2022-10-04,T-CRE1,Completes work on time.
+N-0132,HT-0022,4,2021,2,Science and Technology,2021-06-08,T-SCI2,Anahitaji msaada zaidi katika kusoma.
+N-0133,HT-0022,5,2022,3,Kiswahili ,2022-09-14,T-KIS1,Participates well in group work.
+N-0134,HT-0022,5,2022,2,English,2022-06-24,T-ENG1,Explains reasoning clearly to the group.
+N-0135,HT-0023,8,2025,2,English,13/06/2025,T-ENG2,Steady effort this term.
+N-0136,HT-0023,9,2026,1,Mathematics,2026-01-22,T-MAT1,Needs support with multi-step questions.
+N-0137,HT-0023,7,2024,3,Mathematics,2024-09-24,T-MAT1,Anafanya kazi yake vizuri.
+N-0138,HT-0023,7,2024,2,,2024-06-17,T-PRE1,Asks deep questions during practicals.
+N-0139,HT-0023,7,2024,3,Agriculture,2024-10-05,T-AGR1,Steady effort this term.
+N-0140,HT-0023,7,2024,1,,2024-03-02,T-ENG1,Explains reasoning clearly to the group.
+N-0141,HT-0024,7,2024,2,,2024-05-13,T-SOC1,Participates well in group work.
+N-0142,HT-0024,9,2026,1,,2026-03-15,T-KIS1,Needs support with multi-step questions.
+N-0143,HT-0024,7,2024,3,Social Studies,2024-09-17,T-SOC1,Needs support with multi-step questions.
+N-0144,HT-0024,8,2025,2,Mathematics,2025-05-12,T-MAT2,Anahitaji msaada zaidi katika kusoma.
+N-0145,HT-0024,7,2024,2,English,2024-06-21,T-ENG1,Often leaves the task incomplete.
+N-0146,HT-0024,9,2026,1,Agriculture,09/02/2026,T-AGR1,Steady effort this term.
+N-0147,HT-0024,8,2025,1,Agriculture,2025-02-02,T-AGR2,Steady effort this term.
+N-0148,HT-0024,8,2025,1,Pre-Technical Studies,2025-02-12,T-PRE2,Completes work on time.
+N-0149,HT-0025,7,2024,2,English,2024-06-12,T-ENG1,Anafanya kazi yake vizuri.
+N-0150,HT-0025,7,2024,3,Kiswahili,2024-09-25,T-KIS1,Often leaves the task incomplete.
+N-0151,HT-0025,4,2021,1,Kiswahili,24/01/2021,T-KIS2,Needs support with multi-step questions.
+N-0152,HT-0025,5,2022,2,SST,2022-07-04,T-SOC1,Anafanya kazi yake vizuri.
+N-0153,HT-0025,9,2026,1,English,30-01-26,T-ENG1,Anafanya kazi yake vizuri.
+N-0154,HT-0025,5,2022,3,Science and Technology,23/09/2022,T-SCI1,Hesitant to answer orally.
+N-0155,HT-0025,8,2025,3,Kiswahili,2025-09-19,T-KIS2,Needs support with multi-step questions.
+N-0156,HT-0026,9,2026,1,Agriculture,2026-03-04,T-AGR1,Finished the task early and helped peers.
+N-0157,HT-0026,8,2025,3,Social Studies,2025-09-21,T-SOC2,Steady effort this term.
+N-0158,HT-0026,6,2023,3,Kiswahili,2023-09-19,T-KIS2,Participates well in group work.
+N-0159,HT-0026,5,2022,1,Creative Arts,2022-03-13,T-CRE1,Finished the task early and helped peers.
+N-0160,HT-0026,5,2022,1,,2022-01-25,T-MAT1,Did not complete most items.
+N-0161,HT-0027,5,2022,1,,2022-01-25,T-ENG1,Participates well in group work.
+N-0162,HT-0027,8,2025,1,Social Studies,2025-03-16,T-SOC2,Anahitaji msaada zaidi katika kusoma.
+N-0163,HT-0027,9,2026,1,Pre-Technical Studies,2026-02-20,T-PRE1,Participates well in group work.
+N-0164,HT-0027,8,2025,1,Pre-Technical,2025-02-16,T-PRE2,Participates well in group work.
+N-0165,HT-0027,9,2026,2,,2026-05-18,T-ENG1,Anafanya kazi yake vizuri.
+N-0166,HT-0027,6,2023,2,Creative Arts,21/05/2023,T-CRE2,Completes work on time.
+N-0167,HT-0027,5,2022,2,Kiswahili,2022-06-01,T-KIS1,Hesitant to answer orally.
+N-0168,HT-0027,7,2024,3,Social Studies,2024-09-09,T-SOC1,Often leaves the task incomplete.
+N-0169,HT-0027,8,2025,1,Creative Arts and Sports,2025-02-08,T-CRE2,Participates well in group work.
+N-0170,HT-0028,6,2023,3,Science and Technology,2023-10-03,T-SCI2,Often leaves the task incomplete.
+N-0171,HT-0028,5,2022,1,Social Studies,19/03/2022,T-SOC1,Anafanya kazi yake vizuri.
+N-0172,HT-0028,9,2026,1,CAS,2026-02-25,T-CRE1,Anahitaji msaada zaidi katika kusoma.
+N-0173,HT-0028,8,2025,3,,2025-09-16,T-SOC2,Completes work on time.
+N-0174,HT-0028,7,2024,2,Integrated Science,2024-07-06,T-SCI1,Anahitaji msaada zaidi katika kusoma.
+N-0175,HT-0028,8,2025,1,Creative Arts & Sports,2025-01-30,T-CRE2,Completes work on time.
+N-0176,HT-0028,4,2021,2,Creative Arts,2021-07-01,T-CRE2,Participates well in group work.
+N-0177,HT-0029,7,2024,3,Pre-Technical Studies,30/09/2024,T-PRE1,Anahitaji msaada zaidi katika kusoma.
+N-0178,HT-0029,4,2021,2,,2021-05-24,T-CRE2,Anafanya kazi yake vizuri.
+N-0179,HT-0029,4,2021,3,English,2021-09-15,T-ENG2,Finished the task early and helped peers.
+N-0180,HT-0029,4,2021,2,Kiswahili,2021-05-21,T-KIS2,Anahitaji msaada zaidi katika kusoma.
+N-0181,HT-0029,9,2026,2,Kiswahili,07/06/2026,T-KIS1,Anafanya kazi yake vizuri.
+N-0182,HT-0030,7,2024,3,Creative Arts and Sports,2024-10-04,T-CRE1,Anahitaji msaada zaidi katika kusoma.
+N-0183,HT-0030,8,2025,1,Creative Arts and Sports,2025-03-16,T-CRE2,Anahitaji msaada zaidi katika kusoma.
+N-0184,HT-0030,4,2021,3,Science and Technology,2021-09-21,T-SCI2,Steady effort this term.
+N-0185,HT-0030,5,2022,1,English,2022-02-03,T-ENG1,Ana ujuzi mzuri sana katika kazi hii.
+N-0186,HT-0030,5,2022,3,Maths,2022-10-03,T-MAT1,Often leaves the task incomplete.
+N-0187,HT-0030,6,2023,3,Social Studies,2023-10-02,T-SOC2,Often leaves the task incomplete.
+N-0188,HT-0030,5,2022,1,Mathematics,13/03/2022,T-MAT1,Hesitant to answer orally.
+N-0189,HT-0031,4,2021,2,Science and Technology,2021-06-06,T-SCI2,Completes work on time.
+N-0190,HT-0031,6,2023,2,Science and Technology,2023-06-18,T-SCI2,Ana ujuzi mzuri sana katika kazi hii.
+N-0191,HT-0031,8,2025,3,Integrated Science,2025-09-11,T-SCI2,Explains reasoning clearly to the group.
+N-0192,HT-0031,7,2024,2,SST,2024-06-30,T-SOC1,Often leaves the task incomplete.
+N-0193,HT-0031,6,2023,2,Mathematics,2023-05-18,T-MAT2,Completes work on time.
+N-0194,HT-0031,4,2021,2,,04/07/2021,T-ENG2,Hesitant to answer orally.
+N-0195,HT-0032,5,2022,2,English,2022-07-01,T-ENG1,Completes work on time.
+N-0196,HT-0032,7,2024,2,Social Studies,2024-06-12,T-SOC1,Finished the task early and helped peers.
+N-0197,HT-0032,7,2024,1,English,20/02/2024,T-ENG1,Needs support with multi-step questions.
+N-0198,HT-0032,9,2026,1,,2026-03-08,T-SCI1,Anafanya kazi yake vizuri.
+N-0199,HT-0033,4,2021,1,KISWAHILI,12-03-21,T-KIS2,Often leaves the task incomplete.
+N-0200,HT-0033,6,2023,3,Social Studies,2023-09-13,T-SOC2,Steady effort this term.
+N-0201,HT-0033,8,2025,1,Creative Arts and Sports,2025-02-12,T-CRE2,Explains reasoning clearly to the group.
+N-0202,HT-0033,9,2026,2,Pre-Technical,2026-06-27,T-PRE1,Often leaves the task incomplete.
+N-0203,HT-0033,7,2024,3,Kiswahili,2024-09-11,T-KIS1,Often leaves the task incomplete.
+N-0204,HT-0033,8,2025,3,,2025-09-13,T-SCI2,Participates well in group work.
+N-0205,HT-0034,8,2025,2,,2025-05-25,T-SOC2,Asks deep questions during practicals.
+N-0206,HT-0034,6,2023,3,Creative Arts,2023-09-23,T-CRE2,Asks deep questions during practicals.
+N-0207,HT-0034,5,2022,2,,20/06/2022,T-SOC1,Participates well in group work.
+N-0208,HT-0034,7,2024,1,,2024-02-24,T-SOC1,Steady effort this term.
+N-0209,HT-0034,7,2024,1,Agriculture,2024-01-26,T-AGR1,Steady effort this term.
+N-0210,HT-0034,7,2024,2,Pre-Technical Studies,2024-05-30,T-PRE1,Participates well in group work.
+N-0211,HT-0034,6,2023,3,Kiswahili,2023-09-13,T-KIS2,Hesitant to answer orally.
+N-0212,HT-0034,8,2025,1,Agriculture,2025-03-11,T-AGR2,Ana ujuzi mzuri sana katika kazi hii.
+N-0213,HT-0035,6,2023,2,Social Studies,2023-06-23,T-SOC2,Participates well in group work.
+N-0214,HT-0035,6,2023,1,,2023-03-14,T-MAT2,Anahitaji msaada zaidi katika kusoma.
+N-0215,HT-0035,8,2025,3,Kiswahili,2025-09-12,T-KIS2,Steady effort this term.
+N-0216,HT-0035,4,2021,3,Mathematics,2021-09-12,T-MAT2,Participates well in group work.
+N-0217,HT-0035,7,2024,3,Creative Arts & Sports,18/09/2024,T-CRE1,Needs support with multi-step questions.
+N-0218,HT-0035,6,2023,3,Mathematics,2023-09-23,T-MAT2,Needs support with multi-step questions.
+N-0219,HT-0035,4,2021,1,Mathematics,2021-02-03,T-MAT2,Hesitant to answer orally.
+N-0220,HT-0035,4,2021,1,Kiswahili,2021-03-19,T-KIS2,Participates well in group work.
+N-0221,HT-0036,6,2023,1,,2023-01-26,T-SOC2,Completes work on time.
+N-0222,HT-0036,4,2021,3,,2021-10-04,T-MAT2,Completes work on time.
+N-0223,HT-0036,9,2026,1,Pre-Technical,2026-03-06,T-PRE1,Anafanya kazi yake vizuri.
+N-0224,HT-0036,6,2023,1,,2023-01-30,T-ENG2,Anafanya kazi yake vizuri.
+N-0225,HT-0036,5,2022,2,English,2022-06-25,T-ENG1,Steady effort this term.
+N-0226,HT-0036,7,2024,3,Agriculture,2024-09-16,T-AGR1,Participates well in group work.
+N-0227,HT-0036,9,2026,1,Social Studies,2026-02-13,T-SOC1,Steady effort this term.
+N-0228,HT-0036,5,2022,3,Science and Technology,23/09/2022,T-SCI1,Anafanya kazi yake vizuri.
+N-0229,HT-0037,7,2024,3,English,2024-09-20,T-ENG1,Anahitaji msaada zaidi katika kusoma.
+N-0230,HT-0037,7,2024,1,KISWAHILI,13/03/2024,T-KIS1,Needs support with multi-step questions.
+N-0231,HT-0037,9,2026,1,Social Studies,2026-02-24,T-SOC1,Asks deep questions during practicals.
+N-0232,HT-0037,8,2025,1,,09/02/2025,T-KIS2,Needs one-to-one support.
+N-0233,HT-0037,7,2024,1,Pre-Technical,2024-01-31,T-PRE1,Hesitant to answer orally.
+N-0234,HT-0038,6,2023,3,English,2023-09-25,T-ENG2,Anafanya kazi yake vizuri.
+N-0235,HT-0038,7,2024,2,English,2024-06-20,T-ENG1,Completes work on time.
+N-0236,HT-0038,8,2025,1,Kiswahili,2025-03-16,T-KIS2,Explains reasoning clearly to the group.
+N-0237,HT-0038,8,2025,1,English,2025-03-18,T-ENG2,Steady effort this term.
+N-0238,HT-0038,5,2022,2,,2022-06-22,T-SCI1,Completes work on time.
+N-0239,HT-0038,8,2025,1,Mathematics,2025-01-28,T-MAT2,Needs support with multi-step questions.
+N-0240,HT-0038,5,2022,3,Science and Technology,2022-09-23,T-SCI1,Anahitaji msaada zaidi katika kusoma.
+N-0241,HT-0039,6,2023,2,Science and Technology,2023-06-06,T-SCI2,Participates well in group work.
+N-0242,HT-0039,7,2024,3,Mathematics,2024-09-12,T-MAT1,Hesitant to answer orally.
+N-0243,HT-0039,5,2022,1,,2022-03-12,T-MAT1,Needs support with multi-step questions.
+N-0244,HT-0039,8,2025,3,Agriculture,2025-09-13,T-AGR2,Hesitant to answer orally.
+N-0245,HT-0039,5,2022,1,Creative Arts,2022-02-03,T-CRE1,Needs support with multi-step questions.
+N-0246,HT-0039,9,2026,2,English,2026-06-14,T-ENG1,Completes work on time.
+N-0247,HT-0039,6,2023,1,Science and Technology,2023-03-13,T-SCI2,Anahitaji msaada zaidi katika kusoma.
+N-0248,HT-0039,7,2024,1,Agriculture,2024-01-31,T-AGR1,Often leaves the task incomplete.
+N-0249,HT-0040,5,2022,3,,2022-10-05,T-MAT1,Hesitant to answer orally.
+N-0250,HT-0040,7,2024,1,Social Studies,2024-03-09,T-SOC1,Needs support with multi-step questions.
+N-0251,HT-0040,8,2025,2,,2025-05-21,T-AGR2,Participates well in group work.
+N-0252,HT-0040,8,2025,2,Mathematics,2025-05-26,T-MAT2,Asks deep questions during practicals.
+N-0253,HT-0003,8,2025,3,Mathematics,2025-08-28,T-CLS1,Struggles with fraction word problems; avoids the board.
+N-0254,HT-0003,9,2026,2,Mathematics,2026-04-28,T-CLS1,Asked for extra practice sheets. Ana bidii lakini anachanganyikiwa.
+N-0255,HT-0007,8,2025,2,Creative Arts and Sports,2025-04-28,T-CLS1,Built a detailed model of the school compound from scrap.
+N-0256,HT-0007,9,2026,1,Pre-Technical Studies,2026-01-28,T-CLS1,Neat technical drawings; helps classmates with measuring.
+N-0257,HT-0012,9,2026,1,Kiswahili,2026-01-28,T-CLS1,Insha yake imeboreka sana; anatumia methali vizuri.
+N-0258,HT-0018,8,2025,2,,2025-04-28,T-CLS1,Absent often this term. Follow up with guardian.
+N-0259,HT-0031,8,2025,3,Integrated Science,2025-08-28,T-CLS1,Designed his own experiment on plant growth.

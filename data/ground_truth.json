@@ -1,0 +1,74 @@
+{
+  "HT-0003": {
+    "desc": "Mathematics declines ME -> AE -> BE from Grade 7 Term 3 onward",
+    "expect": [
+      {
+        "type": "decline",
+        "area": "Mathematics"
+      }
+    ]
+  },
+  "HT-0007": {
+    "desc": "Creative Arts held at EE for many terms; strong Pre-Technical Studies",
+    "expect": [
+      {
+        "type": "sustained_strength",
+        "area": "Creative Arts"
+      }
+    ]
+  },
+  "HT-0012": {
+    "desc": "Kiswahili improves from AE to EE across Grades 7-9",
+    "expect": [
+      {
+        "type": "improvement",
+        "area": "Kiswahili"
+      }
+    ]
+  },
+  "HT-0018": {
+    "desc": "Attendance drops below 70% in 2025 Terms 2-3",
+    "expect": [
+      {
+        "type": "attendance_drop",
+        "area": null
+      }
+    ]
+  },
+  "HT-0024": {
+    "desc": "Joined in Grade 7 Term 2 (2024); no Grade 4-6 records",
+    "expect": [
+      {
+        "type": "data_gap",
+        "area": null
+      }
+    ]
+  },
+  "HT-0031": {
+    "desc": "Science held at EE from Grade 5 onward",
+    "expect": [
+      {
+        "type": "sustained_strength",
+        "area": "Science"
+      }
+    ]
+  },
+  "HT-0036": {
+    "desc": "Many records logged 6+ weeks late",
+    "expect": [
+      {
+        "type": "late_logging",
+        "area": null
+      }
+    ]
+  },
+  "HT-0040": {
+    "desc": "One-off EE in Mathematics among AE results; must NOT become a strength",
+    "expect_absent": [
+      {
+        "type": "sustained_strength",
+        "area": "Mathematics"
+      }
+    ]
+  }
+}

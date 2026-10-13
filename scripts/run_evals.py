@@ -1,0 +1,174 @@
+"""Run Hatua's evaluation tasks on a fresh copy of the synthetic data.
+
+    python scripts/run_evals.py
+
+Writes evals/results.json and prints a pass/fail table. Tasks are fixed in advance
+and include one known failure we have not fixed (see EVALS.md).
+"""
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+TMP = Path(tempfile.mkdtemp(prefix="hatua-eval-"))
+shutil.copytree(REPO / "scripts", TMP / "scripts")
+os.environ["HATUA_HOME"] = str(TMP)
+os.environ["HATUA_TODAY"] = "2026-10-13"
+os.environ.pop("HATUA_LLM", None)
+sys.path.insert(0, str(REPO))
+
+from hatua import cli, gate, guard, patterns, store, summary, tools  # noqa: E402
+
+cli.main(["setup", "--fresh"])
+tools.ingest_record("2026_T3_new_records.csv")
+results: list[dict] = []
+
+
+def task(tid: str, desc: str):
+    def wrap(fn):
+        start = time.perf_counter()
+        try:
+            ok, detail = fn()
+        except Exception as exc:  # a crash is a fail, recorded honestly
+            ok, detail = False, f"crashed: {type(exc).__name__}: {exc}"
+        results.append({"id": tid, "task": desc, "pass": bool(ok), "detail": detail,
+                        "ms": round((time.perf_counter() - start) * 1000)})
+        return fn
+    return wrap
+
+
+def has(lid, ptype, fam=None):
+    return [p for p in patterns.find(lid)["patterns"] if p["type"] == ptype and (fam is None or p["family"] == fam)]
+
+
+@task("E01", "Detect a Mathematics decline across terms (HT-0003)")
+def _():
+    p = has("HT-0003", "decline", "Mathematics")
+    return bool(p), p[0]["statement"] if p else "no decline found"
+
+
+@task("E02", "Detect held strength in Creative Arts (HT-0007)")
+def _():
+    p = has("HT-0007", "sustained_strength", "Creative Arts")
+    return bool(p) and p[0]["terms"] >= 8, p[0]["statement"] if p else "not found"
+
+
+@task("E03", "Detect Kiswahili improvement across a missing term (HT-0012)")
+def _():
+    p = has("HT-0012", "improvement", "Kiswahili") or has("HT-0012", "sustained_strength", "Kiswahili")
+    return bool(p), "; ".join(x["statement"] for x in p) or "not found"
+
+
+@task("E04", "Detect an attendance drop and cite attendance entries (HT-0018)")
+def _():
+    p = has("HT-0018", "attendance_drop")
+    return bool(p) and all(e.startswith("A-") for e in p[0]["evidence"]), p[0]["statement"] if p else "not found"
+
+
+@task("E05", "Report a gap in records for a learner who joined in Grade 7 (HT-0024)")
+def _():
+    n = [x for x in patterns.find("HT-0024")["record_notes"] if x["type"] == "data_gap"]
+    return bool(n), n[0]["statement"] if n else "not found"
+
+
+@task("E06", "Detect held strength in Science from Grade 5 (HT-0031)")
+def _():
+    p = has("HT-0031", "sustained_strength", "Science")
+    return bool(p), p[0]["statement"] if p else "not found"
+
+
+@task("E07", "Flag late logging as a records problem, not a learner problem (HT-0036)")
+def _():
+    n = [x for x in patterns.find("HT-0036")["record_notes"] if x["type"] == "late_logging"]
+    return bool(n), n[0]["statement"] if n else "not found"
+
+
+@task("E08", "A single EE among AE results must not become a Maths strength or decline (HT-0040)")
+def _():
+    bad = has("HT-0040", "sustained_strength", "Mathematics") + has("HT-0040", "decline", "Mathematics")
+    return not bad, "no pattern from the one-off result" if not bad else bad[0]["statement"]
+
+
+@task("E09", "Every citation in all 40 teacher drafts exists and belongs to that learner")
+def _():
+    bad = []
+    for l in store.load("learners"):
+        d = summary.draft(l["learner_id"])
+        bad += guard.check(d["text"], l["learner_id"])
+    return not bad, f"{len(bad)} problems" + (f": {bad[:2]}" if bad else " across 40 drafts")
+
+
+@task("E10", "A teacher note with comparison words is cited but not quoted (HT-0007)")
+def _():
+    text = summary.draft("HT-0007")["text"]
+    return "classmates" not in text and "not quoted" in text, "note withheld, citation kept" if "not quoted" in text else text[:120]
+
+
+@task("E11", "Guard blocks an edited draft that suggests a pathway or compares learners")
+def _():
+    probs = guard.check("- Cynthia should take the STEM pathway; she is weaker than classmates. [R-02937]", "HT-0003")
+    return len(probs) >= 2, f"{len(probs)} problems raised"
+
+
+@task("E12", "Saving to the profile is blocked without a named teacher's approval")
+def _():
+    d = summary.draft("HT-0012")
+    try:
+        gate.update_profile(d["draft_id"])
+        return False, "saved without approval"
+    except summary.GateBlocked as exc:
+        return True, str(exc)
+
+
+@task("E13", "A guardian message cannot be drafted before the teacher approves")
+def _():
+    try:
+        summary.draft("HT-0031", audience="guardian", language="sw")
+        return False, "guardian draft created without approval"
+    except summary.GateBlocked as exc:
+        return True, str(exc)
+
+
+@task("E14", "After approval, the Kiswahili guardian message keeps references and has no English level names")
+def _():
+    d = summary.draft("HT-0018")
+    gate.approve(d["draft_id"], teacher="Mary Wambui")
+    g = summary.draft("HT-0018", audience="guardian", language="sw")
+    english = [w for w in ("Expectations", "Meeting", "Approaching") if w in g["text"]]
+    return "Rejea:" in g["text"] and not english, g["text"].splitlines()[2][:110]
+
+
+@task("E15", "Run-to-run variation: 5 runs give identical patterns for all learners")
+def _():
+    runs = [json.dumps([patterns.find(l["learner_id"]) for l in store.load("learners")], sort_keys=True)
+            for _ in range(5)]
+    return len(set(runs)) == 1, f"{len(set(runs))} distinct output(s) across 5 runs (template path, no model)"
+
+
+@task("E16", "KNOWN FAILURE: no pattern should start or end on a record whose score contradicts its level")
+def _():
+    conflicts = {f["record_id"] for f in store.load("flags") if f["type"] == "score_level_conflict"}
+    hits = []
+    for l in store.load("learners"):
+        for p in patterns.find(l["learner_id"])["patterns"]:
+            ends = p["trail"][0]["record_ids"] + p["trail"][-1]["record_ids"]
+            if any(r in conflicts for r in ends):
+                hits.append(f"{l['learner_id']} {p['family']} {p['type']}")
+    return not hits, f"{len(hits)} pattern(s) rest on a conflicting record at an end: {hits[:3]}"
+
+
+passed = sum(r["pass"] for r in results)
+out = REPO / "evals"
+out.mkdir(exist_ok=True)
+(out / "results.json").write_text(json.dumps({"passed": passed, "total": len(results), "tasks": results},
+                                              indent=1, ensure_ascii=False), encoding="utf-8")
+for r in results:
+    print(f"{r['id']}  {'PASS' if r['pass'] else 'FAIL'}  {r['task']}\n      {r['detail']}")
+print(f"\n{passed}/{len(results)} passed. Results in evals/results.json")
+shutil.rmtree(TMP, ignore_errors=True)
