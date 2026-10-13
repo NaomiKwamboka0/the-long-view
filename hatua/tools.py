@@ -28,6 +28,33 @@ def ingest_record(file_name: str) -> dict:
     return store.ingest_records(path)
 
 
+@audit.audited("review_queue")
+def review_queue(file_name: str = "", max_learners: int = 3) -> dict:
+    """Learners with new records in an export (default: the latest one) who have a pattern still
+    going on and no approved draft for it yet. Listed by learner ID, never by results."""
+    ingested = list(store.load("ingested"))  # insertion order = ingest order
+    if not ingested:
+        return {"file": None, "learners": [], "message": "Nothing has been ingested yet."}
+    name = Path(file_name).name if file_name else ingested[-1]
+    touched = sorted({r["learner_id"] for r in store.load("records") if r.get("file") == name})
+    drafts = store.load("drafts")
+    queue, skipped = [], 0
+    for lid in touched:
+        found = patterns.find(lid)
+        current = sorted(p["pattern_id"] for p in found["patterns"] if p["current"])
+        if not current:
+            continue
+        done = [d for d in drafts if d["learner_id"] == lid and d["audience"] == "teacher"
+                and d["status"] == "approved" and sorted(d["pattern_ids"]) == sorted(
+                    p["pattern_id"] for p in found["patterns"])]
+        if done:
+            skipped += 1
+            continue
+        queue.append({"learner_id": lid, "first_name": found["first_name"], "current_patterns": len(current)})
+    return {"file": name, "learners_with_new_records": len(touched), "already_approved": skipped,
+            "waiting": len(queue), "learners": queue[:max(0, int(max_learners))]}
+
+
 @audit.audited("find_patterns")
 def find_patterns(learner_id: str) -> dict:
     """Cited patterns across terms for one learner. No labels, no comparisons."""

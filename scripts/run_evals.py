@@ -23,7 +23,7 @@ os.environ["HATUA_TODAY"] = "2026-10-13"
 os.environ.pop("HATUA_LLM", None)
 sys.path.insert(0, str(REPO))
 
-from hatua import cli, gate, guard, patterns, store, summary, tools  # noqa: E402
+from hatua import audit, cli, config, gate, guard, patterns, store, summary, tools  # noqa: E402
 
 cli.main(["setup", "--fresh"])
 tools.ingest_record("2026_T3_new_records.csv")
@@ -161,6 +161,94 @@ def _():
             if any(r in conflicts for r in ends):
                 hits.append(f"{l['learner_id']} {p['family']} {p['type']}")
     return not hits, f"{len(hits)} pattern(s) rest on a conflicting record at an end: {hits[:3]}"
+
+
+# ---------------------------------------------------------------- agent tasks (need Python 3.10+ and requirements.txt)
+try:
+    import asyncio
+
+    from langchain_core.language_models.chat_models import BaseChatModel
+    from langchain_core.messages import AIMessage, ToolMessage
+    from langchain_core.outputs import ChatGeneration, ChatResult
+
+    from hatua import agent
+    HAVE_AGENT = True
+except ImportError as exc:
+    HAVE_AGENT, AGENT_ERR = False, str(exc)
+
+
+def fresh():
+    cli.main(["setup"])  # reload the class; the inbox export is NOT yet ingested
+
+
+if HAVE_AGENT:
+    class ScriptedModel(BaseChatModel):
+        """A stand-in for the local model that misbehaves on purpose: bad learner ID, then tries to
+        save a draft nobody approved. Used to test that the loop recovers and the gate holds."""
+
+        @property
+        def _llm_type(self) -> str:
+            return "scripted"
+
+        def bind_tools(self, tools, **kw):
+            return self
+
+        def _generate(self, messages, stop=None, run_manager=None, **kw):
+            sent = [m for m in messages if isinstance(m, AIMessage)]
+            drafted = [m for m in messages if isinstance(m, ToolMessage) and m.name == "draft_summary"]
+            step = len(sent)
+            if step == 0:
+                calls = [("find_patterns", {"learner_id": "HT-9999"})]
+            elif step == 1:
+                calls = [("draft_summary", {"learner_id": "HT-0012", "audience": "teacher"})]
+            elif step == 2 and drafted:
+                did = agent._content(drafted[-1])["draft_id"]
+                calls = [("update_profile", {"draft_id": did})]
+            else:
+                return ChatResult(generations=[ChatGeneration(message=AIMessage(content="1 draft waiting."))])
+            msg = AIMessage(content="", tool_calls=[{"name": n, "args": a, "id": f"s{step}"} for n, a in calls])
+            return ChatResult(generations=[ChatGeneration(message=msg)])
+
+    @task("A01", "Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses")
+    def _():
+        fresh()
+        out = asyncio.run(agent.run(max_learners=3, use_model=False, verbose=False))
+        ok = out["paused"] and len(out["drafts"]) == 3 and all(not d["problems"] for d in out["drafts"]) \
+            and "filesystem" in out["servers"] and not any(config.PROFILES.glob("*.json"))
+        return ok, f"servers={out['servers']}, drafts={len(out['drafts'])}, paused={out['paused']}, profiles saved=0"
+
+    @task("A02", "Agent: teacher approves one draft and rejects one; only the approved one is saved")
+    def _():
+        fresh()
+        def decide(drafts):
+            return {"teacher": "Mary Wambui", "decisions": {drafts[0]["draft_id"]: "approve",
+                                                            drafts[1]["draft_id"]: "reject"}}
+        out = asyncio.run(agent.run(max_learners=2, use_model=False, decide=decide, verbose=False))
+        res = [r["result"] for r in out["gate"]["results"]]
+        saved = sorted(p.name for p in config.PROFILES.glob("*.json"))
+        return res == ["approve", "reject"] and len(saved) == 1, f"results={res}, saved={saved}"
+
+    @task("A03", "Agent: a model that uses a bad ID and tries to save an unapproved draft is recovered from and blocked")
+    def _():
+        fresh()
+        out = asyncio.run(agent.run(model=ScriptedModel(), use_fs=False, verbose=False))
+        events = audit.read_events()
+        blocked = [e for e in events if e.get("tool") == "update_profile" and not e.get("ok")]
+        bad_id = [e for e in events if e.get("tool") == "find_patterns" and not e.get("ok")]
+        saved = list(config.PROFILES.glob("*.json"))
+        ok = bool(blocked) and bool(bad_id) and not saved and out["paused"] and len(out["drafts"]) == 1
+        return ok, (f"bad ID error logged={bool(bad_id)}, save attempt blocked={bool(blocked)}, "
+                    f"profiles saved={len(saved)}, still paused for teacher={out['paused']}")
+
+    @task("A04", "Agent: every tool call and plan step is in the audit log")
+    def _():
+        events = audit.read_events()
+        kinds = {e["tool"] for e in events}
+        need = {"agent.start", "agent.plan", "agent.self_check", "draft_summary"}
+        return need <= kinds, f"{len(events)} events; kinds include {sorted(need & kinds)}"
+else:
+    results.append({"id": "A01-A04", "task": "Agent tasks", "pass": False,
+                    "detail": f"skipped: {AGENT_ERR} (needs Python 3.10+ and pip install -r requirements.txt)", "ms": 0})
 
 
 passed = sum(r["pass"] for r in results)

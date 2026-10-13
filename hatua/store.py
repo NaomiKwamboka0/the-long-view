@@ -107,6 +107,7 @@ def ingest_records(path: Path) -> dict:
                                   "Same record appears twice in the export; the copy was skipped.",
                                   rec["record_id"], rec["learner_id"]))
             continue
+        rec["file"] = path.name
         records.append(rec)
         by_id.add(rec["record_id"])
         by_key.add(key)

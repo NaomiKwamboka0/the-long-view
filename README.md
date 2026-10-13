@@ -14,7 +14,25 @@ python3 -m hatua demo
 
 Then open `ui/hatua.html` in any browser (`open ui/hatua.html` on a Mac). It needs only Python 3.9+, with nothing to install. It works offline: no server, no internet, no outside APIs.
 
-The MCP server needs Python 3.10+ and `pip install -r requirements.txt`.
+## Run the agent
+
+The agent needs Python 3.10+, Node.js (for the borrowed filesystem MCP server) and, for the model, Ollama. On a Mac:
+
+```bash
+brew install python@3.12 node ollama
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+ollama serve &            # leave running
+ollama pull qwen2.5:7b    # one-time download, about 4.7 GB
+python -m hatua setup     # load the synthetic class
+python -m hatua agent     # inbox -> patterns -> drafts -> pauses for you
+```
+
+The agent reads the inbox through the filesystem MCP server, ingests new exports, finds learners whose patterns are still going on, drafts a summary for each, and checks every draft. Then it stops and asks for your name and an approve or reject decision for each draft. Run `python -m hatua build-ui` afterwards to see the results on the page.
+
+- `--max 5` drafts for up to 5 learners (default 3).
+- `--rules` plans with fixed rules instead of the model, for when Ollama is not running. The agent falls back to this on its own if it cannot reach Ollama on this machine.
+- `HATUA_MODEL=qwen2.5:3b python -m hatua agent` uses a smaller model on a laptop with less memory.
 
 ## What the teacher sees
 
@@ -43,7 +61,7 @@ python3 -m hatua import-approvals approvals.json
 
 ## MCP server
 
-`python3 -m hatua.mcp_server` starts **hatua-mcp** over stdio with six tools: `list_learners`, `ingest_record`, `find_patterns`, `get_evidence`, `draft_summary`, `update_profile`. There is no approve tool, so the agent cannot approve its own work. See [ARCHITECTURE.md](ARCHITECTURE.md).
+`python -m hatua.mcp_server` starts **hatua-mcp** over stdio with seven tools: `list_learners`, `ingest_record`, `review_queue`, `find_patterns`, `get_evidence`, `draft_summary`, `update_profile`. There is no approve tool, so the agent cannot approve its own work. The agent also uses the official **filesystem MCP server** (borrowed) to see what is in the inbox. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Rules Hatua enforces
 
@@ -59,16 +77,18 @@ python3 -m hatua import-approvals approvals.json
 python3 scripts/run_evals.py
 ```
 
-16 fixed tasks, including one known failure we have not fixed. See [EVALS.md](EVALS.md).
+20 fixed tasks: 16 for the engine and 4 for the agent, including one known failure we have not fixed. See [EVALS.md](EVALS.md).
 
 ## Status (honest)
 
-Done: synthetic messy cohort, cleaning and quality flags, cited pattern finder, drafts in English and Kiswahili, approval gate, audit log, MCP server, offline teacher page, evals.
+Done:
+- Synthetic messy cohort, cleaning and quality flags, cited pattern finder, drafts in English and Kiswahili.
+- Approval gate, audit log, our MCP server plus the borrowed filesystem server.
+- LangGraph agent loop with self-check and a pause for the teacher.
+- Offline teacher page and evals.
 
 Not done yet:
-- LangGraph orchestration loop.
-- The borrowed MCP server (the official filesystem server for the inbox folder).
-- A full task on a local open-weights model. The hook exists in `hatua/llm.py`, off by default, local only.
+- **The local model has not been run end to end.** The build machine could not download model weights. The Ollama path is wired and tested with a scripted stand-in model (eval A03), but the real `qwen2.5:7b` run still has to happen on a laptop.
 - Talking to a practising junior school teacher.
 
 ## Licence

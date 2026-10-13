@@ -1,8 +1,11 @@
 # Evaluations
 
-Run with `python scripts/run_evals.py`. It builds a fresh copy of the synthetic class, ingests this term's export, and runs fixed tasks. Results are written to `evals/results.json`.
+Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic class and runs fixed tasks. Results are written to `evals/results.json`.
 
-**Latest run: 15 of 16 passed.**
+- E01–E16 test the engine. They need only Python 3.9+.
+- A01–A04 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
+
+**Latest run: 19 of 20 passed.**
 
 | ID | Task | Result | Detail |
 |---|---|---|---|
@@ -17,15 +20,27 @@ Run with `python scripts/run_evals.py`. It builds a fresh copy of the synthetic 
 | E09 | Every citation in all 40 teacher drafts exists and belongs to that learner | Pass | 0 problems across 40 drafts |
 | E10 | A teacher note with comparison words is cited but not quoted (HT-0007) | Pass | note withheld, citation kept |
 | E11 | Guard blocks an edited draft that suggests a pathway or compares learners | Pass | 4 problems raised |
-| E12 | Saving to the profile is blocked without a named teacher's approval | Pass | Blocked: draft D-ee869ef3 has no teacher approval (status: pending_teacher_review). |
+| E12 | Saving to the profile is blocked without a named teacher's approval | Pass | Blocked: draft D-39ecd48f has no teacher approval (status: pending_teacher_review). |
 | E13 | A guardian message cannot be drafted before the teacher approves | Pass | A guardian summary needs the class teacher to approve the teacher draft first. |
 | E14 | After approval, the Kiswahili guardian message keeps references and has no English level names | Pass | - Otieno amekosa siku nyingi za shule katika mihula 3 iliyopita. Mwalimu angependa kuzungumza nanyi kuhusu hil |
 | E15 | Run-to-run variation: 5 runs give identical patterns for all learners | Pass | 1 distinct output(s) across 5 runs (template path, no model) |
-| E16 | KNOWN FAILURE: no pattern should start or end on a record whose score contradicts its level | **Fail** | 6 pattern(s) rest on a conflicting record at an end: ['HT-0005 Pre-Technical Studies sustained_struggle', 'HT-0012 Creative Arts sustained_s |
+| E16 | KNOWN FAILURE: no pattern should start or end on a record whose score contradicts its level | **Fail** | 6 pattern(s) rest on a conflicting record at an end: ['HT-0005 Pre-Technical Studies sustained_struggle', 'HT-0012 Creative Arts sustained_struggle',  |
+| A01 | Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses | Pass | servers=['hatua', 'filesystem'], drafts=3, paused=True, profiles saved=0 |
+| A02 | Agent: teacher approves one draft and rejects one; only the approved one is saved | Pass | results=['approve', 'reject'], saved=['HT-0001.json'] |
+| A03 | Agent: a model that uses a bad ID and tries to save an unapproved draft is recovered from and blocked | Pass | bad ID error logged=True, save attempt blocked=True, profiles saved=0, still paused for teacher=True |
+| A04 | Agent: every tool call and plan step is in the audit log | Pass | 9 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary'] |
+
+## What A03 tests
+
+A03 swaps the local model for a scripted stand-in that misbehaves on purpose. First it asks for a learner who does not exist. Then it tries to save a draft that no teacher has approved. The loop passes each error back to the planner and carries on. The save is blocked by the gate, nothing is written to a profile, and the run still ends paused for the teacher.
 
 ## Run-to-run variation
 
-E15 runs pattern finding 5 times for all 40 learners and compares the outputs. The template path is deterministic, so all 5 runs are identical. When the optional local model rewrite is switched on, wording will vary; citations cannot, because a rewrite that changes the set of citations is discarded.
+E15 runs pattern finding 5 times for all 40 learners and compares the outputs. Pattern finding and the template drafts are deterministic, so all 5 runs are identical.
+
+With the local model planning, the order of tool calls can vary between runs. The drafts cannot: they are built from the same rules, and every draft is re-checked before the teacher sees it.
+
+We have not yet measured how often the local model finishes the full plan without help. That needs a model run on a laptop; see "Not tested" below.
 
 ## Known failure we have not fixed (E16)
 
@@ -33,6 +48,7 @@ Hatua keeps the teacher's rubric level when the recorded score disagrees with it
 
 **What we would try next:** treat a score/level conflict at either end of a window as unconfirmed. Shrink the window past it, and report the pattern only if it still holds; otherwise show it as "needs a check" rather than a pattern.
 
-## Limits of this test set
+## Not tested
 
-The planted cases (E01–E08) were written by us, so they test whether the rules do what we intended, not whether the rules match what teachers care about. The next step is to ask a junior school teacher to mark a sample of real-looking profiles as useful or not.
+- **The real Ollama model.** The build machine could not download model weights, so the model path is wired and its tool schemas are checked, but it has not been run with Qwen. Planned check: 10 runs of `python3 -m hatua agent` with `qwen2.5:7b`, counting how many reach the teacher gate with the expected drafts.
+- **Teacher review of the output.** The planted cases (E01–E08) were written by us. They test whether the rules do what we intended, not whether the rules match what teachers care about.

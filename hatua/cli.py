@@ -82,6 +82,15 @@ def cmd_import(args) -> None:
             print(f"{it['draft_id']}: NOT applied ({exc})")
 
 
+def cmd_agent(args) -> None:
+    try:
+        from . import agent
+    except ImportError as exc:
+        print(f"The agent needs Python 3.10+ and: pip install -r requirements.txt  ({exc})", file=sys.stderr)
+        raise SystemExit(1)
+    agent.main(max_learners=args.max, rules=args.rules, no_fs=args.no_fs)
+
+
 def cmd_demo(args) -> None:
     """One command: load the synthetic class, take in this term's export, build the page."""
     cmd_setup(argparse.Namespace(fresh=False))
@@ -126,6 +135,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("import-approvals", help="Apply approvals downloaded from the Hatua page")
     s.add_argument("file")
     s.set_defaults(fn=cmd_import)
+    s = sub.add_parser("agent", help="Run the agent: inbox -> patterns -> drafts -> pause for the teacher")
+    s.add_argument("--max", type=int, default=3, help="Most learners to draft for in one run (default 3)")
+    s.add_argument("--rules", action="store_true", help="Plan with fixed rules instead of the local model")
+    s.add_argument("--no-fs", action="store_true", help="Skip the borrowed filesystem MCP server")
+    s.set_defaults(fn=cmd_agent)
     s = sub.add_parser("demo", help="Set up the synthetic class, ingest this term, build the page")
     s.set_defaults(fn=cmd_demo)
     s = sub.add_parser("build-ui", help="Build the offline teacher page ui/hatua.html")
