@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" font-family="Helvetica, Arial, sans-serif">
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+<marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7d2635"/></marker>
+</defs>
+<rect width="1600" height="1000" fill="#ffffff"/>
+<text x="40" y="52" font-size="30" font-weight="700" fill="#1d2a27">Hatua: how the agent, the model, MCP and the teacher fit together</text>
+<text x="40" y="82" font-size="18" fill="#55635f">Everything runs on the teacher's laptop. No external APIs. All data is synthetic.</text>
+
+<!-- legend -->
+<rect x="1130" y="30" width="26" height="18" fill="#e3eef7" stroke="#2f6fa8" stroke-width="2"/><text x="1164" y="45" font-size="15" fill="#1d2a27">Built by us</text>
+<rect x="1130" y="58" width="26" height="18" fill="#f2f2f2" stroke="#666" stroke-width="2" stroke-dasharray="5 3"/><text x="1164" y="73" font-size="15" fill="#1d2a27">Borrowed (not written by us)</text>
+<rect x="1400" y="30" width="26" height="18" fill="#f9e9ec" stroke="#7d2635" stroke-width="2"/><text x="1434" y="45" font-size="15" fill="#1d2a27">Human</text>
+
+<!-- LLM -->
+<rect x="450" y="110" width="700" height="95" rx="10" fill="#fff6e0" stroke="#b07a00" stroke-width="2.5"/>
+<text x="800" y="145" font-size="22" font-weight="700" text-anchor="middle" fill="#1d2a27">Open-weights model (local)</text>
+<text x="800" y="173" font-size="17" text-anchor="middle" fill="#1d2a27">Qwen 2.5 7B through Ollama on localhost. It chooses the next tool call.</text>
+<text x="800" y="195" font-size="15" text-anchor="middle" fill="#55635f">If no model is running, fixed rules make the same calls.</text>
+
+<!-- Agent -->
+<rect x="360" y="260" width="880" height="190" rx="10" fill="#e3eef7" stroke="#2f6fa8" stroke-width="2.5"/>
+<text x="380" y="290" font-size="20" font-weight="700" fill="#1d2a27">Agent: LangGraph loop (hatua/agent.py), repeats until done</text>
+<g font-size="18" text-anchor="middle" fill="#1d2a27">
+<rect x="385" y="320" width="180" height="80" rx="8" fill="#fff" stroke="#2f6fa8" stroke-width="2"/><text x="475" y="352" font-weight="700">1. plan</text><text x="475" y="378" font-size="15">pick next step</text>
+<rect x="600" y="320" width="180" height="80" rx="8" fill="#fff" stroke="#2f6fa8" stroke-width="2"/><text x="690" y="352" font-weight="700">2. tools</text><text x="690" y="378" font-size="15">call MCP tools</text>
+<rect x="815" y="320" width="180" height="80" rx="8" fill="#fff" stroke="#2f6fa8" stroke-width="2"/><text x="905" y="352" font-weight="700">3. self-check</text><text x="905" y="378" font-size="15">cites, no labels</text>
+<rect x="1030" y="320" width="190" height="80" rx="8" fill="#f9e9ec" stroke="#7d2635" stroke-width="2.5"/><text x="1125" y="352" font-weight="700">4. teacher gate</text><text x="1125" y="378" font-size="15">pause and wait</text>
+</g>
+<line x1="565" y1="360" x2="598" y2="360" stroke="#333" stroke-width="2.5" marker-end="url(#a)"/>
+<line x1="780" y1="360" x2="813" y2="360" stroke="#333" stroke-width="2.5" marker-end="url(#a)"/>
+<line x1="995" y1="360" x2="1028" y2="360" stroke="#333" stroke-width="2.5" marker-end="url(#a)"/>
+<path d="M690 320 C690 295 520 295 480 318" fill="none" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+<path d="M905 400 C905 428 520 428 480 402" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)"/>
+<text x="715" y="441" font-size="13" fill="#55635f">failed draft goes back to plan (one retry)</text>
+<line x1="800" y1="205" x2="800" y2="258" stroke="#b07a00" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+<text x="812" y="238" font-size="14" fill="#55635f">plan asks the model</text>
+
+<!-- Teacher -->
+<rect x="1300" y="260" width="270" height="190" rx="10" fill="#f9e9ec" stroke="#7d2635" stroke-width="2.5"/>
+<text x="1435" y="292" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">Human in the loop</text>
+<text x="1435" y="322" font-size="16" text-anchor="middle" fill="#1d2a27">Named class teacher</text>
+<text x="1435" y="348" font-size="15" text-anchor="middle" fill="#1d2a27">reads each draft and its</text>
+<text x="1435" y="368" font-size="15" text-anchor="middle" fill="#1d2a27">cited records, then approves</text>
+<text x="1435" y="388" font-size="15" text-anchor="middle" fill="#1d2a27">or rejects. Nothing is saved</text>
+<text x="1435" y="408" font-size="15" text-anchor="middle" fill="#1d2a27">or shared before this.</text>
+<text x="1435" y="436" font-size="14" text-anchor="middle" fill="#55635f">Teacher page: ui/hatua.html</text>
+<line x1="1220" y1="360" x2="1298" y2="360" stroke="#7d2635" stroke-width="2.5" marker-end="url(#m)" marker-start="url(#m)"/>
+
+<!-- MCP client -->
+<rect x="360" y="500" width="880" height="70" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2.5" stroke-dasharray="7 4"/>
+<text x="800" y="530" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">MCP client (langchain-mcp-adapters)</text>
+<text x="800" y="555" font-size="15" text-anchor="middle" fill="#55635f">talks to both MCP servers over stdio on the same machine</text>
+<line x1="690" y1="400" x2="690" y2="498" stroke="#333" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+
+<!-- Servers -->
+<rect x="360" y="640" width="430" height="190" rx="10" fill="#e3eef7" stroke="#2f6fa8" stroke-width="2.5"/>
+<text x="575" y="672" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">hatua-mcp (our MCP server)</text>
+<g font-size="15" fill="#1d2a27" text-anchor="middle">
+<text x="575" y="702">list_learners · ingest_record · review_queue</text>
+<text x="575" y="724">find_patterns · get_evidence · draft_summary</text>
+<text x="575" y="746">update_profile (blocked without teacher approval)</text>
+<text x="575" y="778" font-size="14" fill="#7d2635" font-weight="700">There is no approve tool. The agent cannot approve.</text>
+<text x="575" y="802" font-size="14" fill="#55635f">Every call is logged: inputs, output, time, who</text>
+</g>
+<rect x="810" y="640" width="430" height="190" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2.5" stroke-dasharray="7 4"/>
+<text x="1025" y="672" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">Filesystem MCP server (borrowed)</text>
+<g font-size="15" fill="#1d2a27" text-anchor="middle">
+<text x="1025" y="702">Official reference server from the MCP project</text>
+<text x="1025" y="724">Only list_directory and get_file_info are used</text>
+<text x="1025" y="746">Limited to the data/inbox folder</text>
+<text x="1025" y="778" font-size="14" fill="#55635f">Shows the agent which new exports have arrived.</text>
+<text x="1025" y="802" font-size="14" fill="#55635f">Its write tools are not given to the agent.</text>
+</g>
+<line x1="575" y1="570" x2="575" y2="638" stroke="#333" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+<line x1="1025" y1="570" x2="1025" y2="638" stroke="#333" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+
+<!-- Data -->
+<rect x="360" y="880" width="880" height="90" rx="10" fill="#eef5ee" stroke="#2e6b3f" stroke-width="2.5"/>
+<text x="800" y="910" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">Local data sources (files on the laptop)</text>
+<text x="800" y="938" font-size="15" text-anchor="middle" fill="#1d2a27">data/inbox: new CSV exports · store: clean records, notes, attendance, flags, drafts</text>
+<text x="800" y="958" font-size="15" text-anchor="middle" fill="#1d2a27">logs: audit trail and approvals · profiles: saved only after approval</text>
+<line x1="575" y1="830" x2="575" y2="878" stroke="#333" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+<line x1="1025" y1="830" x2="1025" y2="878" stroke="#333" stroke-width="2.5" marker-end="url(#a)"/>
+
+<!-- Overall flow + no API -->
+<rect x="1300" y="500" width="270" height="330" rx="10" fill="#ffffff" stroke="#333" stroke-width="2"/>
+<text x="1435" y="534" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2a27">External APIs: none</text>
+<g font-size="15" text-anchor="middle" fill="#1d2a27">
+<text x="1435" y="566">No internet needed.</text>
+<text x="1435" y="590">The model and both MCP</text>
+<text x="1435" y="610">servers run on the teacher's</text>
+<text x="1435" y="630">laptop, so learner data</text>
+<text x="1435" y="650">stays in Kenya.</text>
+<text x="1435" y="694" font-weight="700">Overall data flow</text>
+<text x="1435" y="720" font-size="14">1. New export arrives in inbox</text>
+<text x="1435" y="742" font-size="14">2. Agent cleans and reads it</text>
+<text x="1435" y="764" font-size="14">3. Cited patterns, draft, check</text>
+<text x="1435" y="786" font-size="14">4. Teacher approves or rejects</text>
+<text x="1435" y="808" font-size="14">5. Only then: profile saved</text>
+</g>
+<text x="40" y="990" font-size="14" fill="#55635f">Repo: github.com/NaomiKwamboka0/the-long-view</text>
+</svg>
