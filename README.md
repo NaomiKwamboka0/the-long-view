@@ -46,6 +46,7 @@ Everything runs on the teacher's laptop. See [ARCHITECTURE.md](ARCHITECTURE.md) 
 
 - **Orchestration:** a LangGraph loop with four steps: `plan`, `tools`, `self_check`, `teacher_gate`.
 - **Model:** an open-weights model (Qwen 2.5 7B) runs locally through Ollama and chooses the next tool call. If Ollama is not running, a fixed rules planner makes the same calls, so the demo always works.
+- **Supervisor:** a small model can stop early or repeat itself. Hatua fixes or drops such calls and, if needed, finishes the agreed steps with fixed rules. Every correction is logged.
 - **Self-check:** every draft is re-checked for missing or false citations and for labelling words. A failed draft goes back to the planner once.
 - **Memory and data:** local JSON files for records, notes, attendance, flags and drafts. Nothing is sent outside the laptop.
 - **Pause:** the graph uses a LangGraph interrupt and waits for the teacher.
@@ -126,15 +127,26 @@ python -m hatua agent
 | `python -m hatua import-approvals approvals.json` | Apply approvals made on the teacher page |
 | `python scripts/run_evals.py` | Run the evaluation tasks |
 
-**The teacher page** (`ui/hatua.html`) works offline. Search learners by name or ID with the Search button, and filter by stream, learning area, what the records show, review status and data issues. Open a learner to see the Grade 4 to 9 long view, the cited patterns and the draft. Tap any cell or citation to open the record behind it. The page also has a **Data checks** list and an **Activity log**, each with its own search and filters.
+![The teacher page](docs/teacher-page.png)
+
+**The teacher page** (`ui/hatua.html`) works offline and is made for a busy class teacher:
+
+- The top line says how many drafts are waiting, with a **Start with the next learner** button.
+- **My class:** search by name or admission number, and filter by stream, review status, learning area and what the records show.
+- Each learner's page is a short path of four steps: **read what the records show**, **see the long view** from Grade 4 to Grade 9, **decide on the draft**, then **write a message for the family** in English or Kiswahili. The last step opens only after approval.
+- Tap any record number or any mark on the long view to see the record behind it.
+- **Records to check** lists what Hatua fixed or wants a teacher to check. **History** shows who did what.
+- Plain words, large touch targets, soft colours with no harsh lines, and a dark mode. It works on a phone.
 
 ## Evaluation
 
-`python scripts/run_evals.py` runs 20 fixed tasks: 16 for the engine and 4 for the agent. 19 pass. One known failure is documented. See [EVALS.md](EVALS.md).
+`python scripts/run_evals.py` runs 21 fixed tasks: 16 for the engine and 5 for the agent. 20 pass. One known failure is documented. See [EVALS.md](EVALS.md).
+
+**Real model run:** on 20 October 2026 the agent ran end to end on a MacBook Air with Qwen 2.5 7B. It reached the teacher gate, and the profile was saved only after approval. Qwen stopped after 1 of 3 learners, so we added the supervisor described above, and test A05 now replays that run.
 
 ## Limitations
 
-- **The real local model has not been run end to end yet.** The model path is built and tested with a scripted stand-in model, but the run with Qwen on a laptop still has to be measured.
+- **One real Qwen run so far.** It worked end to end, but it is one run, not a rate. On its own the 7B model stopped early, so for now the supervisor often finishes the steps.
 - **No real school has tested it.** All data is synthetic, written by us. The test cases check that the rules do what we meant, not that teachers find them useful.
 - **Known failure:** a pattern can start or end on a record whose score and level disagree. It is flagged, but still reported. See EVALS.md.
 - **No bid or exam documents:** Hatua uses marks, notes and attendance. It does not read the national exam portals, and no public API for them was found.
@@ -143,7 +155,7 @@ python -m hatua agent
 
 ## Future improvements
 
-- Run and measure the agent with Qwen over many runs.
+- Run the agent with Qwen 10 or more times and measure how often the supervisor has to step in.
 - Treat a record with a score and level conflict as unconfirmed, and shrink the pattern window past it.
 - Test with a junior school teacher, then change the patterns and wording to match what teachers find useful.
 - Have a Kiswahili speaker review all guardian messages.

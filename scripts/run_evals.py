@@ -209,6 +209,36 @@ if HAVE_AGENT:
             msg = AIMessage(content="", tool_calls=[{"name": n, "args": a, "id": f"s{step}"} for n, a in calls])
             return ChatResult(generations=[ChatGeneration(message=msg)])
 
+    class LazyModel(BaseChatModel):
+        """Copies what qwen2.5:7b really did on a MacBook Air (20 Oct 2026): drafted one learner in
+        Kiswahili, repeated the same draft call, asked for an invented file, then stopped early."""
+
+        @property
+        def _llm_type(self) -> str:
+            return "lazy"
+
+        def bind_tools(self, tools, **kw):
+            return self
+
+        def _generate(self, messages, stop=None, run_manager=None, **kw):
+            step = len([m for m in messages if isinstance(m, AIMessage)])
+            queue = [agent._content(m) for m in messages if isinstance(m, ToolMessage) and m.name == "review_queue"]
+            first = queue[0]["learners"][0]["learner_id"] if queue and queue[0].get("learners") else "HT-0001"
+            script = [
+                [("ingest_record", {"file_name": "2026_T3_new_records.csv"})],
+                [("review_queue", {"file_name": "2026_T3_new_records.csv", "max_learners": 3})],
+                [("find_patterns", {"learner_id": first}),
+                 ("draft_summary", {"learner_id": first, "audience": "teacher", "language": "sw"})],
+                [("draft_summary", {"learner_id": first, "audience": "teacher", "language": "sw"})],
+                [("review_queue", {"file_name": "latest_export.csv", "max_learners": 3})],
+            ]
+            if step < len(script):
+                msg = AIMessage(content="", tool_calls=[{"name": n, "args": a, "id": f"z{step}-{i}"}
+                                                       for i, (n, a) in enumerate(script[step])])
+            else:
+                msg = AIMessage(content="All drafts are waiting for the teacher's review.")
+            return ChatResult(generations=[ChatGeneration(message=msg)])
+
     @task("A01", "Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses")
     def _():
         fresh()
@@ -236,9 +266,22 @@ if HAVE_AGENT:
         blocked = [e for e in events if e.get("tool") == "update_profile" and not e.get("ok")]
         bad_id = [e for e in events if e.get("tool") == "find_patterns" and not e.get("ok")]
         saved = list(config.PROFILES.glob("*.json"))
-        ok = bool(blocked) and bool(bad_id) and not saved and out["paused"] and len(out["drafts"]) == 1
+        ok = bool(blocked) and bool(bad_id) and not saved and out["paused"] and len(out["drafts"]) >= 1
         return ok, (f"bad ID error logged={bool(bad_id)}, save attempt blocked={bool(blocked)}, "
                     f"profiles saved={len(saved)}, still paused for teacher={out['paused']}")
+
+    @task("A05", "Agent: a model that stops after 1 of 3 learners (as Qwen 7B did on a laptop) still ends with 3 English drafts")
+    def _():
+        fresh()
+        out = asyncio.run(agent.run(model=LazyModel(), use_fs=False, max_learners=3, verbose=False))
+        by_id = {d["draft_id"]: d for d in store.load("drafts")}
+        langs = {by_id[d["draft_id"]]["language"] for d in out["drafts"]}
+        plans = [e for e in audit.read_events() if e.get("tool") == "agent.plan"]
+        fixes = sum(len((e.get("output") or {}).get("corrections", [])) for e in plans)
+        fell_back = any(e.get("actor") == "rules-fallback" for e in plans)
+        ok = len(out["drafts"]) == 3 and langs == {"en"} and out["paused"] and fixes >= 2 and fell_back
+        return ok, (f"drafts={len(out['drafts'])}, languages={sorted(langs)}, corrections logged={fixes}, "
+                    f"rules finished the rest={fell_back}, paused={out['paused']}")
 
     @task("A04", "Agent: every tool call and plan step is in the audit log")
     def _():

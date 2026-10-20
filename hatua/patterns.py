@@ -73,7 +73,8 @@ def _caveats(window: list[dict]) -> list[str]:
         notes.append(f"No record for {_label(a + 1)}.")
     flagged = [rid for t in window for rid in t["flagged"]]
     if flagged:
-        notes.append(f"{len(flagged)} record(s) in this window have data-quality flags: {', '.join(flagged[:6])}.")
+        word = "record" if len(flagged) == 1 else "records"
+        notes.append(f"Please check {word} {', '.join(flagged[:6])} before relying on this.")
     return notes
 
 

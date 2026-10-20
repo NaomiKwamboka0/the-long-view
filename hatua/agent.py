@@ -52,6 +52,7 @@ Do these steps, one tool call at a time:
 2. Call ingest_record for each .csv file you see (just the file name). It is safe to repeat.
 3. Call review_queue with max_learners={max_learners}.
 4. For EACH learner in the queue: call find_patterns, then call draft_summary (audience "teacher").
+   Teacher drafts are always in English. Do not repeat a call that already worked.
 5. When every learner in the queue has a draft, stop calling tools and reply with one short
    sentence saying how many drafts are waiting for the teacher.
 
@@ -70,6 +71,7 @@ class State(TypedDict):
     planner: str
     max_learners: int
     inbox: str
+    fallback: bool
 
 
 # ---------------------------------------------------------------- helpers
@@ -110,6 +112,81 @@ def servers(use_fs: bool = True) -> dict:
     return conns
 
 
+# ---------------------------------------------------------------- supervisor
+# A small local model (7B) plans well most of the time, but on a real laptop run it stopped after
+# one learner, repeated a call, asked for a Kiswahili teacher draft and invented a file name.
+# These checks keep it on track. They never add power: they only fix or drop calls, and finish
+# the agreed steps with the rules planner when the model stops too early.
+MAX_NUDGES = 2
+VERBOSE = True
+
+
+def print_note(text: str) -> None:
+    if VERBOSE:
+        print(f"  [guide] {text}")
+
+
+def queue_ids(messages: list) -> list[str]:
+    """Learner IDs from the largest review_queue result so far (a later empty one does not wipe it)."""
+    best: list[str] = []
+    for m in messages:
+        if isinstance(m, ToolMessage) and m.name == "review_queue":
+            data = _content(m)
+            ids = [l["learner_id"] for l in data.get("learners", [])] if isinstance(data, dict) else []
+            if len(ids) >= len(best):
+                best = ids
+    return best
+
+
+def _done_calls(messages: list) -> set[str]:
+    """Signatures of calls that already returned without an error."""
+    ok_ids = {m.tool_call_id for m in messages if isinstance(m, ToolMessage) and m.status != "error"}
+    sigs = set()
+    for m in messages:
+        if isinstance(m, AIMessage):
+            for tc in m.tool_calls:
+                if tc["id"] in ok_ids:
+                    sigs.add(_sig(tc["name"], tc["args"]))
+    return sigs
+
+
+def _sig(name: str, args: dict) -> str:
+    return name + json.dumps(args, sort_keys=True)
+
+
+def tidy_calls(msg: AIMessage, state: State) -> tuple[AIMessage, list[str]]:
+    """Fix or drop model tool calls that break the plan. Returns the new message and what changed."""
+    notes, kept = [], []
+    done = _done_calls(state["messages"])
+    redraft = isinstance(state["messages"][-1], HumanMessage) and state["messages"][-1].content.startswith("REDRAFT")
+    inbox = {p.name for p in config.INBOX.glob("*.csv")}
+    for tc in msg.tool_calls:
+        name, args = tc["name"], dict(tc.get("args") or {})
+        if name == "draft_summary" and args.get("audience", "teacher") == "teacher":
+            if args.get("language", "en") != "en":
+                notes.append(f"teacher draft for {args.get('learner_id')} set to English")
+            args = {"learner_id": args.get("learner_id", ""), "audience": "teacher", "language": "en"}
+        if name == "review_queue":
+            if args.get("file_name") and Path(str(args["file_name"])).name not in inbox:
+                notes.append(f"unknown file '{args['file_name']}' removed from review_queue")
+                args.pop("file_name")
+            args["max_learners"] = state["max_learners"]
+        sig = _sig(name, args)
+        if sig in done and not (redraft and name == "draft_summary") and name != "list_directory":
+            notes.append(f"repeated {name} call skipped")
+            continue
+        if sig in {_sig(k["name"], k["args"]) for k in kept}:
+            continue  # the same call twice in one step
+        kept.append({**tc, "args": args})
+    return AIMessage(content=msg.content, tool_calls=kept, id=msg.id), notes
+
+
+def work_left(state: State, tool_names: set) -> AIMessage | None:
+    """The next call the agreed plan still needs, or None when every queued learner has a draft."""
+    nxt = rules_plan({**state, "_tool_names": tool_names})  # type: ignore[typeddict-item]
+    return nxt if nxt.tool_calls else None
+
+
 # ---------------------------------------------------------------- rules planner
 def rules_plan(state: State) -> AIMessage:
     """Fixed plan with the same tool calls the model is asked to make. Used when no model runs."""
@@ -144,10 +221,9 @@ def rules_plan(state: State) -> AIMessage:
                 for i, f in enumerate(files)])
     if "review_queue" not in called:
         return call("review_queue", max_learners=state["max_learners"])
-    queue = results.get("review_queue", [{}])[-1]
-    learners = [l["learner_id"] for l in (queue.get("learners", []) if isinstance(queue, dict) else [])]
+    learners = queue_ids(state["messages"])
     found = {a["learner_id"] for a in called.get("find_patterns", [])}
-    drafted = {a["learner_id"] for a in called.get("draft_summary", [])}
+    drafted = {d["learner_id"] for d in state.get("drafts", [])}
     for lid in learners:
         if lid not in found:
             return call("find_patterns", learner_id=lid)
@@ -161,15 +237,45 @@ def build_graph(tools: list, model=None):
     tool_names = {t.name for t in tools}
     llm = model.bind_tools(tools) if model is not None else None
 
-    def plan(state: State) -> dict:
-        if llm is not None:
-            msg = llm.invoke(state["messages"])
-        else:
-            msg = rules_plan({**state, "_tool_names": tool_names})  # type: ignore[typeddict-item]
-        audit.write_event({"tool": "agent.plan", "actor": state["planner"], "ok": True,
+    def log_plan(actor: str, msg: AIMessage, notes: list[str] | None = None) -> None:
+        audit.write_event({"tool": "agent.plan", "actor": actor, "ok": True,
                            "output": {"tool_calls": [{"name": t["name"], "args": t["args"]} for t in msg.tool_calls],
-                                      "text": (msg.content or "")[:300] if isinstance(msg.content, str) else ""}})
-        return {"messages": [msg]}
+                                      "text": (msg.content or "")[:300] if isinstance(msg.content, str) else "",
+                                      "corrections": notes or []}})
+
+    def plan(state: State) -> dict:
+        if llm is None or state.get("fallback"):
+            msg = rules_plan({**state, "_tool_names": tool_names})  # type: ignore[typeddict-item]
+            log_plan("rules-fallback" if llm is not None else "rules", msg)
+            return {"messages": [msg]}
+
+        history, added = list(state["messages"]), []
+        for attempt in range(MAX_NUDGES + 1):
+            raw = llm.invoke(history)
+            msg, notes = tidy_calls(raw, {**state, "messages": history})
+            log_plan(state["planner"], msg, notes)
+            added.append(msg)
+            if notes:
+                print_note(f"corrected: {'; '.join(notes)}")
+            if msg.tool_calls:
+                return {"messages": added}
+            left = work_left({**state, "messages": history + [msg]}, tool_names)
+            if left is None:
+                return {"messages": added}  # the agreed work is done
+            if attempt < MAX_NUDGES:
+                todo = [l for l in queue_ids(history) if l not in {d["learner_id"] for d in state.get("drafts", [])}]
+                nudge = HumanMessage(content=(
+                    "Not finished yet. " + (f"These learners still have no teacher draft: {', '.join(todo)}. "
+                                            "For each one call find_patterns, then draft_summary (audience \"teacher\")."
+                                            if todo else "Continue with the next step of the plan.")))
+                print_note("model stopped early; asked it to continue")
+                history += [msg, nudge]
+                added.append(nudge)
+        # The model stopped twice without finishing: the rules planner makes the remaining call.
+        log_plan("rules-fallback", left)
+        print_note("model stopped again; the fixed rules finish the remaining steps")
+        added.append(left)
+        return {"messages": added, "fallback": True}
 
     def after_tools(state: State) -> dict:
         """Log borrowed-server calls (ours log themselves) and collect new drafts."""
@@ -267,6 +373,8 @@ def _print_step(update: dict) -> None:
 async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True,
               teacher: str | None = None, decide=None, model=None, verbose: bool = True) -> dict:
     """Run the agent once. `decide(drafts) -> {"teacher": str, "decisions": {draft_id: approve|reject}}`."""
+    global VERBOSE
+    VERBOSE = verbose
     name = None
     if model is None and use_model:
         name = ollama_model()
@@ -292,7 +400,7 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
     start = {"messages": [SystemMessage(content=SYSTEM.format(max_learners=max_learners)),
                           HumanMessage(content=f"New exports may be in the inbox folder: {config.INBOX}. "
                                                f"Prepare drafts for up to {max_learners} learners.")],
-             "drafts": [], "checked": [], "redrafts": 0, "planner": planner,
+             "drafts": [], "checked": [], "redrafts": 0, "planner": planner, "fallback": False,
              "max_learners": max_learners, "inbox": str(config.INBOX)}
     audit.write_event({"tool": "agent.start", "actor": planner, "ok": True,
                        "inputs": {"max_learners": max_learners, "servers": list(conns)}})

@@ -3,9 +3,9 @@
 Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic class and runs fixed tasks. Results are written to `evals/results.json`.
 
 - E01–E16 test the engine. They need only Python 3.9+.
-- A01–A04 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
+- A01–A05 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
 
-**Latest run: 19 of 20 passed.**
+**Latest run: 20 of 21 passed.** The one failure (E16) is known and explained below.
 
 | ID | Task | Result | Detail |
 |---|---|---|---|
@@ -28,11 +28,33 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 | A01 | Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses | Pass | servers=['hatua', 'filesystem'], drafts=3, paused=True, profiles saved=0 |
 | A02 | Agent: teacher approves one draft and rejects one; only the approved one is saved | Pass | results=['approve', 'reject'], saved=['HT-0001.json'] |
 | A03 | Agent: a model that uses a bad ID and tries to save an unapproved draft is recovered from and blocked | Pass | bad ID error logged=True, save attempt blocked=True, profiles saved=0, still paused for teacher=True |
-| A04 | Agent: every tool call and plan step is in the audit log | Pass | 9 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary'] |
+| A04 | Agent: every tool call and plan step is in the audit log | Pass | 24 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary'] |
+| A05 | Agent: a model that stops after 1 of 3 learners (as Qwen 7B did on a laptop) still ends with 3 English drafts | Pass | drafts=3, languages=['en'], corrections logged=4, rules finished the rest=True, paused=True |
 
 ## What A03 tests
 
 A03 swaps the local model for a scripted stand-in that misbehaves on purpose. First it asks for a learner who does not exist. Then it tries to save a draft that no teacher has approved. The loop passes each error back to the planner and carries on. The save is blocked by the gate, nothing is written to a profile, and the run still ends paused for the teacher.
+
+## The real Qwen run, and what A05 tests
+
+On 20 October 2026 the agent ran end to end on a MacBook Air with `qwen2.5:7b` in Ollama. Both MCP servers connected. Qwen listed the inbox through the borrowed filesystem server, ingested 308 new records, built the review queue, and found patterns for one learner. It drafted for that learner, the self-check passed, and the graph paused for the teacher. The teacher approved, and only then was the profile saved.
+
+It also made four mistakes a small model often makes:
+
+- It drafted for **1 learner instead of 3** and then stopped.
+- It made the same draft call twice.
+- It asked for the teacher draft in Kiswahili. Teacher drafts are English.
+- It asked for a file that does not exist (`latest_export.csv`).
+
+None of these broke a safety rule, but a teacher would have got less work done. So the planner now has a small supervisor (`tidy_calls` and `work_left` in `hatua/agent.py`):
+
+- Repeated calls are skipped, and teacher drafts are set to English.
+- Unknown file names are removed.
+- If the model stops while queued learners still have no draft, it is asked twice to continue. After that, the fixed rules finish the remaining steps.
+
+Every correction is written to the audit log. The supervisor can only fix or drop calls. It cannot approve anything.
+
+A05 replays exactly what Qwen did, using a scripted stand-in model, and checks that the run still ends with 3 English drafts, paused for the teacher.
 
 ## Run-to-run variation
 
@@ -40,7 +62,7 @@ E15 runs pattern finding 5 times for all 40 learners and compares the outputs. P
 
 With the local model planning, the order of tool calls can vary between runs. The drafts cannot: they are built from the same rules, and every draft is re-checked before the teacher sees it.
 
-We have not yet measured how often the local model finishes the full plan without help. That needs a model run on a laptop; see "Not tested" below.
+We have one real Qwen run, described above. We have not yet measured over many runs how often the model finishes the full plan without the supervisor's help; see "Not tested" below.
 
 ## Known failure we have not fixed (E16)
 
@@ -50,5 +72,5 @@ Hatua keeps the teacher's rubric level when the recorded score disagrees with it
 
 ## Not tested
 
-- **The real Ollama model.** The build machine could not download model weights, so the model path is wired and its tool schemas are checked, but it has not been run with Qwen. Planned check: 10 runs of `python3 -m hatua agent` with `qwen2.5:7b`, counting how many reach the teacher gate with the expected drafts.
+- **Many Qwen runs.** One real run is not a rate. Planned check: 10 runs of `python3 -m hatua agent` with `qwen2.5:7b`, counting how often the model finishes on its own and how often the supervisor steps in.
 - **Teacher review of the output.** The planted cases (E01–E08) were written by us. They test whether the rules do what we intended, not whether the rules match what teachers care about.

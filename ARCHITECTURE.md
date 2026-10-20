@@ -17,7 +17,7 @@ START ─► plan ─► tools ─► after_tools ─┐        plan: local Olla
          END
 ```
 
-The planner is told the steps and the rules, and it chooses the calls itself. Tool errors are returned to it as messages so it can correct course (eval A03). It has no tool that approves anything.
+The planner is told the steps and the rules, and it chooses the calls itself. A small supervisor sits around the model: it skips repeated calls, keeps teacher drafts in English, removes file names that do not exist, and asks the model to continue if it stops before every queued learner has a draft. If the model stops twice, the fixed rules finish the remaining steps. Each correction is logged. The supervisor can only fix or drop calls, never approve. Tool errors are returned to it as messages so it can correct course (eval A03). It has no tool that approves anything.
 
 ## Data path
 

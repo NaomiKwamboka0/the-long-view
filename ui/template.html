@@ -1,291 +1,388 @@
-<title>Hatua Class Profiles</title>
+<title>Hatua: my class</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bitter:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
-/* Layout: report-card tool. Class list with search + filters on the left, one learner's long view on the right; stacks on phones. */
+/* Hatua teacher page.
+   One idea: reviewing a learner is a short path, hatua kwa hatua (step by step).
+   No borders or table rules; space, soft tone and round shapes separate things.
+   Works offline: if the web font cannot load, the system font is used. */
 :root {
-  --paper: #f6f8f6;
-  --card: #ffffff;
-  --ink: #1d2a27;
-  --ink-soft: #55635f;
-  --rule: #d9e0dc;
-  --accent: #7d2635;          /* school-uniform maroon */
-  --accent-ink: #ffffff;
-  --focus: #2f6fa8;
-  --l4: #0f4c5c; --l3: #3d8a92; --l2: #8cc2c4; --l1: #d5ebea;  /* EE ME AE BE: one hue, never red */
-  --l4-ink: #ffffff; --l3-ink: #ffffff; --l2-ink: #10343a; --l1-ink: #10343a;
-  --up: #2e6b3f; --up-bg: #e3f1e6;
-  --down: #8a5300; --down-bg: #fbeed6;
-  --held: #0f4c5c; --held-bg: #dcecee;
-  --gap: repeating-linear-gradient(135deg, transparent 0 4px, #d9e0dc 4px 5px);
-  --font-display: "Bitter", Georgia, "Times New Roman", serif;
-  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --paper: #eef2ee;          /* soft sage, the page */
+  --surface: #ffffff;        /* where work happens */
+  --tint: #f5f7f4;           /* quiet blocks inside a surface */
+  --ink: #213029;
+  --ink-soft: #5b6a63;
+  --jacaranda: #6a4c9c;      /* actions and "waiting for you" */
+  --jacaranda-soft: #efe9f8;
+  --jacaranda-ink: #ffffff;
+  --leaf: #2d7451; --leaf-soft: #e2f1e8;      /* approved, going up */
+  --sun: #8f5a06;  --sun-soft: #fbefd8;       /* needs attention (never red) */
+  --lake: #1f5d72; --lake-soft: #e1eff3;      /* held strength */
+  --l4: #1f5d72; --l3: #4b91a5; --l2: #a6cfd9; --l1: #dcedf2;  /* EE ME AE BE */
+  --l4-ink: #fff; --l3-ink: #fff; --l2-ink: #123947; --l1-ink: #123947;
+  --path: #cdbfe4;
+  --focus: #6a4c9c;
+  --shadow: 0 18px 48px -12px rgba(33, 48, 41, .28);
+  --font: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --paper: #121917; --card: #1a2321; --ink: #e5ece9; --ink-soft: #a3b2ad; --rule: #2e3b38;
-  --accent: #d98894; --accent-ink: #1a1012; --focus: #8bbbe8;
-  --l4: #7fd0d6; --l3: #4a9ea5; --l2: #2b6268; --l1: #1f3b3e;
-  --l4-ink: #0c2a2e; --l3-ink: #08181a; --l2-ink: #e5ece9; --l1-ink: #cfe3e2;
-  --up: #8fd3a0; --up-bg: #1d3424; --down: #f1c27a; --down-bg: #3a2b12; --held: #8fd0d6; --held-bg: #183337;
-  --gap: repeating-linear-gradient(135deg, transparent 0 4px, #2e3b38 4px 5px);
+  --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
+  --jacaranda: #bba3e8; --jacaranda-soft: #2f2742; --jacaranda-ink: #1b1428;
+  --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --lake: #8fcbdc; --lake-soft: #18313a;
+  --l4: #8fcbdc; --l3: #4f97ab; --l2: #2b5e6c; --l1: #213c44;
+  --l4-ink: #0f2a33; --l3-ink: #0b1d23; --l2-ink: #e4ebe7; --l1-ink: #c9dfe5;
+  --path: #4a3d66; --focus: #bba3e8; --shadow: 0 18px 48px -12px rgba(0, 0, 0, .6);
   color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --paper: #121917; --card: #1a2321; --ink: #e5ece9; --ink-soft: #a3b2ad; --rule: #2e3b38;
-  --accent: #d98894; --accent-ink: #1a1012; --focus: #8bbbe8;
-  --l4: #7fd0d6; --l3: #4a9ea5; --l2: #2b6268; --l1: #1f3b3e;
-  --l4-ink: #0c2a2e; --l3-ink: #08181a; --l2-ink: #e5ece9; --l1-ink: #cfe3e2;
-  --up: #8fd3a0; --up-bg: #1d3424; --down: #f1c27a; --down-bg: #3a2b12; --held: #8fd0d6; --held-bg: #183337;
-  --gap: repeating-linear-gradient(135deg, transparent 0 4px, #2e3b38 4px 5px);
+  --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
+  --jacaranda: #bba3e8; --jacaranda-soft: #2f2742; --jacaranda-ink: #1b1428;
+  --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --lake: #8fcbdc; --lake-soft: #18313a;
+  --l4: #8fcbdc; --l3: #4f97ab; --l2: #2b5e6c; --l1: #213c44;
+  --l4-ink: #0f2a33; --l3-ink: #0b1d23; --l2-ink: #e4ebe7; --l1-ink: #c9dfe5;
+  --path: #4a3d66; --focus: #bba3e8; --shadow: 0 18px 48px -12px rgba(0, 0, 0, .6);
   color-scheme: dark; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--font-body); }
-.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
-h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--font); }
 button, input, select, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.mono { font-family: var(--font-mono); font-size: .85em; }
-.muted { color: var(--ink-soft); }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 10px; }
+h1, h2, h3 { margin: 0; line-height: 1.25; text-wrap: balance; }
+p { margin: 0; }
+.soft { color: var(--ink-soft); }
+.small { font-size: .88rem; }
+.id { font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: .85em; white-space: nowrap; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 120px; }
 
-/* top bar */
-.top { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; padding-block: 20px 12px; border-bottom: 1px solid var(--rule); }
-.brand { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--accent); }
-.brand small { display: block; font: italic 400 .9rem var(--font-body); color: var(--ink-soft); }
-.where { flex: 1 1 260px; min-width: 0; color: var(--ink-soft); }
-.where b { color: var(--ink); }
-.synthetic { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; white-space: nowrap; }
+/* ---------- top ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 22px 0 8px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.35rem; }
+.brand svg { flex: none; }
+.school { flex: 1 1 240px; min-width: 0; color: var(--ink-soft); }
+.school b { color: var(--ink); font-weight: 700; }
+.practice { background: var(--sun-soft); color: var(--sun); border-radius: 999px; padding: 4px 12px; font-size: .85rem; white-space: nowrap; }
 
-nav.tabs { display: flex; gap: 4px; margin-block: 14px; flex-wrap: wrap; }
-nav.tabs button { border: 1px solid var(--rule); background: var(--card); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-nav.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-nav.tabs .count { font-size: .8rem; opacity: .8; margin-left: 4px; }
+.welcome { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 18px 0 20px; }
+.welcome h1 { font-size: clamp(1.45rem, 3.4vw, 2rem); flex: 1 1 380px; max-width: 30ch; }
 
-/* search + filters (shared by every list) */
-.searchbar { display: flex; gap: 8px; }
-.searchbar input { flex: 1 1 auto; min-width: 0; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); }
-.btn { padding: 10px 16px; border-radius: 6px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; font-weight: 700; white-space: nowrap; }
-.btn.secondary { background: var(--card); color: var(--ink); border-color: var(--rule); font-weight: 400; }
-.btn.accent { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+/* ---------- tabs ---------- */
+.tabs { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; background: var(--surface); padding: 6px; border-radius: 999px; width: fit-content; max-width: 100%; margin-bottom: 18px; }
+.tabs button { flex: none; border: 0; background: transparent; padding: 9px 18px; border-radius: 999px; color: var(--ink-soft); }
+.tabs button[aria-selected="true"] { background: var(--jacaranda-soft); color: var(--jacaranda); font-weight: 700; }
+.tabs .n { margin-left: 6px; font-size: .82rem; }
+
+/* ---------- buttons ---------- */
+.btn { border: 0; border-radius: 12px; padding: 11px 20px; font-weight: 700; background: var(--jacaranda); color: var(--jacaranda-ink); white-space: nowrap; }
+.btn.quiet { background: var(--tint); color: var(--ink); font-weight: 400; }
+.btn.leaf { background: var(--leaf); color: var(--surface); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
-.filters label { display: grid; gap: 2px; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
-.filters select { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--ink); }
-.resultline { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-block: 10px 6px; font-size: .9rem; color: var(--ink-soft); }
-.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; }
+.link { border: 0; background: none; padding: 0; color: var(--jacaranda); text-decoration: underline; text-underline-offset: 3px; }
 
-/* learners tab: two panes */
-.split { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
-@media (max-width: 860px) { .split { grid-template-columns: minmax(0, 1fr); } }
-.pane { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 14px; min-width: 0; }
-.list { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow-y: auto; }
-@media (max-width: 860px) { .list { max-height: 50vh; } }
-.list li button { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px; border: 0; border-top: 1px solid var(--rule); background: transparent; cursor: pointer; }
-.list li:first-child button { border-top: 0; }
-.list li button[aria-current="true"] { background: var(--held-bg); }
-.list .who { font-weight: 700; }
-.list .sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
-.status { font-size: .75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--rule); white-space: nowrap; align-self: start; }
-.status.waiting { border-color: var(--accent); color: var(--accent); }
-.status.approved { background: var(--up-bg); color: var(--up); border-color: transparent; }
-.status.rejected { background: var(--down-bg); color: var(--down); border-color: transparent; }
+/* ---------- search + filters (every list) ---------- */
+.search { display: flex; gap: 8px; }
+.search input { flex: 1 1 auto; min-width: 0; border: 0; border-radius: 12px; background: var(--tint); padding: 11px 14px; }
+.search input::placeholder { color: var(--ink-soft); }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin-top: 12px; }
+.filters label { display: grid; gap: 4px; font-size: .85rem; color: var(--ink-soft); min-width: 0; }
+.filters select { width: 100%; min-width: 0; border: 0; border-radius: 10px; background: var(--tint); padding: 9px 10px; font-size: .95rem; color: var(--ink); }
+.more { margin-top: 10px; }
+.more summary { color: var(--jacaranda); cursor: pointer; font-size: .92rem; width: fit-content; }
+.count-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 14px 2px 6px; font-size: .9rem; color: var(--ink-soft); }
 
-.chip { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-.t-decline, .t-attendance_drop { background: var(--down-bg); color: var(--down); }
-.t-sustained_struggle { background: var(--down-bg); color: var(--down); }
-.t-improvement { background: var(--up-bg); color: var(--up); }
-.t-sustained_strength { background: var(--held-bg); color: var(--held); }
-.t-data { background: transparent; border: 1px dashed var(--ink-soft); color: var(--ink-soft); }
+/* ---------- surfaces ---------- */
+.panel { background: var(--surface); border-radius: 24px; padding: 20px; min-width: 0; }
+.split { display: grid; grid-template-columns: minmax(280px, 330px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 880px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 881px) { .split > .panel:first-child { position: sticky; top: 12px; } }
 
-/* learner detail */
-.detail { display: grid; gap: 18px; min-width: 0; }
-.detail > *, .split > *, .patterns > * { min-width: 0; }
-.head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
-.head h2 { font-size: 1.6rem; }
-.rule-note { font-size: .88rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 10px; max-width: 70ch; }
-section h3 { font-size: 1.1rem; margin-bottom: 8px; }
-.patterns { display: grid; gap: 10px; }
-.pattern { border: 1px solid var(--rule); border-radius: 8px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
-.pattern p { margin: 0; max-width: 72ch; }
-.trail { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: .8rem; }
-.trail .arrow { color: var(--ink-soft); }
-.evid { display: flex; flex-wrap: wrap; gap: 4px; }
-.evid button { font-family: var(--font-mono); font-size: .75rem; padding: 2px 6px; border: 1px solid var(--rule); background: var(--paper); border-radius: 4px; cursor: pointer; }
-.evid button:hover { border-color: var(--ink); }
-.quote { font-style: italic; margin: 0; padding-left: 10px; border-left: 2px solid var(--rule); max-width: 72ch; }
-.caveat { font-size: .85rem; color: var(--down); margin: 0; }
+/* ---------- class list ---------- */
+.people { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 62vh; overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 880px) { .people { max-height: 46vh; } }
+.people button { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; text-align: left; border: 0; background: transparent; padding: 10px; border-radius: 16px; }
+.people button:hover { background: var(--tint); }
+.people button[aria-current="true"] { background: var(--jacaranda-soft); }
+.face { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .95rem; background: var(--lake-soft); color: var(--lake); grid-row: span 2; }
+.people .nm { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.people .what { grid-column: 2 / -1; font-size: .85rem; color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-line { margin-top: 10px; font-size: .82rem; color: var(--ink-soft); }
 
-/* rubric level tokens */
-.lv { display: inline-grid; place-items: center; min-width: 2.1em; height: 1.6em; border-radius: 4px; font: 500 .72rem var(--font-mono); }
+.pill { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: .8rem; white-space: nowrap; background: var(--tint); color: var(--ink-soft); }
+.pill.waiting { background: var(--jacaranda-soft); color: var(--jacaranda); }
+.pill.approved { background: var(--leaf-soft); color: var(--leaf); }
+.pill.rejected { background: var(--sun-soft); color: var(--sun); }
+
+/* ---------- learner page ---------- */
+.learner { display: grid; gap: 26px; }
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.who .face { width: 56px; height: 56px; font-size: 1.2rem; grid-row: auto; }
+.who h2 { font-size: 1.7rem; }
+.who .facts { flex: 1 1 220px; min-width: 0; color: var(--ink-soft); }
+.who .facts h2 { color: var(--ink); }
+.back { display: none; }
+@media (max-width: 880px) { .back { display: inline-block; } }
+.promise { background: var(--tint); border-radius: 16px; padding: 12px 16px; font-size: .92rem; color: var(--ink-soft); max-width: 72ch; }
+
+/* the step path: the one memorable thing */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.step { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 16px; padding-bottom: 34px; }
+.step:last-child { padding-bottom: 0; }
+.step::before { content: ""; position: absolute; left: 19px; top: 44px; bottom: 6px; border-left: 3px dotted var(--path); }
+.step:last-child::before { display: none; }
+.dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--jacaranda-soft); color: var(--jacaranda); }
+.step.done .dot { background: var(--leaf-soft); color: var(--leaf); }
+.step.locked .dot { background: var(--tint); color: var(--ink-soft); }
+.step-body { display: grid; gap: 12px; min-width: 0; padding-top: 6px; }
+.step h3 { font-size: 1.18rem; }
+.step .hint { color: var(--ink-soft); font-size: .92rem; max-width: 68ch; }
+
+/* what the records show */
+.finds { display: grid; gap: 10px; }
+.find { border-radius: 18px; padding: 14px 16px; display: grid; gap: 8px; background: var(--tint); min-width: 0; }
+.find.up { background: var(--leaf-soft); }
+.find.down { background: var(--sun-soft); }
+.find.held { background: var(--lake-soft); }
+.find .kind { font-weight: 700; font-size: .92rem; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.find.up .kind { color: var(--leaf); } .find.down .kind { color: var(--sun); } .find.held .kind { color: var(--lake); }
+.find .kind .ongoing { font-weight: 400; color: var(--ink-soft); }
+.find p { max-width: 70ch; }
+.trail { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cites { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cite { border: 0; border-radius: 999px; padding: 3px 10px; font-size: .78rem; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.cite:hover { background: var(--jacaranda-soft); color: var(--jacaranda); }
+.quote { font-style: italic; max-width: 68ch; }
+.caveat { color: var(--sun); font-size: .9rem; }
+.checkfirst { display: grid; gap: 8px; }
+.checkfirst .find { background: transparent; box-shadow: inset 0 0 0 2px var(--tint); }
+
+/* rubric level marks */
+.lv { display: inline-grid; place-items: center; min-width: 2.3em; height: 1.75em; padding: 0 4px; border-radius: 999px; font-size: .74rem; font-weight: 700; }
 .lv.EE { background: var(--l4); color: var(--l4-ink); }
 .lv.ME { background: var(--l3); color: var(--l3-ink); }
 .lv.AE { background: var(--l2); color: var(--l2-ink); }
 .lv.BE { background: var(--l1); color: var(--l1-ink); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .8rem; color: var(--ink-soft); align-items: center; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--ink-soft); align-items: center; }
+.key span { display: inline-flex; gap: 6px; align-items: center; }
 
-/* long view grid */
-.gridwrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; }
-table.long { border-collapse: collapse; font-size: .78rem; font-variant-numeric: tabular-nums; }
-table.long th, table.long td { border-bottom: 1px solid var(--rule); padding: 3px; text-align: center; }
-table.long thead th { font-weight: 400; color: var(--ink-soft); white-space: nowrap; }
-table.long thead tr:first-child th { font-weight: 700; color: var(--ink); border-left: 1px solid var(--rule); }
-table.long th.area { text-align: left; position: sticky; left: 0; background: var(--card); padding: 4px 10px 4px 8px; white-space: nowrap; font-weight: 700; color: var(--ink); z-index: 1; }
-table.long td.g { border-left: 1px solid var(--rule); }
-table.long td button { border: 0; padding: 0; background: none; cursor: pointer; }
-table.long td.empty span { display: inline-block; width: 2.1em; height: 1.6em; border-radius: 4px; background: var(--gap); }
-table.long td.inwin { box-shadow: inset 0 -3px 0 var(--accent); }
+/* long view */
+.long-wrap { overflow-x: auto; border-radius: 18px; background: var(--tint); padding: 8px; scrollbar-width: thin; }
+table.long { border-collapse: separate; border-spacing: 2px 4px; font-size: .78rem; }
+table.long th { font-weight: 400; color: var(--ink-soft); white-space: nowrap; padding: 2px 4px; }
+table.long thead tr:first-child th { color: var(--ink); font-weight: 700; }
+table.long th.area { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--tint); color: var(--ink); font-weight: 700; padding-right: 12px; }
+table.long td { text-align: center; padding: 0; }
+table.long td.g { padding-left: 6px; }
+table.long .lv, table.long .none { min-width: 2.15em; width: 2.15em; padding: 0; }
+table.long td button { border: 0; padding: 0; background: none; border-radius: 999px; }
+table.long .none { display: inline-block; width: 2.3em; height: 1.75em; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--paper); }
+table.long td.lit .lv { box-shadow: 0 0 0 3px var(--jacaranda); }
+.att { font-size: .74rem; font-weight: 700; color: var(--ink-soft); }
+.att.low { color: var(--sun); }
 
-/* evidence drawer */
-.drawer { border: 2px solid var(--ink); border-radius: 8px; padding: 12px; background: var(--card); display: grid; gap: 6px; }
-.drawer dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: .92rem; }
-.drawer dt { color: var(--ink-soft); }
-.drawer dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+/* decide */
+.decide { display: grid; gap: 12px; }
+.decide textarea { width: 100%; min-height: 240px; border: 0; border-radius: 16px; background: var(--tint); padding: 14px 16px; font-size: .95rem; line-height: 1.6; resize: vertical; }
+.decide .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.decide input[type=text] { flex: 1 1 220px; min-width: 0; border: 0; border-radius: 12px; background: var(--tint); padding: 11px 14px; }
+.checks-ok { color: var(--leaf); font-size: .92rem; }
+.checks-bad { margin: 0; padding-left: 20px; color: var(--sun); font-size: .92rem; }
+.result { border-radius: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.result.approved { background: var(--leaf-soft); color: var(--leaf); }
+.result.rejected { background: var(--sun-soft); color: var(--sun); }
+.result p { flex: 1 1 260px; }
+.letter { white-space: pre-wrap; margin: 0; padding: 16px 18px; border-radius: 16px; background: var(--tint); font: inherit; font-size: .95rem; max-width: 70ch; }
+.agree { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; max-width: 68ch; }
+.agree input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--jacaranda); flex: none; }
+.langs { justify-self: start; display: inline-flex; gap: 4px; background: var(--tint); padding: 4px; border-radius: 999px; }
+.langs button { border: 0; background: transparent; border-radius: 999px; padding: 6px 14px; color: var(--ink-soft); }
+.langs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; }
+.langs button:disabled { cursor: default; }
 
-/* teacher review */
-.review { border: 2px solid var(--accent); border-radius: 8px; padding: 14px; display: grid; gap: 10px; }
-.review textarea { width: 100%; min-height: 260px; padding: 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); font: .85rem/1.5 var(--font-mono); }
-.review .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.review input[type=text] { flex: 1 1 220px; min-width: 0; padding: 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); }
-.problems { margin: 0; padding-left: 18px; color: var(--down); font-size: .88rem; }
-.ok { color: var(--up); font-size: .88rem; margin: 0; }
-pre.guardian { white-space: pre-wrap; margin: 0; padding: 10px; background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; font: .9rem/1.5 var(--font-body); }
+/* ---------- records to check + history lists ---------- */
+.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rows li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: start; padding: 12px 14px; border-radius: 16px; background: var(--tint); }
+.rows .body { min-width: 0; display: grid; gap: 2px; }
+.rows .meta { font-size: .85rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+.tag { border-radius: 999px; padding: 3px 11px; font-size: .8rem; white-space: nowrap; background: var(--surface); color: var(--ink-soft); }
+.tag.reject { background: var(--sun); color: var(--surface); }
+.tag.warn { background: var(--sun-soft); color: var(--sun); }
+.tag.ok { background: var(--leaf-soft); color: var(--leaf); }
+.tag.agent { background: var(--lake-soft); color: var(--lake); }
+.tag.teacher { background: var(--jacaranda-soft); color: var(--jacaranda); }
+.empty { padding: 28px 12px; text-align: center; color: var(--ink-soft); }
+.showmore { text-align: center; margin-top: 12px; }
 
-/* tables for data checks + activity */
-.tablewrap { overflow-x: auto; }
-table.plain { width: 100%; border-collapse: collapse; font-size: .88rem; }
-table.plain th, table.plain td { text-align: left; padding: 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
-table.plain th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); font-weight: 700; }
-.sev { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 3px; }
-.sev.reject { background: var(--down); color: var(--card); }
-.sev.warn { background: var(--down-bg); color: var(--down); }
-.sev.info { border: 1px solid var(--rule); color: var(--ink-soft); }
+/* ---------- evidence pop-up ---------- */
+dialog { border: 0; border-radius: 24px; padding: 0; width: min(520px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(33, 48, 41, .35); }
+.ev { padding: 22px; display: grid; gap: 14px; }
+.ev-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ev dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.ev dt { color: var(--ink-soft); }
+.ev dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 
-.export { position: sticky; bottom: 0; margin-top: 16px; background: var(--ink); color: var(--paper); border-radius: 8px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
-.export .btn { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-.export textarea { width: 100%; min-height: 90px; font: .75rem var(--font-mono); background: var(--card); color: var(--ink); border-radius: 6px; border: 0; padding: 8px; }
-.empty-state { padding: 24px; text-align: center; color: var(--ink-soft); }
-@media (prefers-reduced-motion: no-preference) { .pattern, .drawer { transition: border-color .15s; } }
+/* ---------- save bar ---------- */
+.savebar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); background: var(--ink); color: var(--paper); border-radius: 22px; padding: 14px 18px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; box-shadow: var(--shadow); z-index: 5; }
+.savebar p { flex: 1 1 260px; font-size: .95rem; }
+.savebar .btn { background: var(--paper); color: var(--ink); }
+.savebar .how { flex-basis: 100%; font-size: .82rem; opacity: .8; }
+.savebar code { font: inherit; background: rgba(127, 127, 127, .25); padding: 1px 6px; border-radius: 6px; }
+.savebar textarea { flex-basis: 100%; min-height: 80px; border: 0; border-radius: 12px; padding: 8px; font-size: .78rem; background: var(--surface); color: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open] { animation: rise .22s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .panel { padding: 16px; border-radius: 20px; }
+  .step { grid-template-columns: 32px minmax(0, 1fr); gap: 0 12px; }
+  .dot { width: 32px; height: 32px; font-size: .9rem; }
+  .step::before { left: 15px; top: 36px; }
+  .search .btn { padding: 11px 14px; }
+}
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">Hatua<small>Hatua kwa hatua · step by step</small></div>
-    <div class="where" id="where"></div>
-    <span class="synthetic" title="Every learner and record on this page is invented for the demo">Synthetic demo data</span>
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>
+      Hatua
+    </div>
+    <p class="school" id="school"></p>
+    <span class="practice" title="Every learner and record here is invented for practice">Practice data, not real learners</span>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" id="tab-learners" aria-selected="true" data-tab="learners">Learners <span class="count" id="c-learners"></span></button>
-    <button role="tab" id="tab-checks" aria-selected="false" data-tab="checks">Data checks <span class="count" id="c-checks"></span></button>
-    <button role="tab" id="tab-activity" aria-selected="false" data-tab="activity">Activity log <span class="count" id="c-activity"></span></button>
+  <section class="welcome">
+    <h1 id="hello"></h1>
+    <button class="btn" type="button" id="start">Start with the next learner</button>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Parts of Hatua">
+    <button role="tab" aria-selected="true" data-tab="class">My class<span class="n" id="n-class"></span></button>
+    <button role="tab" aria-selected="false" data-tab="checks">Records to check<span class="n" id="n-checks"></span></button>
+    <button role="tab" aria-selected="false" data-tab="history">History</button>
   </nav>
 
-  <!-- LEARNERS -->
-  <div id="panel-learners" role="tabpanel">
+  <!-- MY CLASS -->
+  <div id="tab-class" role="tabpanel">
     <div class="split">
-      <aside class="pane" aria-label="Class list">
-        <form class="searchbar" id="f-learners">
-          <input id="q-learners" type="search" placeholder="Search name or ID, e.g. HT-0007" aria-label="Search learners">
+      <aside class="panel" aria-label="Class list">
+        <form class="search" id="f-class" role="search">
+          <input id="q-class" type="search" placeholder="Name or number" aria-label="Search the class">
           <button class="btn" type="submit">Search</button>
         </form>
         <div class="filters">
-          <label>Stream<select id="fl-stream"><option value="">All</option><option>9A</option><option>9B</option></select></label>
-          <label>Learning area<select id="fl-area"><option value="">All</option></select></label>
-          <label>Records show<select id="fl-type">
-            <option value="">Anything</option>
-            <option value="decline">Going down</option>
-            <option value="improvement">Going up</option>
-            <option value="sustained_strength">Held strength</option>
-            <option value="sustained_struggle">Needs support</option>
-            <option value="attendance_drop">Attendance drop</option>
-            <option value="none">No pattern yet</option>
-          </select></label>
+          <label>Stream<select id="fl-stream"><option value="">Both streams</option><option>9A</option><option>9B</option></select></label>
           <label>Review<select id="fl-status">
-            <option value="">Any</option>
-            <option value="waiting">Waiting for review</option>
+            <option value="">Everyone</option>
+            <option value="waiting">Waiting for me</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select></label>
-          <label>Data issues<select id="fl-issues">
-            <option value="">Any</option>
-            <option value="yes">Has records to check</option>
-            <option value="no">No issues</option>
-          </select></label>
-          <label>Current only<select id="fl-current">
-            <option value="">All patterns</option>
-            <option value="yes">Still going on</option>
+          <label>Learning area<select id="fl-area"><option value="">All areas</option></select></label>
+          <label>The records show<select id="fl-type">
+            <option value="">Anything</option>
+            <option value="sustained_strength">A held strength</option>
+            <option value="improvement">Going up</option>
+            <option value="decline">Going down</option>
+            <option value="sustained_struggle">Needs support</option>
+            <option value="attendance_drop">Missing school</option>
+            <option value="none">Nothing yet</option>
           </select></label>
         </div>
-        <div class="resultline"><span id="r-learners"></span><button class="linkbtn" id="clear-learners" type="button">Clear filters</button></div>
-        <ul class="list" id="list-learners"></ul>
-        <p class="muted" style="font-size:.8rem;margin:8px 0 0">Listed by learner ID. Hatua never sorts or ranks learners by results.</p>
+        <details class="more">
+          <summary>More filters</summary>
+          <div class="filters">
+            <label>Records<select id="fl-issues"><option value="">Any</option><option value="yes">Some to check</option><option value="no">All fine</option></select></label>
+            <label>When<select id="fl-current"><option value="">Any time</option><option value="yes">Still going on now</option></select></label>
+          </div>
+        </details>
+        <div class="count-line"><span id="r-class"></span><button class="link" type="button" id="clear-class">Clear</button></div>
+        <ul class="people" id="list-class"></ul>
+        <p class="note-line">Listed by admission number. Hatua never ranks learners by marks.</p>
       </aside>
-      <main class="pane detail" id="detail" aria-live="polite"></main>
+      <main class="panel" id="learner" aria-live="polite"></main>
     </div>
   </div>
 
-  <!-- DATA CHECKS -->
-  <div id="panel-checks" role="tabpanel" hidden>
-    <div class="pane">
-      <form class="searchbar" id="f-checks">
-        <input id="q-checks" type="search" placeholder="Search message, record or learner ID" aria-label="Search data checks">
+  <!-- RECORDS TO CHECK -->
+  <div id="tab-checks" role="tabpanel" hidden>
+    <div class="panel">
+      <p class="soft" style="margin-bottom:14px;max-width:68ch">When Hatua reads an export it fixes small mistakes and marks anything you should look at. Records marked "Not used" were left out.</p>
+      <form class="search" id="f-checks" role="search">
+        <input id="q-checks" type="search" placeholder="Learner name, number or record" aria-label="Search records to check">
         <button class="btn" type="submit">Search</button>
       </form>
       <div class="filters">
-        <label>Severity<select id="fc-sev"><option value="">All</option><option value="reject">Not used</option><option value="warn">Check</option><option value="info">Repaired</option></select></label>
-        <label>Kind of issue<select id="fc-type"><option value="">All</option></select></label>
-        <label>Stream<select id="fc-stream"><option value="">All</option><option>9A</option><option>9B</option></select></label>
+        <label>What happened<select id="fc-sev"><option value="">Everything</option><option value="warn">Please check</option><option value="reject">Not used</option><option value="info">Fixed by Hatua</option></select></label>
+        <label>Problem<select id="fc-type"><option value="">Any problem</option></select></label>
+        <label>Stream<select id="fc-stream"><option value="">Both streams</option><option>9A</option><option>9B</option></select></label>
       </div>
-      <div class="resultline"><span id="r-checks"></span><button class="linkbtn" id="clear-checks" type="button">Clear filters</button></div>
-      <div class="tablewrap"><table class="plain"><thead><tr><th>Severity</th><th>Learner</th><th>Record</th><th>What Hatua found</th></tr></thead><tbody id="list-checks"></tbody></table></div>
-      <div style="text-align:center;margin-top:10px"><button class="btn secondary" id="more-checks" type="button">Show more</button></div>
+      <div class="count-line"><span id="r-checks"></span><button class="link" type="button" id="clear-checks">Clear</button></div>
+      <ul class="rows" id="list-checks"></ul>
+      <div class="showmore"><button class="btn quiet" type="button" id="more-checks">Show more</button></div>
     </div>
   </div>
 
-  <!-- ACTIVITY -->
-  <div id="panel-activity" role="tabpanel" hidden>
-    <div class="pane">
-      <form class="searchbar" id="f-activity">
-        <input id="q-activity" type="search" placeholder="Search tool, learner or teacher" aria-label="Search activity">
+  <!-- HISTORY -->
+  <div id="tab-history" role="tabpanel" hidden>
+    <div class="panel">
+      <p class="soft" style="margin-bottom:14px;max-width:68ch">Everything Hatua and teachers have done, newest first. Your head teacher can use this to see who approved what.</p>
+      <form class="search" id="f-history" role="search">
+        <input id="q-history" type="search" placeholder="Learner, file or teacher" aria-label="Search history">
         <button class="btn" type="submit">Search</button>
       </form>
       <div class="filters">
-        <label>Who<select id="fa-who"><option value="">Anyone</option><option value="agent">Hatua agent</option><option value="teacher">Teacher</option></select></label>
-        <label>Action<select id="fa-tool"><option value="">All</option></select></label>
-        <label>Result<select id="fa-ok"><option value="">All</option><option value="ok">Done</option><option value="blocked">Blocked or failed</option></select></label>
+        <label>Who<select id="fh-who"><option value="">Anyone</option><option value="agent">Hatua</option><option value="teacher">A teacher</option></select></label>
+        <label>Action<select id="fh-tool"><option value="">Any action</option></select></label>
+        <label>Result<select id="fh-ok"><option value="">Any result</option><option value="ok">Done</option><option value="blocked">Stopped</option></select></label>
       </div>
-      <div class="resultline"><span id="r-activity"></span><button class="linkbtn" id="clear-activity" type="button">Clear filters</button></div>
-      <div class="tablewrap"><table class="plain"><thead><tr><th>When (UTC)</th><th>Who</th><th>Action</th><th>Details</th><th>Result</th></tr></thead><tbody id="list-activity"></tbody></table></div>
+      <div class="count-line"><span id="r-history"></span><button class="link" type="button" id="clear-history">Clear</button></div>
+      <ul class="rows" id="list-history"></ul>
     </div>
   </div>
+</div>
 
-  <div class="export" id="export" hidden>
-    <span id="export-count"></span>
-    <button class="btn" type="button" id="btn-download">Download approvals file</button>
-    <button class="btn" type="button" id="btn-copy">Copy</button>
-    <span style="font-size:.85rem;opacity:.85">Then run <span class="mono">python3 -m hatua import-approvals approvals.json</span> to save them.</span>
-    <textarea id="export-text" readonly hidden aria-label="Approvals file contents"></textarea>
-  </div>
+<dialog id="ev" aria-labelledby="ev-title"><div class="ev" id="ev-body"></div></dialog>
+
+<div class="savebar" id="savebar" hidden>
+  <p id="save-count"></p>
+  <button class="btn" type="button" id="btn-download">Download approvals file</button>
+  <button class="btn quiet" type="button" id="btn-copy">Copy</button>
+  <span class="how">To save them to the learners' profiles, run <code>python3 -m hatua import-approvals approvals.json</code></span>
+  <textarea id="save-text" readonly hidden aria-label="Approvals file contents"></textarea>
 </div>
 
 <script>
 const DATA = /*__HATUA_DATA__*/null;
-const TYPE_LABEL = { decline: "Going down", improvement: "Going up", sustained_strength: "Held strength",
-  sustained_struggle: "Needs support", attendance_drop: "Attendance drop" };
-const FLAG_LABEL = { late_logging: "Logged late", score_level_conflict: "Score and level disagree",
-  level_from_score: "Level taken from score", missing_logged_date: "No upload date", duplicate_row: "Duplicate row",
-  unknown_learner: "Not on class list", no_result: "No result", id_repaired: "ID repaired",
-  area_repaired: "Learning area repaired", level_repaired: "Level spelling repaired", future_task_date: "Future date",
-  bad_task_date: "Unreadable date", unknown_area: "Unknown learning area" };
+const KIND = {
+  sustained_strength: ["held", "A held strength"], improvement: ["up", "Going up"], decline: ["down", "Going down"],
+  sustained_struggle: ["down", "Needs support"], attendance_drop: ["down", "Missing school"] };
+const FLAG_LABEL = { late_logging: "Uploaded late", score_level_conflict: "Score and level do not agree",
+  level_from_score: "Level worked out from the score", missing_logged_date: "No upload date", duplicate_row: "Same record twice",
+  unknown_learner: "Not on the class list", no_result: "No result", id_repaired: "Learner number fixed",
+  area_repaired: "Learning area name fixed", level_repaired: "Level spelling fixed", future_task_date: "Date in the future",
+  bad_task_date: "Date could not be read", unknown_area: "Unknown learning area" };
+const SEV = { reject: "Not used", warn: "Please check", info: "Fixed by Hatua" };
+const ACTION = { list_learners: "Opened the class list", ingest_record: "Read a new export", review_queue: "Found who needs review",
+  find_patterns: "Looked at a learner's records", get_evidence: "Opened a record", draft_summary: "Wrote a draft",
+  update_profile: "Saved to a profile", approve: "Teacher decision", "agent.start": "Hatua started", "agent.plan": "Hatua planned the next step",
+  "agent.self_check": "Hatua checked its drafts", "filesystem.list_directory": "Looked in the inbox folder" };
+const LEVEL = { EE: "Exceeding Expectations", ME: "Meeting Expectations", AE: "Approaching Expectations", BE: "Below Expectations" };
 const STORE_KEY = "hatua-decisions-v1";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
-const termLabel = o => `G${4 + Math.floor(o / 3)} T${o % 3 + 1}`;
+const termLabel = o => `Grade ${4 + Math.floor(o / 3)}, Term ${o % 3 + 1}`;
 const forbidden = DATA.guard.forbidden.map(p => new RegExp(p, "i"));
-const learnersById = Object.fromEntries(DATA.learners.map(l => [l.id, l]));
+const byId = Object.fromEntries(DATA.learners.map(l => [l.id, l]));
+const initials = n => n.slice(0, 1).toUpperCase();
+const plural = (n, one, many) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
+const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
-/* evidence index: R-, N-, A- ids -> details */
+/* evidence index: R- records, N- notes, A- attendance */
 const EVID = {};
 for (const l of DATA.learners) {
   for (const r of l.records) EVID[r[0]] = { kind: "record", lid: l.id, r };
@@ -295,10 +392,10 @@ for (const l of DATA.learners) {
 const flagsByRecord = {};
 for (const f of DATA.flags) if (f[4]) (flagsByRecord[f[4]] ||= []).push(f);
 
-/* decisions are kept in this browser only */
+/* decisions stay in this browser until the approvals file is imported */
 let decisions = {};
-try { decisions = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (e) { decisions = {}; }
-function saveDecisions() { try { localStorage.setItem(STORE_KEY, JSON.stringify(decisions)); } catch (e) {} renderExport(); }
+try { decisions = JSON.parse(store.get(STORE_KEY, "{}")); } catch (e) { decisions = {}; }
+function saveDecisions() { store.set(STORE_KEY, JSON.stringify(decisions)); renderSave(); }
 
 function statusOf(l) {
   const d = decisions[l.draft.id];
@@ -306,49 +403,56 @@ function statusOf(l) {
   if (l.decided) return l.decided.status;
   return l.patterns.length || l.record_notes.length ? "waiting" : "none";
 }
-const STATUS_TEXT = { waiting: "Waiting for review", approved: "Approved", rejected: "Rejected", none: "Nothing to review" };
+const STATUS = { waiting: "Waiting for you", approved: "Approved", rejected: "Rejected", none: "Nothing to review" };
 
 function checkText(text, lid) {
-  const problems = [];
-  for (const rx of forbidden) { const m = text.match(rx); if (m) problems.push(`Uses "${m[0]}", which labels, places or compares the learner.`); }
+  const out = [];
+  for (const rx of forbidden) { const m = text.match(rx); if (m) out.push(`"${m[0]}" labels, places or compares the learner. Please reword it.`); }
   for (const line of text.split("\n")) {
     const t = line.trim();
-    if (/^[-•*]/.test(t) && !/\b[RNA]-[A-Z0-9-]+/.test(t)) problems.push(`Claim has no citation: "${t.slice(0, 70)}"`);
+    if (/^[-•*]/.test(t) && !/\b[RNA]-[A-Z0-9-]+/.test(t)) out.push(`This line has no record behind it: "${t.slice(0, 60)}"`);
   }
   for (const m of text.matchAll(/\b([RNA]-[A-Z0-9-]+?)(?=[\],;\s)]|$)/g)) {
     const e = EVID[m[1]];
-    if (!e) problems.push(`Citation ${m[1]} does not exist.`);
-    else if (e.lid !== lid) problems.push(`Citation ${m[1]} belongs to a different learner.`);
+    if (!e) out.push(`Record ${m[1]} does not exist.`);
+    else if (e.lid !== lid) out.push(`Record ${m[1]} belongs to another learner.`);
   }
-  return [...new Set(problems)];
+  return [...new Set(out)];
 }
 
-/* ---------- header + tabs ---------- */
-$("where").innerHTML = `<b>${esc(DATA.meta.school)}</b> · ${esc(DATA.meta.class)} · ${DATA.meta.records.toLocaleString()} records · built ${esc(DATA.meta.built)}`;
-let tab = "learners";
-document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
-function setTab(t) {
-  tab = t;
-  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
-  for (const p of ["learners", "checks", "activity"]) $("panel-" + p).hidden = p !== t;
-  try { localStorage.setItem("hatua-tab", t); } catch (e) {}
+/* ---------- header ---------- */
+$("school").innerHTML = `<b>${esc(DATA.meta.school)}</b><br>${esc(DATA.meta.class)}, ${plural(DATA.meta.records, "record", "records")}`;
+const waitingList = () => DATA.learners.filter(l => statusOf(l) === "waiting");
+function renderHello() {
+  const n = waitingList().length;
+  $("hello").textContent = n ? `${plural(n, "learner has", "learners have")} a draft waiting for you.` : "You have reviewed every draft. Well done.";
+  $("start").hidden = !n;
+  $("n-class").textContent = n ? ` ${n}` : "";
 }
-
-/* ---------- learners list ---------- */
-const areaSel = $("fl-area");
-for (const f of DATA.families) areaSel.insertAdjacentHTML("beforeend", `<option>${esc(f)}</option>`);
-let learnerQuery = "";
-let selected = null;
-$("f-learners").addEventListener("submit", e => { e.preventDefault(); learnerQuery = $("q-learners").value.trim().toLowerCase(); renderList(); });
-for (const id of ["fl-stream", "fl-area", "fl-type", "fl-status", "fl-issues", "fl-current"]) $(id).addEventListener("change", renderList);
-$("clear-learners").addEventListener("click", () => {
-  for (const id of ["fl-stream", "fl-area", "fl-type", "fl-status", "fl-issues", "fl-current"]) $(id).value = "";
-  $("q-learners").value = ""; learnerQuery = ""; renderList();
+$("start").addEventListener("click", () => {
+  const next = waitingList().find(l => l.id !== selected) || waitingList()[0];
+  if (next) { setTab("class"); select(next.id, true); }
 });
 
-function learnerMatches(l) {
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+function setTab(t) {
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  for (const p of ["class", "checks", "history"]) $("tab-" + p).hidden = p !== t;
+  store.set("hatua-tab", t);
+}
+
+/* ---------- class list ---------- */
+for (const f of DATA.families) $("fl-area").insertAdjacentHTML("beforeend", `<option>${esc(f)}</option>`);
+const CLASS_FILTERS = ["fl-stream", "fl-status", "fl-area", "fl-type", "fl-issues", "fl-current"];
+let query = "", selected = null;
+$("f-class").addEventListener("submit", e => { e.preventDefault(); query = $("q-class").value.trim().toLowerCase(); renderList(); });
+for (const id of CLASS_FILTERS) $(id).addEventListener("change", renderList);
+$("clear-class").addEventListener("click", () => { for (const id of CLASS_FILTERS) $(id).value = ""; $("q-class").value = ""; query = ""; renderList(); });
+
+function matches(l) {
   const v = id => $(id).value;
-  if (learnerQuery && !(`${l.name} ${l.id}`.toLowerCase().includes(learnerQuery))) return false;
+  if (query && !`${l.name} ${l.id}`.toLowerCase().includes(query)) return false;
   if (v("fl-stream") && l.stream !== v("fl-stream")) return false;
   let pats = l.patterns;
   if (v("fl-current") === "yes") pats = pats.filter(p => p.current);
@@ -357,223 +461,226 @@ function learnerMatches(l) {
   else if (v("fl-type")) { if (!pats.some(p => p.type === v("fl-type"))) return false; }
   else if ((v("fl-area") || v("fl-current")) && !pats.length) return false;
   if (v("fl-status") && statusOf(l) !== v("fl-status")) return false;
-  const issues = l.record_notes.length > 0;
-  if (v("fl-issues") === "yes" && !issues) return false;
-  if (v("fl-issues") === "no" && issues) return false;
+  if (v("fl-issues") === "yes" && !l.record_notes.length) return false;
+  if (v("fl-issues") === "no" && l.record_notes.length) return false;
   return true;
 }
-
+function oneLine(l) {
+  const kinds = [...new Set(l.patterns.map(p => KIND[p.type][1]))];
+  return kinds.length ? kinds.join(", ") : "No pattern yet";
+}
 function renderList() {
-  const rows = DATA.learners.filter(learnerMatches);
-  $("r-learners").textContent = `${rows.length} of ${DATA.learners.length} learners`;
-  $("c-learners").textContent = DATA.learners.filter(l => statusOf(l) === "waiting").length + " to review";
-  $("list-learners").innerHTML = rows.length ? rows.map(l => {
+  const rows = DATA.learners.filter(matches);
+  $("r-class").textContent = `Showing ${rows.length} of ${DATA.learners.length}`;
+  $("list-class").innerHTML = rows.length ? rows.map(l => {
     const st = statusOf(l);
-    const kinds = [...new Set(l.patterns.map(p => p.type))];
     return `<li><button type="button" data-lid="${l.id}" aria-current="${selected === l.id}">
-      <span class="who">${esc(l.name)} <span class="mono muted">${l.id}</span></span>
-      <span class="status ${st}">${STATUS_TEXT[st]}</span>
-      <span class="sub">${kinds.map(k => `<span class="chip t-${k}">${TYPE_LABEL[k]}</span>`).join("")}
-        ${l.record_notes.length ? `<span class="chip t-data">Records to check</span>` : ""}
-        <span class="muted" style="font-size:.75rem">${l.stream}</span></span>
+      <span class="face" aria-hidden="true">${esc(initials(l.name))}</span>
+      <span class="nm">${esc(l.name)}</span>
+      <span class="pill ${st}">${STATUS[st]}</span>
+      <span class="what">${l.id}, ${l.stream}. ${esc(oneLine(l))}</span>
     </button></li>`;
-  }).join("") : `<li class="empty-state">No learners match. Try clearing the filters.</li>`;
-  $("list-learners").querySelectorAll("button[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid, true)));
+  }).join("") : `<li class="empty">Nobody matches. Try Clear.</li>`;
+  $("list-class").querySelectorAll("[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid, true)));
+  renderHello();
 }
 
-/* ---------- learner detail ---------- */
-let openEvidence = null;
+/* ---------- one learner ---------- */
 let highlight = null;
-
-function lv(level) { return `<span class="lv ${level}" title="${level}">${level}</span>`; }
+const lv = level => `<span class="lv ${level}" title="${LEVEL[level] || level}">${level}</span>`;
 
 function select(lid, scroll) {
-  selected = lid; openEvidence = null; highlight = null;
-  try { localStorage.setItem("hatua-learner", lid); } catch (e) {}
-  renderList(); renderDetail();
-  if (scroll && window.matchMedia("(max-width: 860px)").matches) $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  selected = lid; highlight = null; store.set("hatua-learner", lid);
+  renderList(); renderLearner();
+  if (scroll && matchMedia("(max-width: 880px)").matches) $("learner").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function evidenceButtons(ids, max = 40) {
-  const shown = ids.slice(0, max);
-  return `<div class="evid">${shown.map(id => `<button type="button" data-ev="${id}" title="Open ${id}">${id}</button>`).join("")}${ids.length > max ? `<span class="muted">+${ids.length - max} more</span>` : ""}</div>`;
+function cites(ids, max = 8) {
+  const shown = ids.slice(0, max), rest = ids.length - shown.length;
+  return `<div class="cites"><span class="small soft">Records:</span>${shown.map(id => `<button class="cite" type="button" data-ev="${id}">${id}</button>`).join("")}${rest > 0 ? `<button class="link small" type="button" data-all="${esc(ids.join(","))}">and ${rest} more</button>` : ""}</div>`;
 }
 
-function drawer() {
-  if (!openEvidence) return "";
-  const e = EVID[openEvidence];
-  if (!e) return `<div class="drawer">Evidence ${esc(openEvidence)} not found.</div>`;
-  let body = "";
-  if (e.kind === "record") {
-    const [rid, ord, area, fam, task, level, score, td, ld, src, teacher, flags] = e.r;
-    const fl = (flagsByRecord[rid] || []).map(f => `<li>${esc(f[5])}</li>`).join("");
-    body = `<dl><dt>Record</dt><dd class="mono">${rid}</dd><dt>Term</dt><dd>${termLabel(ord)}</dd>
-      <dt>Learning area</dt><dd>${esc(area)}</dd><dt>Task</dt><dd>${esc(task)}</dd>
-      <dt>Rubric level</dt><dd>${lv(level)} ${esc(({ EE: "Exceeding", ME: "Meeting", AE: "Approaching", BE: "Below" })[level])} Expectations</dd>
-      <dt>Score</dt><dd>${score == null ? "<span class='muted'>not recorded</span>" : score + "%"}</dd>
-      <dt>Task date</dt><dd>${esc(td || "unknown")}</dd><dt>Uploaded</dt><dd>${esc(ld || "unknown")}</dd>
-      <dt>Source</dt><dd>${esc(src.replace(/_/g, " "))} · teacher ${esc(teacher)}</dd></dl>
-      ${fl ? `<p class="caveat"><b>Data checks:</b></p><ul class="problems">${fl}</ul>` : ""}`;
-  } else if (e.kind === "note") {
-    const [nid, ord, area, fam, date, text] = e.n;
-    body = `<dl><dt>Teacher note</dt><dd class="mono">${nid}</dd><dt>Term</dt><dd>${termLabel(ord)}</dd>
-      <dt>Learning area</dt><dd>${esc(area || "not given")}</dd><dt>Date</dt><dd>${esc(date)}</dd></dl>
-      <p class="quote">${esc(text)}</p>`;
-  } else {
-    const [aid, ord, p, o] = e.a;
-    body = `<dl><dt>Attendance</dt><dd class="mono">${aid}</dd><dt>Term</dt><dd>${termLabel(ord)}</dd>
-      <dt>Days present</dt><dd>${p} of ${o} (${Math.round(100 * p / o)}%)</dd></dl>`;
-  }
-  return `<div class="drawer" id="drawer"><div class="row" style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-    <h3>Evidence ${esc(openEvidence)}</h3><button class="btn secondary" type="button" id="close-ev">Close</button></div>${body}</div>`;
+function findCard(p) {
+  const [tone, label] = KIND[p.type];
+  const trail = p.trail.map(t => `<span title="${esc(t.term)}">${/%$/.test(t.level) ? `<span class="small">${esc(t.level)}</span>` : lv(t.level)}</span>`).join("");
+  return `<article class="find ${tone}">
+    <div class="kind">${label}${p.current ? `<span class="ongoing">still going on</span>` : ""}
+      ${p.family ? `<button class="link small" type="button" data-hl="${p.pattern_id}">Show me on the long view</button>` : ""}</div>
+    <p>${esc(p.statement)}</p>
+    <div class="trail">${trail}</div>
+    ${cites(p.evidence)}
+    ${p.notes.slice(0, 2).map(n => `<p class="quote">"${esc(n.text)}" <span class="soft small">(teacher note, ${esc(n.term)})</span></p>`).join("")}
+    ${p.caveats.map(c => `<p class="caveat">${esc(c)}</p>`).join("")}
+  </article>`;
 }
 
 function longView(l) {
-  const ords = [];
-  for (let o = 0; o < 18; o++) ords.push(o);
+  const ords = [...Array(18).keys()];
   const cells = {};
   for (const r of l.records) ((cells[r[3]] ||= {})[r[1]] ||= []).push(r);
   const att = Object.fromEntries(l.attendance.map(a => [a[1], a]));
   const fams = DATA.families.filter(f => cells[f]);
-  const win = highlight ? new Set(highlight.ords) : null;
+  const lit = highlight ? new Set(highlight.ords) : null;
   const head1 = [4, 5, 6, 7, 8, 9].map(g => `<th colspan="3">Grade ${g}</th>`).join("");
   const head2 = ords.map(o => `<th>T${o % 3 + 1}</th>`).join("");
   const rows = fams.map(f => `<tr><th class="area" scope="row">${esc(f)}</th>${ords.map(o => {
-      const rs = (cells[f] || {})[o];
-      const cls = (o % 3 === 0 ? "g " : "") + (win && highlight.family === f && win.has(o) ? "inwin" : "");
-      if (!rs) return `<td class="empty ${cls}"><span title="No record for ${termLabel(o)}"></span></td>`;
-      const pts = rs.reduce((s, r) => s + ({ BE: 1, AE: 2, ME: 3, EE: 4 })[r[5]], 0) / rs.length;
-      const level = ["BE", "AE", "ME", "EE"][Math.max(0, Math.min(3, Math.floor(pts + 0.5) - 1))];
-      return `<td class="${cls}"><button type="button" data-ev="${rs[0][0]}" title="${termLabel(o)}: ${level} (${rs.map(r => r[0]).join(", ")})">${lv(level)}</button></td>`;
-    }).join("")}</tr>`).join("");
-  const attRow = `<tr><th class="area" scope="row">Attendance</th>${ords.map(o => {
-      const a = att[o]; const cls = o % 3 === 0 ? "g" : "";
-      if (!a) return `<td class="empty ${cls}"><span title="No register for ${termLabel(o)}"></span></td>`;
-      const pct = Math.round(100 * a[2] / a[3]);
-      return `<td class="${cls}"><button type="button" data-ev="${a[0]}" class="mono" style="font-size:.72rem;${pct < 75 ? "color:var(--down);font-weight:700" : ""}" title="${a[2]} of ${a[3]} days">${pct}%</button></td>`;
-    }).join("")}</tr>`;
-  return `<div class="gridwrap"><table class="long"><thead><tr><th class="area"></th>${head1}</tr><tr><th class="area">Learning area</th>${head2}</tr></thead><tbody>${rows}${attRow}</tbody></table></div>`;
+    const rs = (cells[f] || {})[o];
+    const cls = [o % 3 === 0 && o ? "g" : "", lit && highlight.family === f && lit.has(o) ? "lit" : ""].join(" ");
+    if (!rs) return `<td class="${cls}"><span class="none" title="No record for ${termLabel(o)}"></span></td>`;
+    const pts = rs.reduce((s, r) => s + ({ BE: 1, AE: 2, ME: 3, EE: 4 })[r[5]], 0) / rs.length;
+    const level = ["BE", "AE", "ME", "EE"][Math.max(0, Math.min(3, Math.floor(pts + 0.5) - 1))];
+    return `<td class="${cls}"><button type="button" data-ev="${rs[0][0]}" aria-label="${termLabel(o)}: ${LEVEL[level]}. Open the record">${lv(level)}</button></td>`;
+  }).join("")}</tr>`).join("");
+  const attRow = `<tr><th class="area" scope="row">Days in school</th>${ords.map(o => {
+    const a = att[o], cls = o % 3 === 0 && o ? "g" : "";
+    if (!a) return `<td class="${cls}"><span class="none" title="No register for ${termLabel(o)}"></span></td>`;
+    const pct = Math.round(100 * a[2] / a[3]);
+    return `<td class="${cls}"><button type="button" data-ev="${a[0]}" class="att${pct < 75 ? " low" : ""}" aria-label="${termLabel(o)}: ${a[2]} of ${a[3]} days">${pct}%</button></td>`;
+  }).join("")}</tr>`;
+  return `<div class="long-wrap"><table class="long"><thead><tr><th class="area"></th>${head1}</tr><tr><th class="area">Learning area</th>${head2}</tr></thead><tbody>${rows}${attRow}</tbody></table></div>`;
 }
 
-function reviewBox(l) {
-  const dec = decisions[l.draft.id];
-  const st = statusOf(l);
-  if (!l.patterns.length && !l.record_notes.length) {
-    return `<section class="review"><h3>Teacher review</h3><p class="muted">No pattern has held across enough terms to report yet. Nothing to approve.</p></section>`;
-  }
+function decideStep(l) {
+  const st = statusOf(l), dec = decisions[l.draft.id];
   if (st === "approved" || st === "rejected") {
     const who = dec ? dec.teacher : l.decided.by;
-    const g = dec && dec.decision === "approve" ? guardianBox(l, dec) : "";
-    return `<section class="review"><h3>Teacher review</h3>
-      <p class="${st === "approved" ? "ok" : "caveat"}"><b>${st === "approved" ? "Approved" : "Rejected"}</b> by ${esc(who)}${dec ? " on this device" : ""}.</p>
-      ${dec ? `<button class="btn secondary" type="button" id="undo">Undo this decision</button>` : ""}${g}</section>`;
+    return `<div class="result ${st}"><p><b>${st === "approved" ? "You approved this draft" : "You rejected this draft"}</b>${who ? `, signed ${esc(who)}` : ""}.${dec ? " It is saved on this laptop." : ""}</p>
+      ${dec ? `<button class="btn quiet" type="button" id="undo">Change my mind</button>` : ""}</div>`;
   }
-  return `<section class="review"><h3>Teacher review</h3>
-    <p class="muted" style="margin:0">Read the draft, open any evidence you want to check, edit if needed, then approve or reject. Nothing is saved to the profile or shared with a guardian until you approve.</p>
-    <label for="draft-text" class="muted" style="font-size:.85rem">Draft for the class teacher <span class="mono">${l.draft.id}</span></label>
+  return `<div class="decide">
+    <label for="draft-text" class="small soft">You can edit the draft before you approve it. Each line must keep its record numbers.</label>
     <textarea id="draft-text">${esc(l.draft.text)}</textarea>
-    <div id="draft-check"></div>
-    <div class="row"><input type="text" id="teacher-name" placeholder="Your full name (required to approve)" aria-label="Teacher name">
-      <button class="btn accent" type="button" id="approve">Approve</button>
-      <button class="btn secondary" type="button" id="reject">Reject</button></div>
-  </section>`;
-}
-
-function guardianBox(l, dec) {
-  const g = decisions["G-" + l.id] || {};
-  const lang = g.lang || "en";
-  const msg = l.guardian[lang];
-  const shared = g.decision === "approve";
-  return `<div style="display:grid;gap:8px;border-top:1px solid var(--rule);padding-top:10px">
-    <h3>Message for the guardian</h3>
-    <div class="row"><label class="muted" for="g-lang">Language</label>
-      <select id="g-lang"${shared ? " disabled" : ""}><option value="en"${lang === "en" ? " selected" : ""}>English</option><option value="sw"${lang === "sw" ? " selected" : ""}>Kiswahili</option></select></div>
-    <pre class="guardian">${esc(msg.text)}</pre>
-    ${shared ? `<p class="ok">Approved for sharing by ${esc(g.teacher)}. Hatua does not send it; you share it yourself.</p><button class="btn secondary" type="button" id="g-undo">Undo</button>`
-      : `<label class="row" style="font-size:.95rem"><input type="checkbox" id="g-share"> I have talked about this with the learner's guardian, or will share it myself, and approve sharing it.</label>
-         <div class="row"><button class="btn accent" type="button" id="g-approve" disabled>Approve guardian message</button></div>`}
+    <div id="draft-check" aria-live="polite"></div>
+    <div class="row"><input type="text" id="teacher-name" placeholder="Your full name" aria-label="Your full name" autocomplete="name">
+      <button class="btn leaf" type="button" id="approve">Approve draft</button>
+      <button class="btn quiet" type="button" id="reject">Reject draft</button></div>
   </div>`;
 }
 
-function renderDetail() {
-  const l = learnersById[selected];
-  const el = $("detail");
-  if (!l) { el.innerHTML = `<div class="empty-state">Choose a learner from the list to see their long view.</div>`; return; }
-  const st = statusOf(l);
-  const pats = l.patterns.map(p => {
-    const trail = p.trail.map(t => `<span title="${esc(t.term)}">${/%$/.test(t.level) ? `<span class="mono">${esc(t.level)}</span>` : lv(t.level)}</span>`).join(`<span class="arrow">›</span>`);
-    return `<article class="pattern">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="chip t-${p.type}">${TYPE_LABEL[p.type]}</span>
-        ${p.current ? `<span class="chip t-data">Still going on</span>` : ""}
-        ${p.family ? `<button class="linkbtn" type="button" data-hl="${p.pattern_id}">Show on the long view</button>` : ""}</div>
-      <p>${esc(p.statement)}</p>
-      <div class="trail">${trail}</div>
-      ${evidenceButtons(p.evidence)}
-      ${p.notes.slice(0, 2).map(n => `<p class="quote">${esc(n.text)} <span class="muted">(${esc(n.term)}, <button class="linkbtn mono" type="button" data-ev="${n.note_id}">${n.note_id}</button>)</span></p>`).join("")}
-      ${p.caveats.map(c => `<p class="caveat">${esc(c)}</p>`).join("")}
-    </article>`;
-  }).join("");
-  const rnotes = l.record_notes.map(n => `<article class="pattern"><div><span class="chip t-data">${n.type === "data_gap" ? "Gap in records" : "Logged late"}</span></div><p>${esc(n.statement)}</p>${evidenceButtons(n.evidence, 12)}</article>`).join("");
-  el.innerHTML = `
-    <div class="head"><h2>${esc(l.name)}</h2><span class="mono muted">${l.id}</span><span class="muted">Grade ${l.grade} · ${l.stream}</span><span class="status ${st}">${STATUS_TEXT[st]}</span></div>
-    <p class="muted" style="margin:0">${l.reviewed} assessment records, ${esc(l.span)}.</p>
-    <p class="rule-note">Hatua shows patterns for you to raise with the learner and their guardian. It never assigns a pathway or label and never compares a learner with classmates. Every statement links to the records behind it.</p>
-    ${drawer()}
-    <section><h3>What the records show</h3><div class="patterns">${pats || `<p class="muted">No pattern has held across enough terms yet. A single result never becomes a pattern.</p>`}</div></section>
-    ${rnotes ? `<section><h3>Check before relying on this</h3><div class="patterns">${rnotes}</div></section>` : ""}
-    <section><h3>The long view, Grade 4 to Grade 9</h3>
-      <div class="legend" style="margin-bottom:8px">${lv("EE")} Exceeding ${lv("ME")} Meeting ${lv("AE")} Approaching ${lv("BE")} Below Expectations <span><span style="display:inline-block;width:2em;height:1.2em;vertical-align:middle;border-radius:3px;background:var(--gap)"></span> no record</span> · tap any cell to open its record</div>
-      ${longView(l)}</section>
-    ${reviewBox(l)}`;
-  wireDetail(l);
+function familyStep(l) {
+  const g = decisions["G-" + l.id] || {};
+  const lang = g.lang || "en", shared = g.decision === "approve";
+  const msg = l.guardian[lang];
+  return `<div class="langs" role="group" aria-label="Language">
+      ${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-lang="${k}" aria-pressed="${lang === k}"${shared ? " disabled" : ""}>${t}</button>`).join("")}</div>
+    <pre class="letter">${esc(msg.text)}</pre>
+    ${shared ? `<div class="result approved"><p>Approved for sharing, signed ${esc(g.teacher)}. Hatua does not send it. You share it yourself.</p><button class="btn quiet" type="button" id="g-undo">Change my mind</button></div>`
+      : `<label class="agree"><input type="checkbox" id="g-share"> I will share this with the family myself, or I have already talked with them about it.</label>
+         <div><button class="btn" type="button" id="g-approve" disabled>Approve the message</button></div>`}`;
 }
 
-function wireDetail(l) {
-  const el = $("detail");
-  el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => {
-    openEvidence = b.dataset.ev; renderDetail(); $("drawer")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+function renderLearner() {
+  const l = byId[selected], el = $("learner");
+  if (!l) { el.innerHTML = `<div class="empty">Choose a learner from your class list.</div>`; return; }
+  const st = statusOf(l);
+  const approved = st === "approved", decided = approved || st === "rejected";
+  const nothing = !l.patterns.length && !l.record_notes.length;
+  const finds = l.patterns.map(findCard).join("");
+  const checkFirst = l.record_notes.map(n => `<article class="find"><div class="kind">${n.type === "data_gap" ? "Some terms have no records" : "Some records were uploaded late"}</div><p>${esc(n.statement)}</p>${cites(n.evidence, 6)}</article>`).join("");
+  const step = (n, cls, title, hint, body) => `<li class="step ${cls}"><span class="dot" aria-hidden="true">${cls === "done" ? "✓" : n}</span>
+    <div class="step-body"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : ""}${body}</div></li>`;
+  el.innerHTML = `<div class="learner">
+    <div class="who">
+      <span class="face" aria-hidden="true">${esc(initials(l.name))}</span>
+      <div class="facts"><h2>${esc(l.name)}</h2>${l.id}, Grade ${l.grade} ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</div>
+      <span class="pill ${st}">${STATUS[st]}</span>
+      <button class="link back" type="button" id="back">Back to class list</button>
+    </div>
+    <p class="promise">Hatua only shows what the records say, so you can talk about it with the learner and family. It never gives a label, picks a pathway or compares a learner with classmates. Tap any record number to see it.</p>
+    <ol class="steps">
+      ${step(1, decided ? "done" : "", "Read what the records show",
+        nothing ? "" : "Each point comes from several terms of records, never from one result.",
+        nothing ? `<p class="soft">No pattern has held across enough terms yet. There is nothing to review for ${esc(l.name)} right now.</p>`
+          : `<div class="finds">${finds}</div>${checkFirst ? `<div class="checkfirst"><p class="small soft">Check these before relying on the points above:</p>${checkFirst}</div>` : ""}`)}
+      ${step(2, decided ? "done" : "", "See the long view, Grade 4 to Grade 9",
+        "Each mark is one term. Tap a mark to open the record behind it.",
+        `<div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span><span><span class="lv" style="box-shadow:inset 0 0 0 2px var(--paper)"></span> No record</span></div>${longView(l)}`)}
+      ${nothing ? "" : step(3, decided ? "done" : "", "Decide on the draft",
+        decided ? "" : "Nothing is saved or shared until you approve.", decideStep(l))}
+      ${nothing ? "" : step(4, approved ? "" : "locked", "Message for the family",
+        approved ? "A short message in plain words. Choose the language the family reads best." : "This opens after you approve the draft.",
+        approved ? familyStep(l) : "")}
+    </ol>
+  </div>`;
+  wireLearner(l);
+}
+
+function wireLearner(l) {
+  const el = $("learner");
+  el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => openEvidence(b.dataset.ev)));
+  el.querySelectorAll("[data-all]").forEach(b => b.addEventListener("click", () => {
+    const wrap = b.parentElement;
+    wrap.innerHTML = `<span class="small soft">Records:</span>` + b.dataset.all.split(",").map(id => `<button class="cite" type="button" data-ev="${id}">${id}</button>`).join("");
+    wrap.querySelectorAll("[data-ev]").forEach(x => x.addEventListener("click", () => openEvidence(x.dataset.ev)));
   }));
-  $("close-ev")?.addEventListener("click", () => { openEvidence = null; renderDetail(); });
   el.querySelectorAll("[data-hl]").forEach(b => b.addEventListener("click", () => {
-    const p = l.patterns.find(x => x.pattern_id === b.dataset.hl);
-    const ords = new Set();
+    const p = l.patterns.find(x => x.pattern_id === b.dataset.hl), ords = new Set();
     for (const t of p.trail) for (const id of t.record_ids) { const e = EVID[id]; if (e && e.r) ords.add(e.r[1]); }
     highlight = { family: p.family, ords: [...ords] };
-    renderDetail(); el.querySelector(".gridwrap")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    renderLearner(); $("learner").querySelector(".long-wrap")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }));
+  $("back")?.addEventListener("click", () => $("list-class").closest(".panel").scrollIntoView({ behavior: "smooth" }));
   const ta = $("draft-text");
   if (ta) {
     const name = $("teacher-name");
+    name.value = store.get("hatua-teacher", "");
     const update = () => {
       const probs = checkText(ta.value, l.id);
-      $("draft-check").innerHTML = probs.length ? `<ul class="problems">${probs.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : `<p class="ok">Checks passed: no labels or comparisons, and every claim is cited.</p>`;
+      $("draft-check").innerHTML = probs.length ? `<ul class="checks-bad">${probs.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
+        : `<p class="checks-ok">Looks fine: every line has its records, and nothing labels or compares the learner.</p>`;
       $("approve").disabled = probs.length > 0 || name.value.trim().length < 3;
     };
     ta.addEventListener("input", update); name.addEventListener("input", update); update();
-    $("approve").addEventListener("click", () => decide(l, "approve", ta.value, name.value.trim()));
-    $("reject").addEventListener("click", () => {
-      if (name.value.trim().length < 3) { name.focus(); name.placeholder = "Enter your name to reject"; return; }
-      decide(l, "reject", ta.value, name.value.trim());
-    });
+    const go = d => { const n = name.value.trim(); if (n.length < 3) { name.focus(); return; } store.set("hatua-teacher", n); decide(l, d, ta.value, n); };
+    $("approve").addEventListener("click", () => go("approve"));
+    $("reject").addEventListener("click", () => go("reject"));
   }
-  $("undo")?.addEventListener("click", () => { delete decisions[l.draft.id]; delete decisions["G-" + l.id]; saveDecisions(); renderList(); renderDetail(); });
-  $("g-lang")?.addEventListener("change", e => { decisions["G-" + l.id] = { lang: e.target.value }; saveDecisions(); renderDetail(); });
+  $("undo")?.addEventListener("click", () => { delete decisions[l.draft.id]; delete decisions["G-" + l.id]; saveDecisions(); renderList(); renderLearner(); });
+  el.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { decisions["G-" + l.id] = { lang: b.dataset.lang }; saveDecisions(); renderLearner(); }));
   $("g-share")?.addEventListener("change", e => { $("g-approve").disabled = !e.target.checked; });
   $("g-approve")?.addEventListener("click", () => {
     const lang = (decisions["G-" + l.id] || {}).lang || "en";
     decisions["G-" + l.id] = { decision: "approve", lang, teacher: decisions[l.draft.id].teacher, at: new Date().toISOString() };
-    saveDecisions(); renderDetail();
+    saveDecisions(); renderLearner();
   });
-  $("g-undo")?.addEventListener("click", () => { decisions["G-" + l.id] = { lang: decisions["G-" + l.id].lang }; saveDecisions(); renderDetail(); });
+  $("g-undo")?.addEventListener("click", () => { decisions["G-" + l.id] = { lang: decisions["G-" + l.id].lang }; saveDecisions(); renderLearner(); });
 }
 
 function decide(l, decision, text, teacher) {
   decisions[l.draft.id] = { decision, teacher, edited: text !== l.draft.text ? text : null, at: new Date().toISOString() };
-  saveDecisions(); renderList(); renderDetail();
+  saveDecisions(); renderList(); renderLearner();
 }
 
-/* ---------- export (approvals file) ---------- */
-function exportItems() {
+/* ---------- evidence pop-up ---------- */
+function openEvidence(id) {
+  const e = EVID[id];
+  let body = "";
+  if (!e) body = `<p>Record ${esc(id)} was not found.</p>`;
+  else if (e.kind === "record") {
+    const [rid, ord, area, fam, task, level, score, td, ld, src, teacher] = e.r;
+    const fl = (flagsByRecord[rid] || []).map(f => `<li>${esc(f[5])}</li>`).join("");
+    body = `<dl><dt>Term</dt><dd>${termLabel(ord)}</dd><dt>Learning area</dt><dd>${esc(area)}</dd><dt>Task</dt><dd>${esc(task)}</dd>
+      <dt>Level</dt><dd>${lv(level)} ${LEVEL[level]}</dd><dt>Score</dt><dd>${score == null ? "Not recorded" : score + "%"}</dd>
+      <dt>Done on</dt><dd>${esc(td || "Not known")}</dd><dt>Uploaded</dt><dd>${esc(ld || "Not known")}</dd>
+      <dt>From</dt><dd>${esc(String(src).replace(/_/g, " "))}, ${esc(teacher)}</dd></dl>
+      ${fl ? `<div><p class="caveat"><b>Please check this record</b></p><ul class="checks-bad">${fl}</ul></div>` : ""}`;
+  } else if (e.kind === "note") {
+    const [, ord, area, , date, text] = e.n;
+    body = `<dl><dt>Term</dt><dd>${termLabel(ord)}</dd><dt>Learning area</dt><dd>${esc(area || "Not given")}</dd><dt>Written on</dt><dd>${esc(date)}</dd></dl><p class="quote">"${esc(text)}"</p>`;
+  } else {
+    const [, ord, p, o] = e.a;
+    body = `<dl><dt>Term</dt><dd>${termLabel(ord)}</dd><dt>Days in school</dt><dd>${p} of ${o} days (${Math.round(100 * p / o)}%)</dd></dl>`;
+  }
+  const kind = !e ? "Record" : { record: "Assessment record", note: "Teacher note", attendance: "Attendance" }[e.kind];
+  $("ev-body").innerHTML = `<div class="ev-head"><h2 id="ev-title" style="font-size:1.2rem">${kind} <span class="id">${esc(id)}</span></h2>
+    <button class="btn quiet" type="button" id="ev-close">Close</button></div>${body}`;
+  $("ev-close").addEventListener("click", () => $("ev").close());
+  $("ev").showModal();
+}
+$("ev").addEventListener("click", e => { if (e.target === $("ev")) $("ev").close(); });
+
+/* ---------- approvals file ---------- */
+function saveItems() {
   const items = [];
   for (const l of DATA.learners) {
     const d = decisions[l.draft.id];
@@ -581,96 +688,101 @@ function exportItems() {
     items.push({ draft_id: l.draft.id, learner_id: l.id, audience: "teacher", decision: d.decision, teacher: d.teacher,
       hash: l.draft.hash, edited_text: d.edited, decided_at: d.at });
     const g = decisions["G-" + l.id];
-    if (d.decision === "approve" && g && g.decision === "approve") {
+    if (d.decision === "approve" && g && g.decision === "approve")
       items.push({ learner_id: l.id, audience: "guardian", language: g.lang, decision: "approve", teacher: g.teacher,
         share: true, hash: l.guardian[g.lang].hash, decided_at: g.at });
-    }
   }
   return items;
 }
-function renderExport() {
-  const items = exportItems();
-  $("export").hidden = !items.length;
-  $("export-count").textContent = `${items.length} decision${items.length === 1 ? "" : "s"} saved in this browser, not yet in the profiles.`;
-  $("export-text").value = JSON.stringify(items, null, 1);
+function renderSave() {
+  const items = saveItems();
+  $("savebar").hidden = !items.length;
+  $("save-count").textContent = items.length === 1 ? "1 decision is kept on this laptop. Download it so it reaches the learner's profile."
+    : `${items.length} decisions are kept on this laptop. Download them so they reach the learners' profiles.`;
+  $("save-text").value = JSON.stringify(items, null, 1);
 }
 $("btn-download").addEventListener("click", () => {
-  const blob = new Blob([$("export-text").value], { type: "application/json" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "approvals.json"; a.click();
-  $("export-text").hidden = false;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([$("save-text").value], { type: "application/json" }));
+  a.download = "approvals.json"; a.click();
 });
 $("btn-copy").addEventListener("click", async () => {
-  const ta = $("export-text"); ta.hidden = false;
+  const ta = $("save-text");
   try { await navigator.clipboard.writeText(ta.value); $("btn-copy").textContent = "Copied"; }
-  catch (e) { ta.select(); $("btn-copy").textContent = "Selected, press Ctrl+C"; }
+  catch (e) { ta.hidden = false; ta.select(); $("btn-copy").textContent = "Selected. Press Ctrl+C"; }
   setTimeout(() => { $("btn-copy").textContent = "Copy"; }, 2500);
 });
 
-/* ---------- data checks ---------- */
-const typeSel = $("fc-type");
-for (const t of [...new Set(DATA.flags.map(f => f[1]))].sort()) typeSel.insertAdjacentHTML("beforeend", `<option value="${t}">${esc(FLAG_LABEL[t] || t)}</option>`);
-let checkQuery = "", checkLimit = 150;
-$("f-checks").addEventListener("submit", e => { e.preventDefault(); checkQuery = $("q-checks").value.trim().toLowerCase(); checkLimit = 150; renderChecks(); });
-for (const id of ["fc-sev", "fc-type", "fc-stream"]) $(id).addEventListener("change", () => { checkLimit = 150; renderChecks(); });
-$("clear-checks").addEventListener("click", () => { for (const id of ["fc-sev", "fc-type", "fc-stream"]) $(id).value = ""; $("q-checks").value = ""; checkQuery = ""; renderChecks(); });
-$("more-checks").addEventListener("click", () => { checkLimit += 150; renderChecks(); });
-const SEV = { reject: "Not used", warn: "Check", info: "Repaired" };
+/* ---------- records to check ---------- */
+for (const t of [...new Set(DATA.flags.map(f => f[1]))].sort()) $("fc-type").insertAdjacentHTML("beforeend", `<option value="${t}">${esc(FLAG_LABEL[t] || t)}</option>`);
+const CHECK_FILTERS = ["fc-sev", "fc-type", "fc-stream"];
+let checkQuery = "", checkLimit = 60;
+$("f-checks").addEventListener("submit", e => { e.preventDefault(); checkQuery = $("q-checks").value.trim().toLowerCase(); checkLimit = 60; renderChecks(); });
+for (const id of CHECK_FILTERS) $(id).addEventListener("change", () => { checkLimit = 60; renderChecks(); });
+$("clear-checks").addEventListener("click", () => { for (const id of CHECK_FILTERS) $(id).value = ""; $("q-checks").value = ""; checkQuery = ""; renderChecks(); });
+$("more-checks").addEventListener("click", () => { checkLimit += 60; renderChecks(); });
+const SEV_ORDER = { warn: 0, reject: 1, info: 2 };
 function renderChecks() {
-  const rows = DATA.flags.filter(f => {
+  const rows = DATA.flags.slice().sort((a, b) => SEV_ORDER[a[2]] - SEV_ORDER[b[2]]).filter(f => {
     if ($("fc-sev").value && f[2] !== $("fc-sev").value) return false;
     if ($("fc-type").value && f[1] !== $("fc-type").value) return false;
-    if ($("fc-stream").value && (learnersById[f[3]] || {}).stream !== $("fc-stream").value) return false;
-    if (checkQuery && !`${f[3]} ${f[4]} ${f[5]} ${(learnersById[f[3]] || {}).name || ""}`.toLowerCase().includes(checkQuery)) return false;
+    if ($("fc-stream").value && (byId[f[3]] || {}).stream !== $("fc-stream").value) return false;
+    if (checkQuery && !`${f[3]} ${f[4]} ${f[5]} ${(byId[f[3]] || {}).name || ""}`.toLowerCase().includes(checkQuery)) return false;
     return true;
   });
-  $("r-checks").textContent = `${rows.length.toLocaleString()} of ${DATA.flags.length.toLocaleString()} checks`;
-  $("c-checks").textContent = DATA.flags.filter(f => f[2] !== "info").length.toLocaleString() + " to check";
-  $("list-checks").innerHTML = rows.slice(0, checkLimit).map(f => `<tr>
-    <td><span class="sev ${f[2]}">${SEV[f[2]]}</span></td>
-    <td>${learnersById[f[3]] ? `<button class="linkbtn" type="button" data-go="${f[3]}">${esc(learnersById[f[3]].name)}</button> <span class="mono muted">${f[3]}</span>` : `<span class="mono">${esc(f[3] || "unknown")}</span>`}</td>
-    <td class="mono">${esc(f[4])}</td><td>${esc(f[5])}<br><span class="muted" style="font-size:.8rem">${esc(FLAG_LABEL[f[1]] || f[1])} · ${esc(f[6])}</span></td></tr>`).join("")
-    || `<tr><td colspan="4" class="empty-state">No checks match.</td></tr>`;
+  $("r-checks").textContent = `Showing ${Math.min(rows.length, checkLimit).toLocaleString()} of ${rows.length.toLocaleString()}`;
+  $("n-checks").textContent = " " + DATA.flags.filter(f => f[2] === "warn").length.toLocaleString();
+  $("list-checks").innerHTML = rows.slice(0, checkLimit).map(f => {
+    const l = byId[f[3]];
+    return `<li><span class="tag ${f[2]}">${SEV[f[2]]}</span><div class="body">
+      <p>${esc(f[5])}</p>
+      <p class="meta">${l ? `<button class="link" type="button" data-go="${l.id}">${esc(l.name)}</button> ${l.id}` : esc(f[3] || "Unknown learner")}${f[4] ? `, record ${esc(f[4])}` : ""}. ${esc(FLAG_LABEL[f[1]] || f[1])}${f[6] ? `, from ${esc(f[6])}` : ""}</p>
+    </div></li>`;
+  }).join("") || `<li class="empty" style="display:block">Nothing matches. Try Clear.</li>`;
   $("more-checks").hidden = rows.length <= checkLimit;
-  $("list-checks").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { setTab("learners"); select(b.dataset.go, true); }));
+  $("list-checks").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { setTab("class"); select(b.dataset.go, true); }));
 }
 
-/* ---------- activity ---------- */
-const toolSel = $("fa-tool");
-for (const t of [...new Set(DATA.audit.map(e => e.tool))].sort()) toolSel.insertAdjacentHTML("beforeend", `<option>${esc(t)}</option>`);
-let actQuery = "";
-$("f-activity").addEventListener("submit", e => { e.preventDefault(); actQuery = $("q-activity").value.trim().toLowerCase(); renderActivity(); });
-for (const id of ["fa-who", "fa-tool", "fa-ok"]) $(id).addEventListener("change", renderActivity);
-$("clear-activity").addEventListener("click", () => { for (const id of ["fa-who", "fa-tool", "fa-ok"]) $(id).value = ""; $("q-activity").value = ""; actQuery = ""; renderActivity(); });
-function detailOf(e) {
+/* ---------- history ---------- */
+for (const t of [...new Set(DATA.audit.map(e => e.tool))].sort()) $("fh-tool").insertAdjacentHTML("beforeend", `<option value="${esc(t)}">${esc(ACTION[t] || t)}</option>`);
+const HIST_FILTERS = ["fh-who", "fh-tool", "fh-ok"];
+let histQuery = "";
+$("f-history").addEventListener("submit", e => { e.preventDefault(); histQuery = $("q-history").value.trim().toLowerCase(); renderHistory(); });
+for (const id of HIST_FILTERS) $(id).addEventListener("change", renderHistory);
+$("clear-history").addEventListener("click", () => { for (const id of HIST_FILTERS) $(id).value = ""; $("q-history").value = ""; histQuery = ""; renderHistory(); });
+const isAgent = e => /^(agent|rules|ollama|model|cli|rules-fallback)/.test(String(e.actor || "agent"));
+function about(e) {
   const kw = (e.inputs && e.inputs.kwargs) || {}, args = (e.inputs && e.inputs.args) || [];
-  const first = args[0] ?? kw.learner_id ?? kw.draft_id ?? kw.file_name ?? "";
-  return String(first);
+  const x = String(args[0] ?? kw.learner_id ?? kw.draft_id ?? kw.file_name ?? "");
+  return byId[x] ? `${byId[x].name} ${x}` : x;
 }
-function renderActivity() {
+function when(ts) {
+  const d = new Date(ts);
+  return isNaN(d) ? "" : d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+function renderHistory() {
   const rows = DATA.audit.slice().reverse().filter(e => {
-    const who = e.actor === "agent" ? "agent" : "teacher";
-    if ($("fa-who").value && who !== $("fa-who").value) return false;
-    if ($("fa-tool").value && e.tool !== $("fa-tool").value) return false;
-    if ($("fa-ok").value === "ok" && !e.ok) return false;
-    if ($("fa-ok").value === "blocked" && e.ok) return false;
-    if (actQuery && !`${e.tool} ${e.actor} ${detailOf(e)} ${e.error || ""}`.toLowerCase().includes(actQuery)) return false;
+    if ($("fh-who").value === "agent" && !isAgent(e)) return false;
+    if ($("fh-who").value === "teacher" && isAgent(e)) return false;
+    if ($("fh-tool").value && e.tool !== $("fh-tool").value) return false;
+    if ($("fh-ok").value === "ok" && !e.ok) return false;
+    if ($("fh-ok").value === "blocked" && e.ok) return false;
+    if (histQuery && !`${e.tool} ${ACTION[e.tool] || ""} ${e.actor} ${about(e)} ${e.error || ""}`.toLowerCase().includes(histQuery)) return false;
     return true;
   });
-  $("r-activity").textContent = `${rows.length} of ${DATA.audit.length} logged actions (most recent first)`;
-  $("c-activity").textContent = DATA.audit.length;
-  $("list-activity").innerHTML = rows.slice(0, 300).map(e => `<tr>
-    <td class="mono" style="white-space:nowrap">${esc((e.ts || "").replace("T", " ").replace("+00:00", ""))}</td>
-    <td>${e.actor === "agent" ? "Hatua agent" : esc(e.actor)}</td><td class="mono">${esc(e.tool)}</td>
-    <td class="mono">${esc(detailOf(e))}</td>
-    <td>${e.ok ? `<span class="ok">Done</span> <span class="muted">${e.duration_ms} ms</span>` : `<span class="caveat">${esc(e.error || "Failed")}</span>`}</td></tr>`).join("")
-    || `<tr><td colspan="5" class="empty-state">No logged actions match.</td></tr>`;
+  $("r-history").textContent = `Showing ${Math.min(rows.length, 300)} of ${rows.length}`;
+  $("list-history").innerHTML = rows.slice(0, 300).map(e => `<li>
+    <span class="tag ${isAgent(e) ? "agent" : "teacher"}">${isAgent(e) ? "Hatua" : esc(e.actor)}</span>
+    <div class="body"><p>${esc(ACTION[e.tool] || e.tool)}${about(e) ? `: ${esc(about(e))}` : ""}</p>
+      <p class="meta">${esc(when(e.ts))}. ${e.ok ? "Done" : `<span class="caveat">Stopped: ${esc(e.error || "failed")}</span>`}</p></div></li>`).join("")
+    || `<li class="empty" style="display:block">Nothing matches. Try Clear.</li>`;
 }
 
 /* ---------- start ---------- */
-let startLearner = null, startTab = "learners";
-try { startLearner = localStorage.getItem("hatua-learner"); startTab = localStorage.getItem("hatua-tab") || "learners"; } catch (e) {}
-if (!learnersById[startLearner]) startLearner = (DATA.learners.find(l => l.id === "HT-0003") || DATA.learners[0]).id;
-selected = startLearner;
-setTab(["learners", "checks", "activity"].includes(startTab) ? startTab : "learners");
-renderList(); renderDetail(); renderChecks(); renderActivity(); renderExport();
+let first = store.get("hatua-learner", null);
+if (!byId[first]) first = (DATA.learners.find(l => l.id === "HT-0003") || DATA.learners[0]).id;
+selected = first;
+const startTab = store.get("hatua-tab", "class");
+setTab(["class", "checks", "history"].includes(startTab) ? startTab : "class");
+renderList(); renderLearner(); renderChecks(); renderHistory(); renderSave();
 </script>
