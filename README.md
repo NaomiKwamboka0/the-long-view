@@ -16,7 +16,7 @@ Build a ready-to-open, synthetic-only test package (Python 3.9+, no dependencies
 python scripts/package_teacher_demo.py
 ```
 
-Send `dist/Hatua-Teacher-Test.zip`. The teacher extracts it and opens `index.html` in a desktop browser. It includes a 10–15 minute walkthrough, fictional examples, practice approval and rejection, English/Kiswahili family messages, a downloadable feedback form, and **Privacy & data** controls. Use **Test Teacher**; no real names or school records are needed.
+Share the [live teacher demo](https://naomikwamboka0.github.io/the-long-view/). No installation is needed. For offline use, the optional ZIP contains `index.html`. It includes a 10–15 minute walkthrough, fictional examples, practice approval and rejection, English/Kiswahili family messages, an email feedback form addressed to **ateidiana@gmail.com** (the teacher reviews and sends it in their email app), and **Privacy & data** controls. Use **Test Teacher**; no real names or school records are needed.
 
 The package generator uses fresh synthetic records in an isolated temporary folder. It never copies your working store, profiles or audit logs. A normal `ui/hatua.html` embeds the dataset it was built from, so it must not be published or sent casually.
 

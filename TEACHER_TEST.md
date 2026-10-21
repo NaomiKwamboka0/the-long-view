@@ -16,7 +16,7 @@ If an email or messaging preview shows a blank page, download and extract the at
 - Enter Test Teacher and approve the original draft. Read English and Kiswahili family messages. Separately approve and download a message. Nothing is sent automatically.
 - Review Kiprono (HT-0007), try rejection or editing, and inspect Records to check. A question mark on the long view means a score/level conflict; its term is excluded from patterns.
 - Editing a teacher draft locks the prepared family message so that it cannot silently restore what you changed. Use Change my mind, then review the original draft to try the template message again.
-- On Teacher test, mark the activities you tried, complete the short feedback form and download the feedback file. Read it, then send it privately to the person who invited you.
+- On Teacher test, mark the activities you tried, complete the short feedback form and choose **Email feedback**. Review the prepared email to **ateidiana@gmail.com**, then press Send in your email app. If no email app opens, copy the displayed feedback into an email to that address.
 - Open Privacy & data and clear Hatua browser data when finished. Delete downloaded files separately if you no longer need them.
 
 Use Test Teacher, not your real name. Do not enter real learner names, personal stories, school identifiers or other sensitive information.

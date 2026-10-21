@@ -1,4 +1,4 @@
-Privacy notice · Version 1.0 · 20 October 2026
+Privacy notice · Version 1.1 · 21 October 2026
 
 # Data privacy policy
 
@@ -12,13 +12,13 @@ The HTML file includes invented names, admission numbers, grades, streams, asses
 
 Your approval or rejection, the name you type, approved edits, decision times, selected learner and selected tab are saved in this browser’s local storage where available. Use Test Teacher instead of your real name. Unapproved edits, test checkboxes and feedback remain in page memory and are lost when you close or reload it. If storage is blocked or full, the app shows a notice and keeps decisions only in memory.
 
-This information lets you practise reviewing a draft and return feedback. No name, email address, school name or real learner information is needed for feedback. Participation is voluntary; you can stop at any time.
+This information lets you practise reviewing a draft and return feedback. No teacher name, school name or real learner information is needed in the feedback form. Sending feedback by email reveals your email address and any email signature to the recipient. Participation is voluntary; you can stop at any time.
 
 ## Does anything leave my device?
 
-The offline page has no analytics, advertising, tracking cookies, remote fonts, upload endpoint or hosted AI connection. It makes no application network requests. Downloading approvals, a family message or feedback creates a file on your device; it does not send the file. Copying approvals puts them on your device clipboard, which your device may sync.
+The offline page has no analytics, advertising, tracking cookies, remote fonts, upload endpoint or hosted AI connection. It makes no application network requests. Downloading approvals or a family message creates a file on your device; it does not send the file. Copying approvals puts them on your device clipboard, which your device may sync.
 
-If you send a downloaded file, the recipient and the email or messaging service you choose receive it under their own practices. Review its contents first. Approvals may contain the name you entered and edited text. Feedback contains only your selected answers, test checklist and written comments, not your approval history or teacher name.
+Email feedback opens your email app with a draft addressed to ateidiana@gmail.com. Review it and press Send in your email app to deliver it. The draft includes your selected answers, test checklist and written comments, not your approval history or the teacher name entered for approvals. Your email provider and the recipient receive the message and your sender address under their own practices; your email app may add a signature. Hatua cannot confirm delivery. If you send downloaded approvals separately, they may contain the name you entered and edited text.
 
 If someone hosts the demo on a website, that host receives normal connection information such as your IP address and browser information. Its logging and retention are separate from this offline app. Opening an external link also contacts that site.
 
@@ -38,7 +38,7 @@ Python records, logs, profiles and generated HTML are ordinary unencrypted files
 
 ## Questions, corrections and shared feedback
 
-For this test, contact the person who sent you the demo through the same private channel. Ask them about any feedback you sent, including access, correction or deletion. Do not post personal information in public GitHub issues. There is no central Hatua account or server from which the project can remotely delete your browser files.
+For this test, email ateidiana@gmail.com about feedback you sent, including access, correction or deletion. Do not post personal information in public GitHub issues. There is no central Hatua account or server from which the project can remotely delete your browser files.
 
 Before collecting real school data, the operator must identify the responsible school or organisation and provide its privacy contact and a process for handling learners’ and guardians’ requests. This prototype notice does not establish those roles or promise legal compliance.
 
