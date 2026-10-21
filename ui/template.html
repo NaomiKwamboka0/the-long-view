@@ -308,7 +308,7 @@ footer { font-size:.85rem; color:var(--ink-soft); }
       </div>
       <form class="feedback" id="feedback-form">
         <h3>What did you find?</h3>
-        <p class="soft">Feedback stays on this page until you download it. Send the file back to the person who invited you. No names are required.</p>
+        <p class="soft">Send your feedback to <b>ateidiana@gmail.com</b>. The button opens your email app with your answers ready. Review the email and press Send there. Your email address will be visible to the recipient.</p>
         <label>Test progress <progress id="test-progress" class="progress" max="3" value="0"></progress><span id="test-progress-text" class="small">0 of 3 activities tried</span></label>
         <div class="guide-grid" style="margin-top:0">
           <label>How easy was the review?<select id="feedback-ease"><option value="">Choose an answer</option><option>Very easy</option><option>Mostly easy</option><option>Mixed</option><option>Difficult</option><option>Could not complete</option></select></label>
@@ -317,8 +317,9 @@ footer { font-size:.85rem; color:var(--ink-soft); }
         </div>
         <label>What helped?<textarea id="feedback-helped" maxlength="2000" placeholder="For example: checking the source of a statement"></textarea></label>
         <label>What was confusing or should change?<textarea id="feedback-change" maxlength="2000" placeholder="Describe the step and what you expected. Please use only the fictional example names."></textarea></label>
-        <div><button class="btn" type="submit">Download feedback</button></div>
+        <div><button class="btn" type="submit">Email feedback</button></div>
         <p id="feedback-status" class="small soft" role="status"></p>
+        <textarea id="feedback-email-body" aria-label="Feedback email text to copy" readonly hidden></textarea>
       </form>
     </div>
   </section>
@@ -916,9 +917,14 @@ $("feedback-form").onsubmit = e => {
     `Kiswahili: ${$("feedback-language").value || "Not reviewed"}`, "",
     "What helped:", $("feedback-helped").value.trim() || "Not answered", "",
     "What should change:", $("feedback-change").value.trim() || "Not answered", "",
-    "Downloaded locally. Share this file yourself with the person who invited you."].join("\n");
-  downloadFile("hatua-teacher-feedback.txt", feedback, "text/plain");
-  $("feedback-status").textContent = "Feedback download requested. Check your Downloads folder, review the file and send it to your inviter. Nothing was sent automatically.";
+    "Sent by the teacher from the Hatua demo."].join("\n");
+  $("feedback-email-body").value = feedback;
+  $("feedback-email-body").hidden = false;
+  const email = document.createElement("a");
+  email.href = "mailto:ateidiana@gmail.com?subject=" + encodeURIComponent("Hatua teacher feedback") + "&body=" + encodeURIComponent(feedback);
+  email.target = "_blank"; email.rel = "noopener noreferrer";
+  document.body.appendChild(email); email.click(); email.remove();
+  $("feedback-status").textContent = "Finish by pressing Send in your email app. If it did not open, copy the text below into an email to ateidiana@gmail.com. This page cannot confirm delivery.";
 };
 $("clear-data").onclick = () => {
   if (!confirm("Clear Hatua decisions, saved names, page preferences, unsent feedback and edits from this browser? Downloaded files and Python records will remain.")) return;
@@ -926,9 +932,9 @@ $("clear-data").onclick = () => {
   try { Object.keys(localStorage).filter(k => k.startsWith("hatua-")).forEach(k => localStorage.removeItem(k)); } catch(e) { cleared = false; }
   decisions = {}; for (const k of Object.keys(draftEdits)) delete draftEdits[k];
   $("feedback-form").reset(); taskChecks.forEach(x => x.checked = false); renderProgress();
-  $("feedback-status").textContent = ""; $("save-text").hidden = true;
+  $("feedback-status").textContent = ""; $("feedback-email-body").value = ""; $("feedback-email-body").hidden = true; $("save-text").hidden = true;
   renderList(); renderLearner(); renderSave();
-  $("clear-status").textContent = cleared ? "Hatua browser data cleared. Delete any downloaded approvals, messages or feedback separately. The fictional records embedded in this file remain." : "Session changes cleared, but browser storage could not be accessed. Use your browser’s site-data settings to remove stored Hatua data.";
+  $("clear-status").textContent = cleared ? "Hatua browser data cleared. Delete any downloaded approvals or messages separately. The fictional records embedded in this file remain." : "Session changes cleared, but browser storage could not be accessed. Use your browser’s site-data settings to remove stored Hatua data.";
 };
 /* ---------- start ---------- */
 let first = store.get("hatua-learner", null);
