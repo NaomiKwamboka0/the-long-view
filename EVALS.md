@@ -5,7 +5,7 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 - E01–E16 test the engine. They need only Python 3.9+.
 - A01–A05 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
 
-**Latest run: 20 of 21 passed.** The one failure (E16) is known and explained below.
+**Latest run: 21 of 21 passed (20 October 2026).** This run used the rules planner and scripted model stand-ins, not a new live Ollama model run.
 
 | ID | Task | Result | Detail |
 |---|---|---|---|
@@ -14,22 +14,22 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 | E03 | Detect Kiswahili improvement across a missing term (HT-0012) | Pass | Kiswahili: results rose from Meeting Expectations (Grade 8 Term 1) to Exceeding Expectations (Grade 9 Term 3) over 6 recorded terms. |
 | E04 | Detect an attendance drop and cite attendance entries (HT-0018) | Pass | Attendance under 75% for 3 terms in a row (Grade 8 Term 2: 44/70 days, Grade 8 Term 3: 30/45 days, Grade 9 Term 1: 37/63 days). |
 | E05 | Report a gap in records for a learner who joined in Grade 7 (HT-0024) | Pass | Records start at Grade 7 Term 2. Earlier years are not in Hatua (for example, the learner joined from another school). |
-| E06 | Detect held strength in Science from Grade 5 (HT-0031) | Pass | Science: Exceeding Expectations in 14 recorded terms in a row, Grade 5 Term 1 to Grade 9 Term 3. |
+| E06 | Detect held strength in Science from Grade 5 (HT-0031) | Pass | Science: Exceeding Expectations in 5 recorded terms in a row, Grade 8 Term 2 to Grade 9 Term 3. |
 | E07 | Flag late logging as a records problem, not a learner problem (HT-0036) | Pass | 71 records were uploaded more than six weeks after the task. Check these before relying on them. |
 | E08 | A single EE among AE results must not become a Maths strength or decline (HT-0040) | Pass | no pattern from the one-off result |
 | E09 | Every citation in all 40 teacher drafts exists and belongs to that learner | Pass | 0 problems across 40 drafts |
 | E10 | A teacher note with comparison words is cited but not quoted (HT-0007) | Pass | note withheld, citation kept |
 | E11 | Guard blocks an edited draft that suggests a pathway or compares learners | Pass | 4 problems raised |
-| E12 | Saving to the profile is blocked without a named teacher's approval | Pass | Blocked: draft D-39ecd48f has no teacher approval (status: pending_teacher_review). |
+| E12 | Saving to the profile is blocked without a named teacher's approval | Pass | Blocked: draft D-a257f35f has no teacher approval (status: pending_teacher_review). |
 | E13 | A guardian message cannot be drafted before the teacher approves | Pass | A guardian summary needs the class teacher to approve the teacher draft first. |
 | E14 | After approval, the Kiswahili guardian message keeps references and has no English level names | Pass | - Otieno amekosa siku nyingi za shule katika mihula 3 iliyopita. Mwalimu angependa kuzungumza nanyi kuhusu hil |
 | E15 | Run-to-run variation: 5 runs give identical patterns for all learners | Pass | 1 distinct output(s) across 5 runs (template path, no model) |
-| E16 | KNOWN FAILURE: no pattern should start or end on a record whose score contradicts its level | **Fail** | 6 pattern(s) rest on a conflicting record at an end: ['HT-0005 Pre-Technical Studies sustained_struggle', 'HT-0012 Creative Arts sustained_struggle',  |
+| E16 | No pattern should start or end on a record whose score contradicts its level | Pass | 0 pattern(s) rest on a conflicting record at an end: [] |
 | A01 | Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses | Pass | servers=['hatua', 'filesystem'], drafts=3, paused=True, profiles saved=0 |
 | A02 | Agent: teacher approves one draft and rejects one; only the approved one is saved | Pass | results=['approve', 'reject'], saved=['HT-0001.json'] |
 | A03 | Agent: a model that uses a bad ID and tries to save an unapproved draft is recovered from and blocked | Pass | bad ID error logged=True, save attempt blocked=True, profiles saved=0, still paused for teacher=True |
-| A04 | Agent: every tool call and plan step is in the audit log | Pass | 24 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary'] |
 | A05 | Agent: a model that stops after 1 of 3 learners (as Qwen 7B did on a laptop) still ends with 3 English drafts | Pass | drafts=3, languages=['en'], corrections logged=4, rules finished the rest=True, paused=True |
+| A04 | Agent: every tool call and plan step is in the audit log | Pass | 24 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary'] |
 
 ## What A03 tests
 
@@ -64,11 +64,15 @@ With the local model planning, the order of tool calls can vary between runs. Th
 
 We have one real Qwen run, described above. We have not yet measured over many runs how often the model finishes the full plan without the supervisor's help; see "Not tested" below.
 
-## Known failure we have not fixed (E16)
+## Conflict regression (E16)
 
-Hatua keeps the teacher's rubric level when the recorded score disagrees with it, and flags the record. A pattern can still begin or end on one of those flagged records. In the latest run, 6 patterns did. The flag is shown as a caveat on the pattern, but the pattern is still reported.
+The previous version allowed patterns to begin or end on conflicting score/level records. The updated engine preserves the raw record for inspection, excludes its entire learning-area term from pattern calculations, and breaks a run at that term. A clean suffix may still support a shorter trend. The long view shows a question mark and provides the underlying records for review. E16 now passes with zero conflicting endpoints.
 
-**What we would try next:** treat a score/level conflict at either end of a window as unconfirmed. Shrink the window past it, and report the pattern only if it still holds; otherwise show it as "needs a check" rather than a pattern.
+## Additional regression checks
+
+- `python -m pytest -q`: 28 passing tests, including malformed/remote model endpoints, blocked redirects, conflict handling, empty drafts, changed or edited parent drafts, and approval imports.
+- `npm run test:ui`: 16 passing DOM integration checks against the generated HTML, covering guided entry, evidence dialogs, approval/rejection, separate guardian approval, downloads, feedback, search, keyboard tabs, data clearing, storage failures and reloads.
+- No real browser visual/layout test was run in this environment. The DOM checks do not measure actual rendering, download behavior or screen-reader usability.
 
 ## Not tested
 

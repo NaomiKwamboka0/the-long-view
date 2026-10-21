@@ -62,8 +62,16 @@ The tool boundaries follow the teacher's own steps, so another school system cou
   - Going up or going down: the two earliest terms in the window sit a full rubric step from the two latest, with no reversal in between.
   - Attendance: 2 or more terms in a row under 75%.
 - **Learning areas are followed as families.** For example, Science and Technology (Grades 4–6) continues as Integrated Science (Grades 7–9).
-- **Teacher levels win over scores.** When a score and the rubric level disagree, Hatua keeps the teacher's level and flags the record. A percentage is converted to a level only when the level is missing. The bands EE ≥75, ME ≥50, AE ≥25 are our assumption.
+- **Conflicts are unconfirmed.** When a score and the rubric level disagree, Hatua preserves the original values and flags the record. The whole learning-area term is excluded from inference and breaks consecutive runs. A percentage is converted to a level only when the level is missing. The bands EE ≥75, ME ≥50, AE ≥25 are our assumption.
 - **Approval is outside the agent.** `approve` is not exposed over MCP. `update_profile` checks that an approval exists for the draft and that the approved text's hash matches.
-- **Local only.** There are no network calls in the core. The planner model runs in Ollama on `localhost`; any other host is refused. Learner data never leaves the laptop, which fits Kenya's rule that basic-education data is processed in Kenya. The optional wording rewrite (`hatua/llm.py`) follows the same rule and is dropped if it loses a citation or fails the guard.
+- **Local only.** There are no network calls in the core. The planner model runs in Ollama on `localhost`; any other host is refused. The endpoint parser allows literal loopback destinations only, with proxies and redirects disabled. Downloads, manually shared files, device backups and independently enabled third-party tracing require separate handling; local execution alone does not establish legal compliance. The optional wording rewrite (`hatua/llm.py`) follows the same rule and is dropped if it loses a citation or fails the guard.
 - **The model plans; rules write.** The model decides which tools to call. Patterns and drafts come from deterministic code, so a claim about a learner never depends on what the model happened to generate.
 - **Offline teacher page.** All data is embedded in one HTML file, so it runs on a school laptop without internet.
+
+## Teacher testing and privacy
+
+`package_teacher_demo.py` builds the distribution using a fresh synthetic dataset in a temporary `HATUA_HOME`. It does not copy working school records. The standalone page includes a walkthrough, feedback export and the full privacy notice. Its Content Security Policy blocks application connections and external assets. There are no external fonts.
+
+Browser decisions are namespaced by a fingerprint of the embedded dataset, including draft identities and hashes. Storage errors produce a visible warning. The clear-data action removes Hatua local-storage keys and in-memory feedback and edits, leaving other applications' storage alone. Exports, the embedded dataset, Python records and recipient copies are separate and are explained in the notice.
+
+A previous decision is shown as current only when its source draft hash matches the new draft. Family templates remain locked if the approved teacher text was edited. Approval imports require a source hash; guardian imports also require an explicit sharing decision. The prototype still has no authenticated teacher identities, encryption at rest, concurrent-user storage or automated retention.

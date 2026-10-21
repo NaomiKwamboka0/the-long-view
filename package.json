@@ -1,0 +1,6 @@
+{
+  "name": "hatua-ui-checks",
+  "private": true,
+  "scripts": {"test:ui": "node tests/test_ui.cjs"},
+  "devDependencies": {"jsdom": "26.1.0"}
+}

@@ -1,12 +1,26 @@
 # Hatua
 
-*Hatua kwa hatua* means "step by step" in Kiswahili. Hatua is an open-source AI agent that helps a Kenyan junior school teacher see each learner's strengths and struggles across Grades 4 to 9. Every statement links to the record it came from. Nothing is saved or shared until a named teacher approves it.
+*Hatua kwa hatua* means "step by step" in Kiswahili. Hatua is an open-source AI agent that helps a Kenyan junior school teacher see each learner's strengths and struggles across Grades 4 to 9. Generated claims link to supporting records for a teacher to verify. Records and pending drafts stay in local files. A named teacher must approve a draft before it is added to a learner profile or used to prepare a family message.
 
 Built for the **Education: The Long View** track of the African Agentic AI Design Challenge. Sub-theme: *Longitudinal strength tracking*, with *Plain-language reporting* in English and Kiswahili.
 
 > All data in this repository is **synthetic**. No real learner is represented.
 
 ![Architecture](docs/architecture.png)
+
+## Send it to a teacher
+
+Build a ready-to-open, synthetic-only test package (Python 3.9+, no dependencies):
+
+```bash
+python scripts/package_teacher_demo.py
+```
+
+Send `dist/Hatua-Teacher-Test.zip`. The teacher extracts it and opens `index.html` in a desktop browser. It includes a 10–15 minute walkthrough, fictional examples, practice approval and rejection, English/Kiswahili family messages, a downloadable feedback form, and **Privacy & data** controls. Use **Test Teacher**; no real names or school records are needed.
+
+The package generator uses fresh synthetic records in an isolated temporary folder. It never copies your working store, profiles or audit logs. A normal `ui/hatua.html` embeds the dataset it was built from, so it must not be published or sent casually.
+
+For a public test link, enable GitHub Actions as the Pages source and manually run **Publish synthetic teacher demo**. Use the URL returned by that deployment. See [the teacher guide](TEACHER_TEST.md), [privacy policy](PRIVACY.md) and [GitHub's Pages workflow guide](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
 
 ## Problem statement
 
@@ -48,7 +62,7 @@ Everything runs on the teacher's laptop. See [ARCHITECTURE.md](ARCHITECTURE.md) 
 - **Model:** an open-weights model (Qwen 2.5 7B) runs locally through Ollama and chooses the next tool call. If Ollama is not running, a fixed rules planner makes the same calls, so the demo always works.
 - **Supervisor:** a small model can stop early or repeat itself. Hatua fixes or drops such calls and, if needed, finishes the agreed steps with fixed rules. Every correction is logged.
 - **Self-check:** every draft is re-checked for missing or false citations and for labelling words. A failed draft goes back to the planner once.
-- **Memory and data:** local JSON files for records, notes, attendance, flags and drafts. Nothing is sent outside the laptop.
+- **Memory and data:** local JSON files for records, notes, attendance, flags and drafts. The standard local workflow does not send learner records to a hosted AI service. Generated HTML and exported files contain data; sharing those files discloses their contents.
 - **Pause:** the graph uses a LangGraph interrupt and waits for the teacher.
 
 Patterns and drafts come from fixed rules, not from the model. The model decides which tools to call. So a claim about a learner never depends on what the model happened to write.
@@ -83,7 +97,7 @@ There is **no approve tool**. The agent cannot approve its own work. Every call 
 4. Only then can `update_profile` save to the learner's profile.
 5. A guardian message can only be drafted after the teacher approves, and it needs a second "share" approval.
 
-A guard blocks pathway or career advice, labels, rankings and comparisons with classmates. It also checks the teacher's own edits.
+A phrase-and-citation guard blocks common pathway advice, labels, rankings and comparisons. It also checks teacher edits, but does not prove semantic accuracy. Edited teacher drafts lock the prepared family message to avoid silently restoring removed or changed text. A typed teacher name is an acknowledgement, not authenticated identity.
 
 ## Technology stack
 
@@ -140,7 +154,19 @@ python -m hatua agent
 
 ## Evaluation
 
-`python scripts/run_evals.py` runs 21 fixed tasks: 16 for the engine and 5 for the agent. 20 pass. One known failure is documented. See [EVALS.md](EVALS.md).
+`python scripts/run_evals.py` runs 21 fixed tasks: 16 for the engine and 5 for the agent. See [EVALS.md](EVALS.md) and the recorded results for the latest run.
+
+For regression checks:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pytest -q
+python scripts/package_teacher_demo.py
+npm ci
+npm run test:ui
+```
+
+Node and npm are needed only for developer UI checks and the optional agent, not for the teacher's standalone demo. UI integration checks use a simulated DOM; they do not replace a real browser accessibility or layout review.
 
 **Real model run:** on 20 October 2026 the agent ran end to end on a MacBook Air with Qwen 2.5 7B. It reached the teacher gate, and the profile was saved only after approval. Qwen stopped after 1 of 3 learners, so we added the supervisor described above, and test A05 now replays that run.
 
@@ -148,7 +174,7 @@ python -m hatua agent
 
 - **One real Qwen run so far.** It worked end to end, but it is one run, not a rate. On its own the 7B model stopped early, so for now the supervisor often finishes the steps.
 - **No real school has tested it.** All data is synthetic, written by us. The test cases check that the rules do what we meant, not that teachers find them useful.
-- **Known failure:** a pattern can start or end on a record whose score and level disagree. It is flagged, but still reported. See EVALS.md.
+- **Unconfirmed terms:** a score/level conflict excludes that learning-area term from patterns and breaks a run. The original record stays available for teacher inspection; fix it in the source and rebuild through a controlled import.
 - **No bid or exam documents:** Hatua uses marks, notes and attendance. It does not read the national exam portals, and no public API for them was found.
 - The score bands used when a rubric level is missing (EE from 75%, ME from 50%, AE from 25%) are our assumption.
 - Kiswahili messages use fixed templates. A native speaker should review them.
@@ -156,11 +182,10 @@ python -m hatua agent
 ## Future improvements
 
 - Run the agent with Qwen 10 or more times and measure how often the supervisor has to step in.
-- Treat a record with a score and level conflict as unconfirmed, and shrink the pattern window past it.
 - Test with a junior school teacher, then change the patterns and wording to match what teachers find useful.
 - Have a Kiswahili speaker review all guardian messages.
-- A Data Protection Impact Assessment and written consent steps before any real pilot, as Kenya's Data Protection Act requires for children's data.
-- Import from real school exports, with parental consent.
+- Before any real pilot, identify the responsible operator, assess the lawful basis and child protections, complete the necessary impact assessment and consent process, and establish access, retention and incident controls. See [PRIVACY.md](PRIVACY.md).
+- Validate real-school import and correction workflows after the school has approved its privacy and security arrangements.
 
 ## Licence
 
