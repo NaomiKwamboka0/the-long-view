@@ -17,7 +17,7 @@ function boot({brokenStorage=false, saved=null}={}) {
       w.HTMLDialogElement.prototype.close=function(){this.open=false;};
       w.URL.createObjectURL=blob=>{downloads.push({blob});return 'blob:test';};
       w.URL.revokeObjectURL=()=>{};
-      w.HTMLAnchorElement.prototype.click=function(){downloads.at(-1).filename=this.download;};
+      w.HTMLAnchorElement.prototype.click=function(){if(this.href.startsWith("mailto:")){w.lastFeedbackEmail=this.href;}else{downloads.at(-1).filename=this.download;}};
       if (brokenStorage) Object.defineProperty(w,'localStorage',{get(){throw new Error('blocked');}});
       if(saved) for(const [key,value] of Object.entries(saved)) w.localStorage.setItem(key,value);
     }});
@@ -69,10 +69,19 @@ check('live search and empty results are usable',()=>{
   input('q-class','Kiprono');assert.match($('list-class').textContent,/Kiprono/);assert.match($('r-class').textContent,/Showing 1 of 40/);
   input('q-class','no-such-learner');assert.match($('list-class').textContent,/Nobody matches/);$('clear-class').click();
 });
-check('feedback is downloaded separately and privacy remains accessible',()=>{
+check('feedback email targets the owner and excludes approval details',()=>{
   $('open-test').click();$('feedback-helped').value='Evidence links were useful.';
   $('feedback-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
-  assert.equal(downloads.at(-1).filename,'hatua-teacher-feedback.txt');assert.match($('feedback-status').textContent,/Nothing was sent/);
+  const email=new URL(w.lastFeedbackEmail);
+  assert.equal(email.pathname,'ateidiana@gmail.com');
+  assert.equal(email.searchParams.get('subject'),'Hatua teacher feedback');
+  assert.match(email.searchParams.get('body'),/Evidence links were useful/);
+  assert.doesNotMatch(email.searchParams.get('body'),/Test Teacher|draft_hash/);
+  assert.equal($('feedback-email-body').value,email.searchParams.get('body'));
+  assert.match($('feedback-status').textContent,/pressing Send/);
+  $('feedback-helped').value='Useful & clear? #1 + Kiswahili: nzuri';
+  $('feedback-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  assert.match(new URL(w.lastFeedbackEmail).searchParams.get('body'),/Useful & clear\? #1 \+ Kiswahili: nzuri/);
   $('open-privacy').click();assert.equal($('tab-privacy').hidden,false);assert.match($('tab-privacy').textContent,/ordinary unencrypted files/);
 });
 const saved=Object.fromEntries(Object.keys(w.localStorage).map(k=>[k,w.localStorage.getItem(k)]));
