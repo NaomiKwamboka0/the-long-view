@@ -1,11 +1,10 @@
 <title>Hatua: my class</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+
 <style>
 /* Hatua teacher page.
    One idea: reviewing a learner is a short path, hatua kwa hatua (step by step).
    No borders or table rules; space, soft tone and round shapes separate things.
-   Works offline: if the web font cannot load, the system font is used. */
+   Works offline: system fonts only; no external requests. */
 :root {
   --paper: #eef2ee;          /* soft sage, the page */
   --surface: #ffffff;        /* where work happens */
@@ -23,7 +22,7 @@
   --path: #cdbfe4;
   --focus: #6a4c9c;
   --shadow: 0 18px 48px -12px rgba(33, 48, 41, .28);
-  --font: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font: system-ui, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
@@ -242,8 +241,32 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   .step::before { left: 15px; top: 36px; }
   .search .btn { padding: 11px 14px; }
 }
+
+.guide-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:18px; margin-top:20px; }
+.guide-card { background:var(--tint); border-radius:18px; padding:20px; display:grid; gap:12px; align-content:start; }
+.guide-card h3 { font-size:1.1rem; }
+.eyebrow { color:var(--jacaranda); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700; }
+.intro { display:grid; gap:14px; max-width:74ch; }
+.intro h2 { font-size:clamp(1.8rem,5vw,2.8rem); max-width:22ch; }
+.policy { max-width:80ch; display:grid; gap:18px; }
+.policy h3 { margin-top:10px; }
+.policy a { color:var(--jacaranda); overflow-wrap:anywhere; }
+.feedback { display:grid; gap:14px; margin-top:24px; }
+.feedback label { display:grid; gap:6px; }
+.feedback select, .feedback textarea { width:100%; padding:12px; border:1px solid var(--path); border-radius:12px; background:var(--tint); }
+.feedback textarea { min-height:100px; resize:vertical; }
+.utility { display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin:24px 0; }
+.notice { padding:12px 16px; border-radius:14px; background:var(--sun-soft); color:var(--sun); margin-bottom:16px; }
+.task-check { display:flex; gap:10px; align-items:flex-start; }
+.task-check input { width:20px; height:20px; flex:none; }
+.progress { width:100%; accent-color:var(--jacaranda); }
+.skip { position:absolute; left:16px; top:-60px; background:var(--surface); padding:10px; z-index:9; }
+.skip:focus { top:10px; }
+footer { font-size:.85rem; color:var(--ink-soft); }
+@media (max-width:520px) { .savebar { position:static; transform:none; margin:16px; width:auto; } .wrap { padding-bottom:24px; } }
 </style>
 
+<a class="skip" href="#tab-test">Skip to teacher test</a>
 <div class="wrap">
   <header class="top">
     <div class="brand">
@@ -251,20 +274,55 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
       Hatua
     </div>
     <p class="school" id="school"></p>
-    <span class="practice" title="Every learner and record here is invented for practice">Practice data, not real learners</span>
+    <span class="practice" id="data-badge"></span>
   </header>
 
+  <p id="storage-notice" class="notice" role="status" hidden></p>
   <section class="welcome">
     <h1 id="hello"></h1>
     <button class="btn" type="button" id="start">Start with the next learner</button>
   </section>
 
   <nav class="tabs" role="tablist" aria-label="Parts of Hatua">
+    <button role="tab" aria-selected="false" data-tab="test">Teacher test</button>
     <button role="tab" aria-selected="true" data-tab="class">My class<span class="n" id="n-class"></span></button>
     <button role="tab" aria-selected="false" data-tab="checks">Records to check<span class="n" id="n-checks"></span></button>
     <button role="tab" aria-selected="false" data-tab="history">History</button>
+    <button role="tab" aria-selected="false" data-tab="privacy">Privacy &amp; data</button>
   </nav>
 
+  <section id="tab-test" role="tabpanel" hidden tabindex="-1">
+    <div class="panel">
+      <div class="intro">
+        <p class="eyebrow">The long view · Teacher preview</p>
+        <h2>Every learner has a story. Help us see it clearly.</h2>
+        <p>Hatua brings several years of assessment records into one view. Try a 10–15 minute review and tell us what would help in your classroom.</p>
+        <p class="promise">40 fictional learners. No account, installation or real school records needed. Use <b>Test Teacher</b> when asked for a name. The app sends nothing automatically.</p>
+        <div><button class="btn" id="begin-test" type="button">Begin with Cynthia</button></div>
+        <p class="small soft">This is a working prototype, not a school records system. Please avoid real learner names, school details or sensitive information in your edits and feedback.</p>
+      </div>
+      <div class="guide-grid">
+        <article class="guide-card"><p class="eyebrow">01 · About 3 minutes</p><h3>Follow a claim to its source</h3><p>Open Cynthia (HT-0003). Find the Mathematics pattern, then open a cited record. Does the long view support the statement?</p><button class="btn quiet" type="button" data-scenario="HT-0003">Review Cynthia</button><label class="task-check"><input type="checkbox" data-task="evidence">I checked a claim against its records</label></article>
+        <article class="guide-card"><p class="eyebrow">02 · About 3 minutes</p><h3>Make a teacher decision</h3><p>Read the draft, enter Test Teacher, and approve it. Compare the English and Kiswahili family messages. A separate approval is needed before downloading a message.</p><label class="task-check"><input type="checkbox" data-task="approval">I tried approval and the family message</label></article>
+        <article class="guide-card"><p class="eyebrow">03 · About 3 minutes</p><h3>Try a different story</h3><p>Review Kiprono’s strength in Creative Arts. Try rejecting a draft or editing it before approval. Open Records to check: a conflict means the evidence needs review.</p><button class="btn quiet" type="button" data-scenario="HT-0007">Review Kiprono</button><label class="task-check"><input type="checkbox" data-task="exceptions">I tried another learner and checked a problem</label></article>
+      </div>
+      <form class="feedback" id="feedback-form">
+        <h3>What did you find?</h3>
+        <p class="soft">Feedback stays on this page until you download it. Send the file back to the person who invited you. No names are required.</p>
+        <label>Test progress <progress id="test-progress" class="progress" max="3" value="0"></progress><span id="test-progress-text" class="small">0 of 3 activities tried</span></label>
+        <div class="guide-grid" style="margin-top:0">
+          <label>How easy was the review?<select id="feedback-ease"><option value="">Choose an answer</option><option>Very easy</option><option>Mostly easy</option><option>Mixed</option><option>Difficult</option><option>Could not complete</option></select></label>
+          <label>Would this help your work?<select id="feedback-useful"><option value="">Choose an answer</option><option>Yes</option><option>Maybe, with changes</option><option>Not yet</option></select></label>
+          <label>How was the Kiswahili?<select id="feedback-language"><option value="">Not reviewed</option><option>Clear and natural</option><option>Understandable, needs edits</option><option>Hard to understand</option></select></label>
+        </div>
+        <label>What helped?<textarea id="feedback-helped" maxlength="2000" placeholder="For example: checking the source of a statement"></textarea></label>
+        <label>What was confusing or should change?<textarea id="feedback-change" maxlength="2000" placeholder="Describe the step and what you expected. Please use only the fictional example names."></textarea></label>
+        <div><button class="btn" type="submit">Download feedback</button></div>
+        <p id="feedback-status" class="small soft" role="status"></p>
+      </form>
+    </div>
+  </section>
+  <section id="tab-privacy" role="tabpanel" hidden tabindex="-1"><div class="panel"><!--__PRIVACY__--><div class="utility"><button class="btn quiet" type="button" id="clear-data">Clear Hatua data in this browser</button></div><p id="clear-status" role="status" class="soft small"></p></div></section>
   <!-- MY CLASS -->
   <div id="tab-class" role="tabpanel">
     <div class="split">
@@ -343,6 +401,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
       <ul class="rows" id="list-history"></ul>
     </div>
   </div>
+  <footer class="utility"><span>Hatua · Step by step, with the teacher in charge.</span><button class="link" type="button" id="open-privacy">Privacy &amp; data</button><button class="link" type="button" id="open-test">Teacher test &amp; feedback</button></footer>
 </div>
 
 <dialog id="ev" aria-labelledby="ev-title"><div class="ev" id="ev-body"></div></dialog>
@@ -371,7 +430,10 @@ const ACTION = { list_learners: "Opened the class list", ingest_record: "Read a 
   update_profile: "Saved to a profile", approve: "Teacher decision", "agent.start": "Hatua started", "agent.plan": "Hatua planned the next step",
   "agent.self_check": "Hatua checked its drafts", "filesystem.list_directory": "Looked in the inbox folder" };
 const LEVEL = { EE: "Exceeding Expectations", ME: "Meeting Expectations", AE: "Approaching Expectations", BE: "Below Expectations" };
-const STORE_KEY = "hatua-decisions-v1";
+const PREFIX = `hatua-v2-${DATA.meta.data_key}-`;
+const STORE_KEY = "decisions";
+const draftEdits = {};
+let storageAvailable = true;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
 const termLabel = o => `Grade ${4 + Math.floor(o / 3)}, Term ${o % 3 + 1}`;
@@ -379,8 +441,17 @@ const forbidden = DATA.guard.forbidden.map(p => new RegExp(p, "i"));
 const byId = Object.fromEntries(DATA.learners.map(l => [l.id, l]));
 const initials = n => n.slice(0, 1).toUpperCase();
 const plural = (n, one, many) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
-const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } },
-                set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+function storageWarning() {
+  storageAvailable = false;
+  $("storage-notice").hidden = false;
+  $("storage-notice").textContent = "This browser cannot save Hatua changes. Keep this page open and download your decisions before closing or refreshing it.";
+}
+const store = {
+  get(k, d) { try { return localStorage.getItem(PREFIX + k) ?? d; } catch (e) { storageWarning(); return d; } },
+  set(k, v) { try { localStorage.setItem(PREFIX + k, v); } catch (e) { storageWarning(); } }
+};
+try { localStorage.setItem(PREFIX + "check", "1"); localStorage.removeItem(PREFIX + "check"); } catch(e) { storageWarning(); }
+
 
 /* evidence index: R- records, N- notes, A- attendance */
 const EVID = {};
@@ -394,8 +465,20 @@ for (const f of DATA.flags) if (f[4]) (flagsByRecord[f[4]] ||= []).push(f);
 
 /* decisions stay in this browser until the approvals file is imported */
 let decisions = {};
-try { decisions = JSON.parse(store.get(STORE_KEY, "{}")); } catch (e) { decisions = {}; }
-function saveDecisions() { store.set(STORE_KEY, JSON.stringify(decisions)); renderSave(); }
+try {
+  const saved = JSON.parse(store.get(STORE_KEY, "{}"));
+  if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+    for (const l of DATA.learners) {
+      const d = saved[l.draft.id];
+      if (d && ["approve", "reject"].includes(d.decision) && typeof d.teacher === "string" && d.teacher.trim().length >= 3 && (d.edited == null || typeof d.edited === "string")) {
+        if (d.decision !== "approve" || !checkText(d.edited ?? l.draft.text, l.id).length) decisions[l.draft.id] = d;
+        const g = saved["G-" + l.id];
+        if (decisions[l.draft.id]?.decision === "approve" && !d.edited && g && ["en","sw"].includes(g.lang)) decisions["G-" + l.id] = g;
+      }
+    }
+  }
+} catch (e) { decisions = {}; }
+function saveDecisions() { store.set(STORE_KEY, JSON.stringify(decisions)); renderSave(); renderHistory(); }
 
 function statusOf(l) {
   const d = decisions[l.draft.id];
@@ -407,6 +490,7 @@ const STATUS = { waiting: "Waiting for you", approved: "Approved", rejected: "Re
 
 function checkText(text, lid) {
   const out = [];
+  if (!text.trim()) return ["The draft is empty. Keep the summary and its evidence before approving."];
   for (const rx of forbidden) { const m = text.match(rx); if (m) out.push(`"${m[0]}" labels, places or compares the learner. Please reword it.`); }
   for (const line of text.split("\n")) {
     const t = line.trim();
@@ -421,6 +505,7 @@ function checkText(text, lid) {
 }
 
 /* ---------- header ---------- */
+$("data-badge").textContent = DATA.meta.demo ? "Practice data · fictional learners" : "Local review copy · do not publish";
 $("school").innerHTML = `<b>${esc(DATA.meta.school)}</b><br>${esc(DATA.meta.class)}, ${plural(DATA.meta.records, "record", "records")}`;
 const waitingList = () => DATA.learners.filter(l => statusOf(l) === "waiting");
 function renderHello() {
@@ -437,22 +522,32 @@ $("start").addEventListener("click", () => {
 /* ---------- tabs ---------- */
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
 function setTab(t) {
-  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
-  for (const p of ["class", "checks", "history"]) $("tab-" + p).hidden = p !== t;
+  document.querySelectorAll(".tabs button").forEach(b => { b.setAttribute("aria-selected", String(b.dataset.tab === t)); b.tabIndex = b.dataset.tab === t ? 0 : -1; });
+  for (const p of ["test", "class", "checks", "history", "privacy"]) $("tab-" + p).hidden = p !== t;
   store.set("hatua-tab", t);
 }
 
 /* ---------- class list ---------- */
 for (const f of DATA.families) $("fl-area").insertAdjacentHTML("beforeend", `<option>${esc(f)}</option>`);
 const CLASS_FILTERS = ["fl-stream", "fl-status", "fl-area", "fl-type", "fl-issues", "fl-current"];
+const tabButtons = [...document.querySelectorAll(".tabs button")];
+for (const [i, b] of tabButtons.entries()) {
+  b.id = "nav-" + b.dataset.tab; b.setAttribute("aria-controls", "tab-" + b.dataset.tab);
+  $("tab-" + b.dataset.tab).setAttribute("aria-labelledby", b.id);
+  b.addEventListener("keydown", e => {
+    const index = e.key === "ArrowRight" ? (i+1)%tabButtons.length : e.key === "ArrowLeft" ? (i+tabButtons.length-1)%tabButtons.length : e.key === "Home" ? 0 : e.key === "End" ? tabButtons.length-1 : -1;
+    if (index >= 0) { e.preventDefault(); setTab(tabButtons[index].dataset.tab); tabButtons[index].focus(); }
+  });
+}
 let query = "", selected = null;
 $("f-class").addEventListener("submit", e => { e.preventDefault(); query = $("q-class").value.trim().toLowerCase(); renderList(); });
+$("q-class").addEventListener("input", () => { query = $("q-class").value.trim().toLowerCase(); renderList(); });
 for (const id of CLASS_FILTERS) $(id).addEventListener("change", renderList);
 $("clear-class").addEventListener("click", () => { for (const id of CLASS_FILTERS) $(id).value = ""; $("q-class").value = ""; query = ""; renderList(); });
 
 function matches(l) {
   const v = id => $(id).value;
-  if (query && !`${l.name} ${l.id}`.toLowerCase().includes(query)) return false;
+  if (query && !`${l.name} ${esc(l.id)}`.toLowerCase().includes(query)) return false;
   if (v("fl-stream") && l.stream !== v("fl-stream")) return false;
   let pats = l.patterns;
   if (v("fl-current") === "yes") pats = pats.filter(p => p.current);
@@ -461,8 +556,8 @@ function matches(l) {
   else if (v("fl-type")) { if (!pats.some(p => p.type === v("fl-type"))) return false; }
   else if ((v("fl-area") || v("fl-current")) && !pats.length) return false;
   if (v("fl-status") && statusOf(l) !== v("fl-status")) return false;
-  if (v("fl-issues") === "yes" && !l.record_notes.length) return false;
-  if (v("fl-issues") === "no" && l.record_notes.length) return false;
+  if (v("fl-issues") === "yes" && !DATA.flags.some(f => f[3] === l.id && f[2] !== "info")) return false;
+  if (v("fl-issues") === "no" && DATA.flags.some(f => f[3] === l.id && f[2] !== "info")) return false;
   return true;
 }
 function oneLine(l) {
@@ -474,11 +569,11 @@ function renderList() {
   $("r-class").textContent = `Showing ${rows.length} of ${DATA.learners.length}`;
   $("list-class").innerHTML = rows.length ? rows.map(l => {
     const st = statusOf(l);
-    return `<li><button type="button" data-lid="${l.id}" aria-current="${selected === l.id}">
+    return `<li><button type="button" data-lid="${esc(l.id)}" aria-current="${selected === l.id}">
       <span class="face" aria-hidden="true">${esc(initials(l.name))}</span>
       <span class="nm">${esc(l.name)}</span>
       <span class="pill ${st}">${STATUS[st]}</span>
-      <span class="what">${l.id}, ${l.stream}. ${esc(oneLine(l))}</span>
+      <span class="what">${esc(l.id)}, ${esc(l.stream)}. ${esc(oneLine(l))}</span>
     </button></li>`;
   }).join("") : `<li class="empty">Nobody matches. Try Clear.</li>`;
   $("list-class").querySelectorAll("[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid, true)));
@@ -497,7 +592,7 @@ function select(lid, scroll) {
 
 function cites(ids, max = 8) {
   const shown = ids.slice(0, max), rest = ids.length - shown.length;
-  return `<div class="cites"><span class="small soft">Records:</span>${shown.map(id => `<button class="cite" type="button" data-ev="${id}">${id}</button>`).join("")}${rest > 0 ? `<button class="link small" type="button" data-all="${esc(ids.join(","))}">and ${rest} more</button>` : ""}</div>`;
+  return `<div class="cites"><span class="small soft">Records:</span>${shown.map(id => `<button class="cite" type="button" data-ev="${esc(id)}">${esc(id)}</button>`).join("")}${rest > 0 ? `<button class="link small" type="button" data-all="${esc(ids.join(","))}">and ${rest} more</button>` : ""}</div>`;
 }
 
 function findCard(p) {
@@ -505,11 +600,11 @@ function findCard(p) {
   const trail = p.trail.map(t => `<span title="${esc(t.term)}">${/%$/.test(t.level) ? `<span class="small">${esc(t.level)}</span>` : lv(t.level)}</span>`).join("");
   return `<article class="find ${tone}">
     <div class="kind">${label}${p.current ? `<span class="ongoing">still going on</span>` : ""}
-      ${p.family ? `<button class="link small" type="button" data-hl="${p.pattern_id}">Show me on the long view</button>` : ""}</div>
+      ${p.family ? `<button class="link small" type="button" data-hl="${esc(p.pattern_id)}">Show me on the long view</button>` : ""}</div>
     <p>${esc(p.statement)}</p>
     <div class="trail">${trail}</div>
     ${cites(p.evidence)}
-    ${p.notes.slice(0, 2).map(n => `<p class="quote">"${esc(n.text)}" <span class="soft small">(teacher note, ${esc(n.term)})</span></p>`).join("")}
+    ${p.notes.slice(0, 2).filter(n => !forbidden.some(rx => rx.test(n.text))).map(n => `<p class="quote">"${esc(n.text)}" <span class="soft small">(teacher note, ${esc(n.term)})</span></p>`).join("")}
     ${p.caveats.map(c => `<p class="caveat">${esc(c)}</p>`).join("")}
   </article>`;
 }
@@ -527,9 +622,10 @@ function longView(l) {
     const rs = (cells[f] || {})[o];
     const cls = [o % 3 === 0 && o ? "g" : "", lit && highlight.family === f && lit.has(o) ? "lit" : ""].join(" ");
     if (!rs) return `<td class="${cls}"><span class="none" title="No record for ${termLabel(o)}"></span></td>`;
+    if (rs.some(r => r[11].split(",").includes("score_level_conflict"))) return `<td class="${cls}"><button class="att low" type="button" data-records="${esc(rs.map(r => r[0]).join(','))}" aria-label="${termLabel(o)}: conflicting record, excluded from patterns">?</button></td>`;
     const pts = rs.reduce((s, r) => s + ({ BE: 1, AE: 2, ME: 3, EE: 4 })[r[5]], 0) / rs.length;
     const level = ["BE", "AE", "ME", "EE"][Math.max(0, Math.min(3, Math.floor(pts + 0.5) - 1))];
-    return `<td class="${cls}"><button type="button" data-ev="${rs[0][0]}" aria-label="${termLabel(o)}: ${LEVEL[level]}. Open the record">${lv(level)}</button></td>`;
+    return `<td class="${cls}"><button type="button" data-records="${esc(rs.map(r => r[0]).join(","))}" aria-label="${termLabel(o)}: ${LEVEL[level]}. Open all ${rs.length} records">${lv(level)}</button></td>`;
   }).join("")}</tr>`).join("");
   const attRow = `<tr><th class="area" scope="row">Days in school</th>${ords.map(o => {
     const a = att[o], cls = o % 3 === 0 && o ? "g" : "";
@@ -544,27 +640,29 @@ function decideStep(l) {
   const st = statusOf(l), dec = decisions[l.draft.id];
   if (st === "approved" || st === "rejected") {
     const who = dec ? dec.teacher : l.decided.by;
-    return `<div class="result ${st}"><p><b>${st === "approved" ? "You approved this draft" : "You rejected this draft"}</b>${who ? `, signed ${esc(who)}` : ""}.${dec ? " It is saved on this laptop." : ""}</p>
+    return `<div class="result ${st}"><p><b>${st === "approved" ? "You approved this draft" : "You rejected this draft"}</b>${who ? `, signed ${esc(who)}` : ""}.${dec ? (storageAvailable ? " This decision is saved in this browser." : " This decision is in memory; download it before closing.") : ""}</p>
       ${dec ? `<button class="btn quiet" type="button" id="undo">Change my mind</button>` : ""}</div>`;
   }
   return `<div class="decide">
     <label for="draft-text" class="small soft">You can edit the draft before you approve it. Each line must keep its record numbers.</label>
-    <textarea id="draft-text">${esc(l.draft.text)}</textarea>
+    <textarea id="draft-text">${esc(draftEdits[l.id] ?? l.draft.text)}</textarea>
     <div id="draft-check" aria-live="polite"></div>
-    <div class="row"><input type="text" id="teacher-name" placeholder="Your full name" aria-label="Your full name" autocomplete="name">
+    <div class="row"><input type="text" id="teacher-name" placeholder="${DATA.meta.demo ? "Test Teacher" : "Your full name"}" aria-label="Teacher name for this decision" autocomplete="off">
       <button class="btn leaf" type="button" id="approve">Approve draft</button>
       <button class="btn quiet" type="button" id="reject">Reject draft</button></div>
   </div>`;
 }
 
 function familyStep(l) {
+  const edited = decisions[l.draft.id]?.edited || (l.decided?.text && l.decided.text !== l.draft.text);
+  if (edited) return `<p class="notice">You edited the teacher draft. The prepared family message may not reflect your changes, so it is locked. Use “Change my mind” and review the original draft to try the template message in this demo.</p>`;
   const g = decisions["G-" + l.id] || {};
   const lang = g.lang || "en", shared = g.decision === "approve";
   const msg = l.guardian[lang];
   return `<div class="langs" role="group" aria-label="Language">
       ${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-lang="${k}" aria-pressed="${lang === k}"${shared ? " disabled" : ""}>${t}</button>`).join("")}</div>
     <pre class="letter">${esc(msg.text)}</pre>
-    ${shared ? `<div class="result approved"><p>Approved for sharing, signed ${esc(g.teacher)}. Hatua does not send it. You share it yourself.</p><button class="btn quiet" type="button" id="g-undo">Change my mind</button></div>`
+    ${shared ? `<div class="result approved"><p>Approved for sharing, signed ${esc(g.teacher)}. Hatua does not send it. You share it yourself.</p><button class="btn quiet" type="button" id="g-download">Download message</button><button class="btn quiet" type="button" id="g-undo">Change my mind</button></div>`
       : `<label class="agree"><input type="checkbox" id="g-share"> I will share this with the family myself, or I have already talked with them about it.</label>
          <div><button class="btn" type="button" id="g-approve" disabled>Approve the message</button></div>`}`;
 }
@@ -576,13 +674,13 @@ function renderLearner() {
   const approved = st === "approved", decided = approved || st === "rejected";
   const nothing = !l.patterns.length && !l.record_notes.length;
   const finds = l.patterns.map(findCard).join("");
-  const checkFirst = l.record_notes.map(n => `<article class="find"><div class="kind">${n.type === "data_gap" ? "Some terms have no records" : "Some records were uploaded late"}</div><p>${esc(n.statement)}</p>${cites(n.evidence, 6)}</article>`).join("");
+  const checkFirst = l.record_notes.map(n => `<article class="find"><div class="kind">${n.type === "data_gap" ? "Some terms have no records" : n.type === "score_level_conflict" ? "Some scores and levels disagree" : "Some records were uploaded late"}</div><p>${esc(n.statement)}</p>${cites(n.evidence, 6)}</article>`).join("");
   const step = (n, cls, title, hint, body) => `<li class="step ${cls}"><span class="dot" aria-hidden="true">${cls === "done" ? "✓" : n}</span>
     <div class="step-body"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : ""}${body}</div></li>`;
   el.innerHTML = `<div class="learner">
     <div class="who">
       <span class="face" aria-hidden="true">${esc(initials(l.name))}</span>
-      <div class="facts"><h2>${esc(l.name)}</h2>${l.id}, Grade ${l.grade} ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</div>
+      <div class="facts"><h2>${esc(l.name)}</h2>${esc(l.id)}, Grade ${esc(l.grade)} ${esc(l.stream)}. ${l.reviewed} records, ${esc(l.span)}.</div>
       <span class="pill ${st}">${STATUS[st]}</span>
       <button class="link back" type="button" id="back">Back to class list</button>
     </div>
@@ -593,10 +691,10 @@ function renderLearner() {
         nothing ? `<p class="soft">No pattern has held across enough terms yet. There is nothing to review for ${esc(l.name)} right now.</p>`
           : `<div class="finds">${finds}</div>${checkFirst ? `<div class="checkfirst"><p class="small soft">Check these before relying on the points above:</p>${checkFirst}</div>` : ""}`)}
       ${step(2, decided ? "done" : "", "See the long view, Grade 4 to Grade 9",
-        "Each mark is one term. Tap a mark to open the record behind it.",
+        "Each mark is one term. Tap it to open all contributing records. A ? means a conflict; that term is excluded from patterns.",
         `<div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span><span><span class="lv" style="box-shadow:inset 0 0 0 2px var(--paper)"></span> No record</span></div>${longView(l)}`)}
       ${nothing ? "" : step(3, decided ? "done" : "", "Decide on the draft",
-        decided ? "" : "Nothing is saved or shared until you approve.", decideStep(l))}
+        decided ? "" : "Review this prepared draft. Your decision stays in this browser; no message is sent automatically.", decideStep(l))}
       ${nothing ? "" : step(4, approved ? "" : "locked", "Message for the family",
         approved ? "A short message in plain words. Choose the language the family reads best." : "This opens after you approve the draft.",
         approved ? familyStep(l) : "")}
@@ -607,10 +705,11 @@ function renderLearner() {
 
 function wireLearner(l) {
   const el = $("learner");
+  el.querySelectorAll("[data-records]").forEach(b => b.addEventListener("click", () => openRecords(b.dataset.records.split(","))));
   el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => openEvidence(b.dataset.ev)));
   el.querySelectorAll("[data-all]").forEach(b => b.addEventListener("click", () => {
     const wrap = b.parentElement;
-    wrap.innerHTML = `<span class="small soft">Records:</span>` + b.dataset.all.split(",").map(id => `<button class="cite" type="button" data-ev="${id}">${id}</button>`).join("");
+    wrap.innerHTML = `<span class="small soft">Records:</span>` + b.dataset.all.split(",").map(id => `<button class="cite" type="button" data-ev="${esc(id)}">${esc(id)}</button>`).join("");
     wrap.querySelectorAll("[data-ev]").forEach(x => x.addEventListener("click", () => openEvidence(x.dataset.ev)));
   }));
   el.querySelectorAll("[data-hl]").forEach(b => b.addEventListener("click", () => {
@@ -623,14 +722,14 @@ function wireLearner(l) {
   const ta = $("draft-text");
   if (ta) {
     const name = $("teacher-name");
-    name.value = store.get("hatua-teacher", "");
+    name.value = store.get("hatua-teacher", DATA.meta.demo ? "Test Teacher" : "");
     const update = () => {
       const probs = checkText(ta.value, l.id);
       $("draft-check").innerHTML = probs.length ? `<ul class="checks-bad">${probs.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
-        : `<p class="checks-ok">Looks fine: every line has its records, and nothing labels or compares the learner.</p>`;
+        : `<p class="checks-ok">No missing citations or blocked phrases detected. Please check that the evidence really supports the wording.</p>`;
       $("approve").disabled = probs.length > 0 || name.value.trim().length < 3;
     };
-    ta.addEventListener("input", update); name.addEventListener("input", update); update();
+    ta.addEventListener("input", () => { draftEdits[l.id] = ta.value; update(); }); name.addEventListener("input", update); update();
     const go = d => { const n = name.value.trim(); if (n.length < 3) { name.focus(); return; } store.set("hatua-teacher", n); decide(l, d, ta.value, n); };
     $("approve").addEventListener("click", () => go("approve"));
     $("reject").addEventListener("click", () => go("reject"));
@@ -640,18 +739,33 @@ function wireLearner(l) {
   $("g-share")?.addEventListener("change", e => { $("g-approve").disabled = !e.target.checked; });
   $("g-approve")?.addEventListener("click", () => {
     const lang = (decisions["G-" + l.id] || {}).lang || "en";
-    decisions["G-" + l.id] = { decision: "approve", lang, teacher: decisions[l.draft.id].teacher, at: new Date().toISOString() };
+    decisions["G-" + l.id] = { decision: "approve", lang, teacher: decisions[l.draft.id]?.teacher || l.decided?.by, at: new Date().toISOString() };
     saveDecisions(); renderLearner();
+  });
+  $("g-download")?.addEventListener("click", () => {
+    const g = decisions["G-" + l.id];
+    if (statusOf(l) === "approved" && g?.decision === "approve") downloadFile(`hatua-${esc(l.id)}-${g.lang}.txt`, l.guardian[g.lang].text, "text/plain");
   });
   $("g-undo")?.addEventListener("click", () => { decisions["G-" + l.id] = { lang: decisions["G-" + l.id].lang }; saveDecisions(); renderLearner(); });
 }
 
 function decide(l, decision, text, teacher) {
+  if (decision === "approve" && checkText(text, l.id).length) return;
+  delete decisions["G-" + l.id];
+  delete draftEdits[l.id];
   decisions[l.draft.id] = { decision, teacher, edited: text !== l.draft.text ? text : null, at: new Date().toISOString() };
   saveDecisions(); renderList(); renderLearner();
 }
 
 /* ---------- evidence pop-up ---------- */
+function openRecords(ids) {
+  if (ids.length === 1) { openEvidence(ids[0]); return; }
+  $("ev-body").innerHTML = `<div class="ev-head"><h2 id="ev-title">Records for this term</h2><button class="btn quiet" id="ev-close" type="button">Close</button></div><p>The displayed level combines these records. A conflict excludes the whole term from patterns.</p>${ids.map(id => `<button class="btn quiet" type="button" data-record="${esc(id)}">${esc(id)}</button>`).join("")}`;
+  $("ev-close").onclick = () => $("ev").close();
+  $("ev-body").querySelectorAll("[data-record]").forEach(b => b.onclick = () => openEvidence(b.dataset.record));
+  if (!$("ev").open) $("ev").showModal();
+}
+
 function openEvidence(id) {
   const e = EVID[id];
   let body = "";
@@ -675,7 +789,7 @@ function openEvidence(id) {
   $("ev-body").innerHTML = `<div class="ev-head"><h2 id="ev-title" style="font-size:1.2rem">${kind} <span class="id">${esc(id)}</span></h2>
     <button class="btn quiet" type="button" id="ev-close">Close</button></div>${body}`;
   $("ev-close").addEventListener("click", () => $("ev").close());
-  $("ev").showModal();
+  if (!$("ev").open) $("ev").showModal();
 }
 $("ev").addEventListener("click", e => { if (e.target === $("ev")) $("ev").close(); });
 
@@ -684,11 +798,10 @@ function saveItems() {
   const items = [];
   for (const l of DATA.learners) {
     const d = decisions[l.draft.id];
-    if (!d) continue;
-    items.push({ draft_id: l.draft.id, learner_id: l.id, audience: "teacher", decision: d.decision, teacher: d.teacher,
+    if (d) items.push({ draft_id: l.draft.id, learner_id: l.id, audience: "teacher", decision: d.decision, teacher: d.teacher,
       hash: l.draft.hash, edited_text: d.edited, decided_at: d.at });
     const g = decisions["G-" + l.id];
-    if (d.decision === "approve" && g && g.decision === "approve")
+    if (statusOf(l) === "approved" && g && g.decision === "approve")
       items.push({ learner_id: l.id, audience: "guardian", language: g.lang, decision: "approve", teacher: g.teacher,
         share: true, hash: l.guardian[g.lang].hash, decided_at: g.at });
   }
@@ -697,15 +810,16 @@ function saveItems() {
 function renderSave() {
   const items = saveItems();
   $("savebar").hidden = !items.length;
-  $("save-count").textContent = items.length === 1 ? "1 decision is kept on this laptop. Download it so it reaches the learner's profile."
-    : `${items.length} decisions are kept on this laptop. Download them so they reach the learners' profiles.`;
+  $("save-count").textContent = items.length === 1 ? "1 decision is ready to download. Downloading does not send it or update a profile."
+    : `${items.length} decisions are ready to download. Nothing has been sent or imported.`;
   $("save-text").value = JSON.stringify(items, null, 1);
 }
-$("btn-download").addEventListener("click", () => {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([$("save-text").value], { type: "application/json" }));
-  a.download = "approvals.json"; a.click();
-});
+function downloadFile(filename, content, type) {
+  const a = document.createElement("a"), url = URL.createObjectURL(new Blob([content], {type}));
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+$("btn-download").addEventListener("click", () => downloadFile("approvals.json", $("save-text").value, "application/json"));
 $("btn-copy").addEventListener("click", async () => {
   const ta = $("save-text");
   try { await navigator.clipboard.writeText(ta.value); $("btn-copy").textContent = "Copied"; }
@@ -736,7 +850,7 @@ function renderChecks() {
     const l = byId[f[3]];
     return `<li><span class="tag ${f[2]}">${SEV[f[2]]}</span><div class="body">
       <p>${esc(f[5])}</p>
-      <p class="meta">${l ? `<button class="link" type="button" data-go="${l.id}">${esc(l.name)}</button> ${l.id}` : esc(f[3] || "Unknown learner")}${f[4] ? `, record ${esc(f[4])}` : ""}. ${esc(FLAG_LABEL[f[1]] || f[1])}${f[6] ? `, from ${esc(f[6])}` : ""}</p>
+      <p class="meta">${l ? `<button class="link" type="button" data-go="${esc(l.id)}">${esc(l.name)}</button> ${esc(l.id)}` : esc(f[3] || "Unknown learner")}${f[4] ? `, record ${esc(f[4])}` : ""}. ${esc(FLAG_LABEL[f[1]] || f[1])}${f[6] ? `, from ${esc(f[6])}` : ""}</p>
     </div></li>`;
   }).join("") || `<li class="empty" style="display:block">Nothing matches. Try Clear.</li>`;
   $("more-checks").hidden = rows.length <= checkLimit;
@@ -761,7 +875,11 @@ function when(ts) {
   return isNaN(d) ? "" : d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 function renderHistory() {
-  const rows = DATA.audit.slice().reverse().filter(e => {
+  const browserEvents = DATA.learners.filter(l => decisions[l.draft.id]).map(l => ({
+    tool: "approve", actor: decisions[l.draft.id].teacher, ts: decisions[l.draft.id].at,
+    ok: true, inputs: {args: [l.id]}
+  }));
+  const rows = [...DATA.audit, ...browserEvents].sort((a,b) => String(b.ts).localeCompare(String(a.ts))).filter(e => {
     if ($("fh-who").value === "agent" && !isAgent(e)) return false;
     if ($("fh-who").value === "teacher" && isAgent(e)) return false;
     if ($("fh-tool").value && e.tool !== $("fh-tool").value) return false;
@@ -778,11 +896,46 @@ function renderHistory() {
     || `<li class="empty" style="display:block">Nothing matches. Try Clear.</li>`;
 }
 
+/* ---------- teacher testing and privacy ---------- */
+$("begin-test").onclick = () => { setTab("class"); select("HT-0003", true); };
+document.querySelectorAll("[data-scenario]").forEach(b => b.onclick = () => { setTab("class"); select(b.dataset.scenario, true); });
+$("open-privacy").onclick = () => setTab("privacy");
+$("open-test").onclick = () => setTab("test");
+const taskChecks = [...document.querySelectorAll("[data-task]")];
+function renderProgress() {
+  const n = taskChecks.filter(x => x.checked).length;
+  $("test-progress").value = n; $("test-progress-text").textContent = `${n} of 3 activities tried`;
+}
+taskChecks.forEach(x => x.addEventListener("change", renderProgress));
+$("feedback-form").onsubmit = e => {
+  e.preventDefault();
+  const feedback = ["HATUA — TEACHER TEST FEEDBACK", "Synthetic-data preview; no real learner data requested.", "",
+    ...taskChecks.map(x => `${x.checked ? "Tried" : "Not tried"}: ${x.dataset.task}`), "",
+    `Ease of use: ${$("feedback-ease").value || "Not answered"}`,
+    `Useful in my work: ${$("feedback-useful").value || "Not answered"}`,
+    `Kiswahili: ${$("feedback-language").value || "Not reviewed"}`, "",
+    "What helped:", $("feedback-helped").value.trim() || "Not answered", "",
+    "What should change:", $("feedback-change").value.trim() || "Not answered", "",
+    "Downloaded locally. Share this file yourself with the person who invited you."].join("\n");
+  downloadFile("hatua-teacher-feedback.txt", feedback, "text/plain");
+  $("feedback-status").textContent = "Feedback download requested. Check your Downloads folder, review the file and send it to your inviter. Nothing was sent automatically.";
+};
+$("clear-data").onclick = () => {
+  if (!confirm("Clear Hatua decisions, saved names, page preferences, unsent feedback and edits from this browser? Downloaded files and Python records will remain.")) return;
+  let cleared = true;
+  try { Object.keys(localStorage).filter(k => k.startsWith("hatua-")).forEach(k => localStorage.removeItem(k)); } catch(e) { cleared = false; }
+  decisions = {}; for (const k of Object.keys(draftEdits)) delete draftEdits[k];
+  $("feedback-form").reset(); taskChecks.forEach(x => x.checked = false); renderProgress();
+  $("feedback-status").textContent = ""; $("save-text").hidden = true;
+  renderList(); renderLearner(); renderSave();
+  $("clear-status").textContent = cleared ? "Hatua browser data cleared. Delete any downloaded approvals, messages or feedback separately. The fictional records embedded in this file remain." : "Session changes cleared, but browser storage could not be accessed. Use your browser’s site-data settings to remove stored Hatua data.";
+};
 /* ---------- start ---------- */
 let first = store.get("hatua-learner", null);
-if (!byId[first]) first = (DATA.learners.find(l => l.id === "HT-0003") || DATA.learners[0]).id;
+if (!byId[first]) first = (DATA.learners.find(l => l.id === "HT-0003") || DATA.learners[0])?.id;
 selected = first;
-const startTab = store.get("hatua-tab", "class");
-setTab(["class", "checks", "history"].includes(startTab) ? startTab : "class");
+const startTab = store.get("hatua-tab", DATA.meta.demo ? "test" : "class");
+setTab(["test", "class", "checks", "history", "privacy"].includes(startTab) ? startTab : "class");
 renderList(); renderLearner(); renderChecks(); renderHistory(); renderSave();
+window.addEventListener("beforeunload", e => { if (Object.keys(draftEdits).length || $("feedback-helped").value || $("feedback-change").value || (!storageAvailable && saveItems().length)) { e.preventDefault(); e.returnValue = ""; } });
 </script>
