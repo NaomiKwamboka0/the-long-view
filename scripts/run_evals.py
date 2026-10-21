@@ -3,7 +3,7 @@
     python scripts/run_evals.py
 
 Writes evals/results.json and prints a pass/fail table. Tasks are fixed in advance
-and include one known failure we have not fixed (see EVALS.md).
+and include a regression for score/level conflicts (see EVALS.md).
 """
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ def _():
     return len(set(runs)) == 1, f"{len(set(runs))} distinct output(s) across 5 runs (template path, no model)"
 
 
-@task("E16", "KNOWN FAILURE: no pattern should start or end on a record whose score contradicts its level")
+@task("E16", "No pattern should start or end on a record whose score contradicts its level")
 def _():
     conflicts = {f["record_id"] for f in store.load("flags") if f["type"] == "score_level_conflict"}
     hits = []
@@ -290,7 +290,7 @@ if HAVE_AGENT:
         need = {"agent.start", "agent.plan", "agent.self_check", "draft_summary"}
         return need <= kinds, f"{len(events)} events; kinds include {sorted(need & kinds)}"
 else:
-    results.append({"id": "A01-A04", "task": "Agent tasks", "pass": False,
+    results.append({"id": "A01-A05", "task": "Agent tasks", "pass": False, "skipped": True,
                     "detail": f"skipped: {AGENT_ERR} (needs Python 3.10+ and pip install -r requirements.txt)", "ms": 0})
 
 
@@ -303,3 +303,6 @@ for r in results:
     print(f"{r['id']}  {'PASS' if r['pass'] else 'FAIL'}  {r['task']}\n      {r['detail']}")
 print(f"\n{passed}/{len(results)} passed. Results in evals/results.json")
 shutil.rmtree(TMP, ignore_errors=True)
+
+if any(not r["pass"] and not r.get("skipped") for r in results):
+    raise SystemExit(1)
