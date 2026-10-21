@@ -110,6 +110,10 @@ def draft(learner_id: str, audience: str = "teacher", language: str = "en") -> d
         if not approved:
             raise GateBlocked("A guardian summary needs the class teacher to approve the teacher draft first.")
         last = approved[-1]
+        if last.get("final_text", last["text"]) != last["text"]:
+            raise GateBlocked("The approved teacher draft was edited. A template family message could undo those edits; review a new teacher draft first.")
+        if set(last["pattern_ids"]) != {p["pattern_id"] for p in found["patterns"]}:
+            raise GateBlocked("The learner's patterns changed. Review a new teacher draft before preparing a family message.")
         keep = set(last["pattern_ids"]) - set(last.get("removed_pattern_ids", []))
         text = guardian_text(found, learner, keep, language)
         keep = sorted(keep)

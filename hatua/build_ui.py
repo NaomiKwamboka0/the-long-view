@@ -7,16 +7,18 @@ applies through the same gate as the command line.
 from __future__ import annotations
 
 import json
+import hashlib
+from pathlib import Path
 from datetime import datetime, timezone
 
 from . import audit, config, guard, patterns, store, summary, tools
 
-TEMPLATE = config.UI / "template.html"
+TEMPLATE = Path(__file__).resolve().parent.parent / "ui" / "template.html"
 OUT = config.UI / "hatua.html"
 OUT_FRAGMENT = config.UI / "hatua_fragment.html"  # same page without the document wrapper
 
 
-def collect() -> dict:
+def collect(demo=False) -> dict:
     learners = store.load("learners")
     records = store.load("records")
     att = store.load("attendance")
@@ -49,7 +51,7 @@ def collect() -> dict:
             text = summary.guardian_text(found, l, keep, lang)
             guardian[lang] = {"text": text, "hash": summary.text_hash(text)}
         approved = next((x for x in reversed(drafts) if x["learner_id"] == lid and x["audience"] == "teacher"
-                         and x["status"] in ("approved", "rejected")), None)
+                         and x["hash"] == d["hash"] and x["status"] in ("approved", "rejected")), None)
         out.append({
             "id": lid, "name": l["first_name"], "stream": l["stream"], "grade": l["current_grade"],
             "joined": l["joined"], "span": found["span"], "reviewed": found["records_reviewed"],
@@ -65,6 +67,7 @@ def collect() -> dict:
         })
     return {
         "meta": {"school": learners[0]["school"] if learners else "", "class": "Grade 9 (streams 9A, 9B)",
+                 "demo": demo, "data_key": hashlib.sha256(json.dumps(out, sort_keys=True).encode()).hexdigest()[:16],
                  "built": datetime.now(timezone.utc).strftime("%d %b %Y %H:%M UTC"),
                  "today": config.today().isoformat(), "records": len(records)},
         "families": sorted({r["family"] for r in records}),
@@ -76,11 +79,17 @@ def collect() -> dict:
     }
 
 
-def build() -> str:
-    data = json.dumps(collect(), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+def build(demo=False) -> str:
+    data = json.dumps(collect(demo=demo), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     page = TEMPLATE.read_text(encoding="utf-8").replace("/*__HATUA_DATA__*/null", data)
+    page = page.replace("<!--__PRIVACY__-->", (TEMPLATE.parent / "privacy.html").read_text(encoding="utf-8"))
+    config.UI.mkdir(parents=True, exist_ok=True)
     OUT_FRAGMENT.write_text(page, encoding="utf-8")
     OUT.write_text('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+                   '<meta name="referrer" content="no-referrer">\n'
+                   '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; '
+                   'script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data:; '
+                   'connect-src \'none\'; font-src \'none\'; form-action \'none\'; base-uri \'none\'; object-src \'none\'">\n'
                    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
                    "</head>\n<body>\n" + page + "\n</body>\n</html>\n", encoding="utf-8")
     return str(OUT.relative_to(config.ROOT))

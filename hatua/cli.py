@@ -58,15 +58,26 @@ def cmd_save(args) -> None:
 def cmd_import(args) -> None:
     """Apply approvals exported from the Hatua page (ui/hatua.html)."""
     items = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    if not isinstance(items, list):
+        raise ValueError("Approvals file must contain a JSON list.")
     for it in items:
+        if not isinstance(it, dict) or not isinstance(it.get("hash"), str) or len(it["hash"]) != 64:
+            print("Decision: NOT applied (missing draft hash; export the reviewed decision again)")
+            continue
+        if not isinstance(it.get("teacher"), str) or it.get("decision") not in ("approve", "reject"):
+            print("Decision: NOT applied (invalid teacher or decision)")
+            continue
+        if it.get("audience") == "guardian" and (it.get("share") is not True or it.get("decision") != "approve"):
+            print("Guardian: NOT applied (explicit sharing approval is required)")
+            continue
         if it.get("audience") == "guardian":
-            label = f"{it['learner_id']} guardian ({it['language']})"
+            label = f"{it.get('learner_id', 'unknown')} guardian ({it.get('language', 'unknown')})"
             try:
                 d = tools.draft_summary(it["learner_id"], "guardian", it["language"])
                 gate.approve(d["draft_id"], teacher=it["teacher"], decision="approve", share_with_guardian=True,
                              expected_hash=it.get("hash"))
                 print(f"{label}: approved -> {tools.update_profile(d['draft_id'])['saved']}")
-            except (GateBlocked, ValueError) as exc:
+            except (GateBlocked, ValueError, KeyError, TypeError) as exc:
                 print(f"{label}: NOT applied ({exc})")
             continue
         try:
@@ -78,8 +89,8 @@ def cmd_import(args) -> None:
             if entry["decision"] == "approve":
                 msg += " -> " + tools.update_profile(it["draft_id"])["saved"]
             print(f"{it['draft_id']}: {msg}")
-        except (GateBlocked, ValueError) as exc:
-            print(f"{it['draft_id']}: NOT applied ({exc})")
+        except (GateBlocked, ValueError, KeyError, TypeError) as exc:
+            print(f"{it.get('draft_id', 'unknown')}: NOT applied ({exc})")
 
 
 def cmd_agent(args) -> None:
@@ -95,13 +106,14 @@ def cmd_demo(args) -> None:
     """One command: load the synthetic class, take in this term's export, build the page."""
     cmd_setup(argparse.Namespace(fresh=False))
     print(tools.ingest_record("2026_T3_new_records.csv")["message"])
+    args.demo = True
     cmd_build_ui(args)
     print("Open ui/hatua.html in your browser. No internet or server needed.")
 
 
 def cmd_build_ui(args) -> None:
     from .build_ui import build
-    print("Wrote", build())
+    print("Wrote", build(demo=getattr(args, "demo", False)))
 
 
 def main(argv: list[str] | None = None) -> int:

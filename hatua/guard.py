@@ -40,6 +40,8 @@ def citations(text: str) -> list[str]:
 def check(text: str, learner_id: str) -> list[str]:
     """Return a list of human-readable problems. Empty list means the draft passes."""
     problems: list[str] = []
+    if not text.strip():
+        return ["The draft is empty. Keep the evidence-based summary before approving."]
     for rx in _FORBIDDEN:
         m = rx.search(text)
         if m:

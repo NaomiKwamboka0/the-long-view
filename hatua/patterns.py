@@ -43,6 +43,12 @@ def term_series(records: list[dict]) -> dict[str, list[dict]]:
     for fam, terms in by_fam.items():
         series = []
         for o in sorted(terms):
+            # An unresolved score/level conflict makes the whole term unconfirmed.
+            # Keep it in the series as a break so runs cannot bridge across it.
+            if any("score_level_conflict" in r["flags"] for r in terms[o]):
+                series.append({"ordinal": o, "points": None, "level": None,
+                               "record_ids": [r["record_id"] for r in terms[o]], "flagged": []})
+                continue
             pts = mean(r["points"] for r in terms[o])
             series.append({"ordinal": o, "points": round(pts, 2), "level": _lvl(pts),
                            "record_ids": [r["record_id"] for r in terms[o]],
@@ -55,6 +61,11 @@ def term_series(records: list[dict]) -> dict[str, list[dict]]:
 def _runs(series: list[dict], ok) -> list[list[dict]]:
     runs, cur = [], []
     for t in series:
+        if t["points"] is None:
+            if cur:
+                runs.append(cur)
+            cur = []
+            continue
         if ok(t) and (not cur or t["ordinal"] - cur[-1]["ordinal"] <= MAX_GAP):
             cur.append(t)
         else:
@@ -108,6 +119,8 @@ def _trend(series: list[dict]) -> tuple[str, list[dict]] | None:
     best = None
     for n in range(4, min(6, len(series)) + 1):
         w = series[-n:]
+        if any(t["points"] is None for t in w):
+            continue
         if w[-1]["ordinal"] - w[0]["ordinal"] > n:  # at most one missing term
             continue
         first, last = [t["points"] for t in w[:2]], [t["points"] for t in w[-2:]]
@@ -184,6 +197,11 @@ def find(lid: str) -> dict:
 
     # Notes about the records themselves (never about the child).
     record_notes = []
+    conflicts = [r["record_id"] for r in recs if "score_level_conflict" in r["flags"]]
+    if conflicts:
+        record_notes.append({"type": "score_level_conflict", "evidence": conflicts,
+                             "statement": f"{len(conflicts)} assessment record(s) have a score and level that disagree. "
+                                          "Their learning-area terms are excluded from patterns until corrected in the source records."})
     if recs:
         first = recs[0]["ordinal"]
         if first > 0:

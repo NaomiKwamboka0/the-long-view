@@ -11,6 +11,8 @@ import json
 import os
 import urllib.request
 
+from .local_model import local_host, open_local
+
 PROMPT = """Rewrite the teacher draft below in plain, warm, simple English for a busy Kenyan
 junior school teacher. Keep every line that starts with '-' as a separate line starting
 with '-'. Keep every citation in square brackets exactly as written. Do not add facts,
@@ -32,15 +34,15 @@ def model_name() -> str:
 def polish(text: str, language: str = "en") -> str | None:
     if not enabled() or language != "en":
         return None
-    host = os.environ.get("HATUA_OLLAMA_HOST", "http://127.0.0.1:11434")
-    if not host.startswith(("http://127.0.0.1", "http://localhost")):
+    host = local_host()
+    if not host:
         return None  # local only, by design
     body = json.dumps({"model": model_name().split(":", 1)[1], "prompt": PROMPT.format(draft=text),
                        "stream": False, "options": {"temperature": 0}}).encode()
     try:
         req = urllib.request.Request(f"{host}/api/generate", data=body,
                                      headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with open_local(req, timeout=120) as resp:
             return json.loads(resp.read())["response"].strip()
     except Exception:
         return None

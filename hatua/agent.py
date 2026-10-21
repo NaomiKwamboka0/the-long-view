@@ -42,6 +42,7 @@ from langgraph.types import Command, interrupt
 from . import audit, config, gate, guard, store
 from . import tools as hatua_tools
 from .summary import GateBlocked
+from .local_model import local_host, open_local
 
 FS_TOOLS = {"list_directory", "get_file_info"}  # the only borrowed tools the planner needs
 
@@ -88,12 +89,12 @@ def _content(msg: ToolMessage) -> Any:
 
 def ollama_model() -> str | None:
     """Return the model name if a local Ollama server has it, else None."""
-    host = os.environ.get("HATUA_OLLAMA_HOST", "http://127.0.0.1:11434")
-    if not host.startswith(("http://127.0.0.1", "http://localhost")):
+    host = local_host()
+    if not host:
         return None  # local only, by design
     want = os.environ.get("HATUA_MODEL", "qwen2.5:7b")
     try:
-        with urllib.request.urlopen(f"{host}/api/tags", timeout=2) as r:
+        with open_local(f"{host}/api/tags", timeout=2) as r:
             names = {m["name"] for m in json.loads(r.read()).get("models", [])}
     except Exception:
         return None
@@ -381,7 +382,8 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
         if name:
             from langchain_ollama import ChatOllama
             model = ChatOllama(model=name, temperature=0,
-                               base_url=os.environ.get("HATUA_OLLAMA_HOST", "http://127.0.0.1:11434"))
+                               base_url=local_host(),
+                               client_kwargs={"trust_env": False, "follow_redirects": False})
     planner = f"ollama:{name}" if name else ("model:test" if model is not None else "rules")
     conns = servers(use_fs)
     client = MultiServerMCPClient(conns)
