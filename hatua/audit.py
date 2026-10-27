@@ -9,6 +9,19 @@ from typing import Any, Callable
 
 from . import config
 
+# Arguments that must never reach the log in clear text. A PIN or a session token
+# would otherwise sit in logs/audit.jsonl forever.
+# Secrets MUST be passed as keyword arguments: positional arguments are logged as
+# they are, so `approve("D-1", "name", "approve", "pin")` would still be stored.
+SECRET_KEYS = {"pin", "session", "password", "token", "secret"}
+REDACTED = "[redacted]"
+
+
+def scrub(kwargs: dict) -> dict:
+    """Return the keyword arguments with every secret-bearing value replaced."""
+    return {key: REDACTED if str(key).lower() in SECRET_KEYS else value
+            for key, value in kwargs.items()}
+
 
 def _short(value: Any, limit: int = 2000) -> Any:
     text = json.dumps(value, default=str, ensure_ascii=False)
@@ -32,7 +45,7 @@ def audited(tool: str, actor: str = "agent") -> Callable:
         def inner(*args, **kwargs):
             start = time.perf_counter()
             event = {"tool": tool, "actor": kwargs.get("teacher") or actor,
-                     "inputs": _short({"args": list(args), "kwargs": kwargs})}
+                     "inputs": _short({"args": list(args), "kwargs": scrub(kwargs)})}
             try:
                 result = fn(*args, **kwargs)
                 event.update(ok=True, output=_short(result))
