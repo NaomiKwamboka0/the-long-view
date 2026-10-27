@@ -133,6 +133,23 @@ def cmd_import(args) -> None:
             print(f"{it.get('draft_id', 'unknown')}: NOT applied ({exc})")
 
 
+def cmd_verify_log(args) -> int:
+    """Check the hash chain on the audit and approvals logs. Exit 1 on a broken chain."""
+    from . import audit
+
+    paths = [Path(args.path)] if getattr(args, "path", None) else [config.AUDIT_LOG, config.APPROVALS_LOG]
+    broken = False
+    for path in paths:
+        result = audit.verify_jsonl(path)
+        label = "UNCHAINED" if result["ok"] and not result["chained"] else ("OK" if result["ok"] else "BROKEN")
+        print(f"{label:9} {result['message']}")
+        broken = broken or not result["ok"]
+    if broken:
+        print("A broken chain means the file was edited, had a line deleted, or was reordered. "
+              "The entries cannot be trusted; keep the file and report it.", file=sys.stderr)
+    return 1 if broken else 0
+
+
 def cmd_agent(args) -> None:
     try:
         from . import agent
@@ -200,6 +217,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("file")
     s.add_argument("--teacher-id", help="Sign in and vouch for every decision in the file")
     s.set_defaults(fn=cmd_import)
+    s = sub.add_parser("verify-log", help="Check the audit and approval logs for edits")
+    s.add_argument("--path", help="Check one file instead of both logs")
+    s.set_defaults(fn=cmd_verify_log)
     s = sub.add_parser("agent", help="Run the agent: inbox -> patterns -> drafts -> pause for the teacher")
     s.add_argument("--max", type=int, default=3, help="Most learners to draft for in one run (default 3)")
     s.add_argument("--rules", action="store_true", help="Plan with fixed rules instead of the local model")
@@ -211,11 +231,11 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_build_ui)
     args = ap.parse_args(argv)
     try:
-        args.fn(args)
+        result = args.fn(args)
     except GateBlocked as exc:
         print(f"BLOCKED: {exc}", file=sys.stderr)
         return 2
     except (ValueError, OSError, KeyError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
-    return 0
+    return int(result or 0)

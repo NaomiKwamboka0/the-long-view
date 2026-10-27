@@ -37,7 +37,7 @@ data/inbox/*.csv ──► ingest_record ──► store/ (clean records + quali
              guardian draft (EN / Kiswahili) ──► teacher ticks "share" ──► text file the teacher sends
 ```
 
-Every tool call is appended to `logs/audit.jsonl` (tool, actor, inputs, output, time, duration). Approvals go to `logs/approvals.jsonl`.
+Every tool call is appended to `logs/audit.jsonl` (tool, actor, inputs, output, time, duration). Approvals go to `logs/approvals.jsonl`. Each line carries `prev`, the SHA-256 of the line before it, so `python -m hatua verify-log` reports an edited, deleted or reordered line and exits non-zero; files written before this existed are reported as unchained rather than broken. The chain does not stop someone who can rewrite the whole file: it only proves an edit if the latest hash is kept somewhere else, such as printed on the approval page or read out during the demo.
 
 ## MCP servers
 

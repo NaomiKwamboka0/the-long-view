@@ -9,6 +9,7 @@ whose hash matches the exact text being saved.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timezone
 
@@ -18,6 +19,17 @@ from .summary import GateBlocked, text_hash
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _approval_id(draft_id: str, final_hash: str, ts: str) -> str:
+    """Derive the id from the approval's own content instead of a shared counter.
+
+    `len(approvals) + 1` gives two writers the same id when they read the file at the same
+    moment. Two different drafts cannot share this id. One writer at a time is still
+    assumed for the log file itself (see hatua/audit.py).
+    """
+    material = f"{draft_id}|{final_hash}|{ts}".encode()
+    return "AP-" + hashlib.sha256(material).hexdigest()[:8].upper()
 
 
 def _approvals() -> list[dict]:
@@ -56,14 +68,14 @@ def approve(draft_id: str, teacher: str = "", decision: str = "approve", edited_
             raise GateBlocked("Edited text failed safety checks: " + "; ".join(problems))
         if d["audience"] == "guardian" and not share_with_guardian:
             raise GateBlocked("Tick 'share with guardian' to approve a guardian message.")
-    entry = {"approval_id": f"AP-{len(_approvals()) + 1:05d}", "draft_id": draft_id,
+    ts = _now()
+    final_hash = text_hash(final)
+    entry = {"approval_id": _approval_id(draft_id, final_hash, ts), "draft_id": draft_id,
              "learner_id": d["learner_id"], "audience": d["audience"], "teacher": teacher,
              "teacher_id": teacher_id, "authenticated": authenticated,
-             "decision": decision, "final_hash": text_hash(final), "edited": edited_text is not None,
-             "share_with_guardian": share_with_guardian, "reason": reason, "ts": _now()}
-    config.LOGS.mkdir(parents=True, exist_ok=True)
-    with config.APPROVALS_LOG.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+             "decision": decision, "final_hash": final_hash, "edited": edited_text is not None,
+             "share_with_guardian": share_with_guardian, "reason": reason, "ts": ts}
+    audit.append_jsonl(config.APPROVALS_LOG, entry)
     d.update(status="approved" if decision == "approve" else "rejected", final_text=final,
              approved_by=teacher, approval_id=entry["approval_id"],
              removed_pattern_ids=removed_pattern_ids or [])

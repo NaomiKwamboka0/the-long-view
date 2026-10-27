@@ -139,6 +139,7 @@ python -m hatua agent
 | `python -m hatua approve D-xxxx --teacher "Full Name"` | Teacher approves (add `--reject`, `--edited file.txt`, `--share`) |
 | `python -m hatua build-ui` | Rebuild the teacher page `ui/hatua.html` |
 | `python -m hatua import-approvals approvals.json` | Apply approvals made on the teacher page |
+| `python -m hatua verify-log` | Check the audit and approval logs for edited or missing lines |
 | `python scripts/run_evals.py` | Run the evaluation tasks |
 
 ![The teacher page](docs/teacher-page.png)

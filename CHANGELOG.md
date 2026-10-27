@@ -1,5 +1,12 @@
 # Hardening and honesty — 27 October 2026
 
+## T7: logs that show when they have been edited
+
+- Every line in `logs/audit.jsonl` and `logs/approvals.jsonl` now carries `prev`, the SHA-256 of the line before it (64 zeros for the first), so editing, deleting or reordering a line breaks the chain.
+- `python -m hatua verify-log` reports each log as OK, BROKEN (with the line number) or UNCHAINED, and exits 1 when a chain is broken. A file written before this change is reported as unchained, not broken, and nothing in it can be verified.
+- `approval_id` is now derived from the draft, the approved text hash and the timestamp instead of `len(approvals) + 1`, so two writers cannot mint the same id.
+- **Documented limit:** the chain proves an edit only if the latest hash is kept somewhere else. Editing or deleting the *last* line cannot be detected from the file alone, and anyone who controls the machine can rewrite the whole chain. One writer at a time is assumed.
+
 ## T6: a three-minute runbook with real output in it
 
 - New `docs/DEMO.md`: a storyboard with per-step timings, the exact commands, the output each one prints, a pre-recording checklist, and a closing note not to edit out the pause, the block or the crash.
