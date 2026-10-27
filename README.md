@@ -192,7 +192,7 @@ Node and npm are needed only for developer UI checks and the optional agent, not
 
 ## Limitations
 
-- **One real Qwen run so far.** It worked end to end, but it is one run, not a rate. On its own the 7B model stopped early, so for now the supervisor often finishes the steps.
+- **One real Qwen run so far.** It reached the teacher gate and the profile was saved only after approval, but the model drafted for 1 of 3 learners and then stopped, so a supervisor finished the rest. One run is not a rate: `python scripts/measure_agent.py --runs 10` measures it, and that batch has not been run yet, so no completion rate is claimed here.
 - **No real school has tested it.** All data is synthetic, written by us. The test cases check that the rules do what we meant, not that teachers find them useful.
 - **Unconfirmed terms:** a score/level conflict excludes that learning-area term from patterns and breaks a run. The original record stays available for teacher inspection; fix it in the source and rebuild through a controlled import.
 - **No bid or exam documents:** Hatua uses marks, notes and attendance. It does not read the national exam portals, and no public API for them was found.

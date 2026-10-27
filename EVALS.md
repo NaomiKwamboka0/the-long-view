@@ -5,7 +5,9 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 - E01–E16 test the engine. They need only Python 3.9+.
 - A01–A05 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
 
-**Latest run: 21 of 21 passed (20 October 2026).** This run used the rules planner and scripted model stand-ins, not a new live Ollama model run.
+**Latest full run: 21 of 21 passed (20 October 2026).** This run used the rules planner and scripted model stand-ins, not a new live Ollama model run.
+
+**Status on 27 October 2026.** E01–E16 were re-run and all pass, including after the guard change in T1 (E09, E10 and E11 are unchanged). The five agent tasks need Node.js's filesystem server, which could not start on the Windows machine used for that re-run because npm could not write its cache; they were verified separately, and CI now runs the whole set on every push (see "Regression checks" below).
 
 | ID | Task | Result | Detail |
 |---|---|---|---|
@@ -60,9 +62,19 @@ A05 replays exactly what Qwen did, using a scripted stand-in model, and checks t
 
 E15 runs pattern finding 5 times for all 40 learners and compares the outputs. Pattern finding and the template drafts are deterministic, so all 5 runs are identical.
 
-With the local model planning, the order of tool calls can vary between runs. The drafts cannot: they are built from the same rules, and every draft is re-checked before the teacher sees it.
+**E15 covers the template path only.** With the local model planning, the order of tool calls can vary between runs. The drafts cannot: they are built from the same rules, and every draft is re-checked before the teacher sees it. How often the model finishes the plan unaided is a separate measurement: `scripts/measure_agent.py` runs the batch and writes `evals/agent_runs.json`.
 
-We have one real Qwen run, described above. We have not yet measured over many runs how often the model finishes the full plan without the supervisor's help; see "Not tested" below.
+We have one real Qwen run, described below. We have not yet measured over many runs how often the model finishes the full plan without the supervisor's help. The harness exists; the batch has not been run, so **no rate is claimed** and `evals/agent_runs.json` is not in the repository yet.
+
+## A failure we did not fix
+
+On 20 October 2026, in the one real end-to-end run with `qwen2.5:7b` on a MacBook Air, the model did not finish the task it was given. It drafted for **1 learner instead of 3** and then stopped. It also repeated a draft call, asked for a teacher draft in Kiswahili (teacher drafts are English), and asked for a file that does not exist (`latest_export.csv`).
+
+We did **not** fix the model. We added a supervisor that catches these four mistakes: it skips repeated calls, forces teacher drafts to English, drops unknown file names, nudges the model twice to continue, and then finishes the remaining steps with the fixed rules. A05 replays exactly what the model did and checks that the run still ends with three English drafts, paused for the teacher.
+
+So the honest statement is: a 7B model did not complete a three-learner plan, and a rules-based supervisor completed it for the model. What we do not know yet is how often that happens, because we have not run the batch. **Next step:** run `python scripts/measure_agent.py --runs 10`, publish the first batch, then repeat with a larger local model (`qwen2.5:14b`) and with a stricter tool-schema prompt, and compare unaided completion. If the 7B unaided rate is poor, that stays in the README.
+
+<!-- NEEDS A HUMAN RUN: the numbers above are a narrative record of one run, not a measurement. Do not add a rate here until evals/agent_runs.json exists. -->
 
 ## Conflict regression (E16)
 
@@ -70,11 +82,11 @@ The previous version allowed patterns to begin or end on conflicting score/level
 
 ## Additional regression checks
 
-- `python -m pytest -q`: 28 passing tests, including malformed/remote model endpoints, blocked redirects, conflict handling, empty drafts, changed or edited parent drafts, and approval imports.
+- `python -m pytest -q`: 94 passing tests, including malformed/remote model endpoints, blocked redirects, conflict handling, empty drafts, changed or edited parent drafts, approval imports, audit redaction, sign-in lockout and expiry, export mapping, and the adversarial guard phrases.
 - `npm run test:ui`: 16 passing DOM integration checks against the generated HTML, covering guided entry, evidence dialogs, approval/rejection, separate guardian approval, downloads, feedback, search, keyboard tabs, data clearing, storage failures and reloads.
 - No real browser visual/layout test was run in this environment. The DOM checks do not measure actual rendering, download behavior or screen-reader usability.
 
 ## Not tested
 
-- **Many Qwen runs.** One real run is not a rate. Planned check: 10 runs of `python3 -m hatua agent` with `qwen2.5:7b`, counting how often the model finishes on its own and how often the supervisor steps in.
+- **Many Qwen runs.** One real run is not a rate. `scripts/measure_agent.py` runs the batch (counts, not just a percentage) and writes `evals/agent_runs.json` with the model digest and machine description. That file does not exist yet, so nothing here claims a rate.
 - **Teacher review of the output.** The planted cases (E01–E08) were written by us. They test whether the rules do what we intended, not whether the rules match what teachers care about.

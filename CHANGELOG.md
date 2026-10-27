@@ -1,5 +1,13 @@
 # Hardening and honesty — 27 October 2026
 
+## T3: EVALS.md now separates what is measured from what is claimed
+
+- New section **"A failure we did not fix"**: in the one real run the model drafted for 1 of 3 learners and stopped, repeated a call, asked for a Kiswahili teacher draft and invented a file name. The supervisor works around all four; the model is not fixed. The next step is named: run the 10-run batch, then compare a larger local model and a stricter tool-schema prompt.
+- E15 is now stated plainly as covering the template path only, with a pointer to `scripts/measure_agent.py` for the model path.
+- The "Not tested" entry for many Qwen runs points at the harness and says the batch does not exist yet.
+- The README limitation was rewritten to match: one real run, no completion rate claimed.
+- **Not done:** no rate is published anywhere, because no batch has been run. No number was moved or rounded to look better; the existing single-run account is left as recorded.
+
 ## T2: measuring the local model instead of guessing
 
 - New `scripts/measure_agent.py` runs the agent N times, each in a fresh temporary home with a fixed `HATUA_TODAY`, and records for every run: whether it finished all target learners without the supervisor, the nudge count, drafts, tool calls, blocked calls, token counts when Ollama reports them, and wall time. Crashed runs are recorded as failed runs.
