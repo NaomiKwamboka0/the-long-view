@@ -1,0 +1,9 @@
+{
+  "description": "Example: a school's own spreadsheet saved as CSV. Copy this file, then change the left-hand names to the headings in your sheet.",
+  "columns": {"Adm No": "learner_id", "Class": "grade", "Year": "year", "Term": "term",
+              "Learning Area": "learning_area", "Assessment": "task", "Rubric Level": "level",
+              "Marks %": "score", "Date Done": "task_date", "Date Entered": "logged_date",
+              "Teacher No": "teacher"},
+  "constants": {"source": "school_sheet"},
+  "id_map": "private/id_map.csv"
+}

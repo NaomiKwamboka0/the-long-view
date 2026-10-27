@@ -1,11 +1,15 @@
-"""Checks for the audit redaction and optional sign-in (tickets A1-A2)."""
+"""Checks for the audit redaction, optional sign-in and the export mapper (tickets A1-A3)."""
+import csv
 import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
-from hatua import audit, auth, cli, config, gate, store, summary
+from hatua import audit, auth, cli, config, gate, importer, store, summary
 from hatua.summary import GateBlocked
+
+REPO = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture
@@ -206,4 +210,150 @@ def test_cli_returns_2_when_sign_in_is_required(home, learner, monkeypatch):
 def test_cli_returns_1_for_a_bad_teacher_id(home, monkeypatch):
     stub_pin(monkeypatch, PIN, PIN)
     assert cli.main(['teacher-add', '--id', 'x', '--name', NAME]) == 1
+
+
+# ---------------------------------------------------------------- A3: mapping a school sheet
+SCHOOL_HEADINGS = ['Adm No', 'Full Name', 'Class', 'Year', 'Term', 'Learning Area', 'Assessment',
+                   'Rubric Level', 'Marks %', 'Date Done', 'Date Entered', 'Teacher No', 'Parent Phone']
+MAPPING = {
+    'columns': {'Adm No': 'learner_id', 'Class': 'grade', 'Year': 'year', 'Term': 'term',
+                'Learning Area': 'learning_area', 'Assessment': 'task', 'Rubric Level': 'level',
+                'Marks %': 'score', 'Date Done': 'task_date', 'Date Entered': 'logged_date',
+                'Teacher No': 'teacher'},
+    'constants': {'source': 'school_sheet'},
+}
+
+
+def school_sheet(path, rows=None):
+    rows = rows or [
+        ['HT-0001', 'Achieng O', 'Grade 7', '2026', 'Term 2', 'Mathematics', 'Algebra check',
+         'ME', '68', '2026-06-12', '2026-06-19', 'T-004', '0712 000 000'],
+        ['HT-0001', 'Achieng O', 'Grade 7', '2026', 'Term 2', 'Mathematics', 'Fractions',
+         'EE', '82', '2026-07-02', '2026-07-09', 'T-004', '0712 000 000'],
+    ]
+    with path.open('w', encoding='utf-8-sig', newline='') as fh:
+        writer = csv.writer(fh)
+        writer.writerow(SCHOOL_HEADINGS)
+        writer.writerows(rows)
+    return path
+
+
+def write_mapping(path, mapping=None):
+    path.write_text(json.dumps(mapping or MAPPING), encoding='utf-8')
+    return path
+
+
+@pytest.fixture
+def sheet(home, tmp_path):
+    config.INBOX.mkdir(parents=True, exist_ok=True)
+    return school_sheet(tmp_path / 'school.csv')
+
+
+def test_only_mapped_columns_are_copied_and_drops_are_reported(home, tmp_path, sheet):
+    report = importer.map_export(sheet, write_mapping(tmp_path / 'mapping.json'), 'july.csv')
+    raw = (config.INBOX / 'july.csv').read_text(encoding='utf-8')
+    assert 'Full Name' not in raw and 'Achieng' not in raw
+    assert 'Parent Phone' not in raw and '0712 000 000' not in raw
+    assert report['dropped_but_look_personal'] == ['Full Name', 'Parent Phone']
+    assert report['dropped_columns'] == ['Full Name', 'Parent Phone']
+    assert 'Adm No' not in report['dropped_columns']
+
+    first = next(csv.DictReader(raw.splitlines()))
+    assert first['learner_id'] == 'HT-0001'
+    assert first['grade'] == '7' and first['term'] == '2'
+    assert 'source' in first and first['source'] == 'school_sheet'
+    assert report['rows_in'] == 2 and report['rows_out'] == 2
+    assert report['skipped'] == {'no_id_match': 0, 'blank': 0}
+    assert report['next'] == 'python -m hatua ingest july.csv'
+
+
+def test_two_imports_of_the_same_sheet_are_identical(home, tmp_path, sheet):
+    mapping = write_mapping(tmp_path / 'mapping.json')
+    importer.map_export(sheet, mapping, 'first.csv')
+    first = (config.INBOX / 'first.csv').read_text(encoding='utf-8')
+    importer.map_export(sheet, mapping, 'second.csv')
+    second = (config.INBOX / 'second.csv').read_text(encoding='utf-8')
+    assert first == second
+    assert first.splitlines()[1].startswith('R-')
+
+
+def test_unmapped_real_ids_are_skipped_never_passed_through(home, tmp_path):
+    config.INBOX.mkdir(parents=True, exist_ok=True)
+    config.DATA.joinpath('private').mkdir(parents=True, exist_ok=True)
+    config.DATA.joinpath('private', 'id_map.csv').write_text(
+        'real_id,hatua_id\nSCH-1,HT-0001\n', encoding='utf-8')
+    source = school_sheet(tmp_path / 'school.csv', rows=[
+        ['SCH-1', 'Known Child', 'Grade 7', '2026', 'Term 2', 'Mathematics', 'Algebra', 'ME', '68',
+         '2026-06-12', '2026-06-19', 'T-004', '0712 000 000'],
+        ['SCH-2', 'Other Child', 'Grade 7', '2026', 'Term 2', 'Mathematics', 'Algebra', 'ME', '60',
+         '2026-06-12', '2026-06-19', 'T-004', '0713 000 000'],
+    ])
+    mapping = write_mapping(tmp_path / 'm.json', {**MAPPING, 'id_map': 'private/id_map.csv'})
+    report = importer.map_export(source, mapping, 'mapped.csv')
+
+    raw = (config.INBOX / 'mapped.csv').read_text(encoding='utf-8')
+    assert 'SCH-2' not in raw and 'Other Child' not in raw
+    assert report['skipped']['no_id_match'] == 1
+    assert report['rows_out'] == 1
+    assert next(csv.DictReader(raw.splitlines()))['learner_id'] == 'HT-0001'
+
+
+def test_bad_mappings_and_unsafe_output_names_are_refused(home, tmp_path, sheet):
+    with pytest.raises(importer.MappingError, match='Unknown Hatua column'):
+        importer.map_export(sheet, write_mapping(tmp_path / 'bad.json',
+                                                 {'columns': {'Adm No': 'not_a_column'}}), 'a.csv')
+    with pytest.raises(importer.MappingError, match='Heading'):
+        importer.map_export(sheet, write_mapping(tmp_path / 'missing.json',
+                                                 {'columns': {'Not There': 'learner_id',
+                                                              'Class': 'grade', 'Year': 'year',
+                                                              'Term': 'term',
+                                                              'Learning Area': 'learning_area',
+                                                              'Rubric Level': 'level'}}), 'a.csv')
+    mapping = write_mapping(tmp_path / 'ok.json')
+    with pytest.raises(importer.MappingError, match='inside data/inbox'):
+        importer.map_export(sheet, mapping, '../escape.csv')
+    importer.map_export(sheet, mapping, 'taken.csv')
+    with pytest.raises(importer.MappingError, match='already exists'):
+        importer.map_export(sheet, mapping, 'taken.csv')
+
+
+def test_mapped_file_still_gets_the_normal_cleaner_repairs(home, tmp_path):
+    store.save('learners', [{'learner_id': 'HT-0001', 'first_name': 'Achieng', 'stream': '7A',
+                             'current_grade': 7}])
+    config.INBOX.mkdir(parents=True, exist_ok=True)
+    source = school_sheet(tmp_path / 'school.csv', rows=[
+        ['ht 1', 'Achieng O', 'Grade 7', '2026', 'Term 2', 'maths', 'Algebra', 'me', '68',
+         '2026-06-12', '2026-06-19', 'T-004', '0712 000 000'],
+    ])
+    importer.map_export(source, write_mapping(tmp_path / 'm.json'), 'cleaned.csv')
+    result = store.ingest_records(config.INBOX / 'cleaned.csv')
+
+    assert result['added'] == 1 and result['rejected'] == 0
+    record = store.load('records')[0]
+    assert record['learner_id'] == 'HT-0001'
+    assert record['learning_area'] == 'Mathematics'
+    assert record['level'] == 'ME'
+    flagged = {f['type'] for f in store.load('flags')}
+    assert {'id_repaired', 'area_repaired', 'level_repaired'} <= flagged
+
+
+def test_example_mapping_and_template_work_together(home, tmp_path):
+    """Smoke test: the shipped template, mapped with the shipped example mapping, then ingested."""
+    mapping = json.loads((REPO / 'data' / 'mappings' / 'example_school_export.json')
+                         .read_text(encoding='utf-8'))
+    mapping.pop('id_map', None)  # the private ID map is never shipped
+    map_file = tmp_path / 'example.json'
+    map_file.write_text(json.dumps(mapping), encoding='utf-8')
+    config.INBOX.mkdir(parents=True, exist_ok=True)
+    store.save('learners', [{'learner_id': 'HT-0001', 'first_name': 'Achieng', 'stream': '7A',
+                             'current_grade': 7},
+                            {'learner_id': 'HT-0002', 'first_name': 'Brian', 'stream': '7A',
+                             'current_grade': 7}])
+    report = importer.map_export(REPO / 'docs' / 'templates' / 'records_template.csv',
+                                map_file, 'template.csv')
+    assert report['rows_in'] == 2 and report['rows_out'] == 2
+    assert report['dropped_but_look_personal'] == []
+    result = store.ingest_records(config.INBOX / 'template.csv')
+    assert result['added'] == 2 and result['rejected'] == 0
+
 

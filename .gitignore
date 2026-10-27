@@ -1,6 +1,7 @@
 store/
 logs/
 profiles/
+data/private/
 ui/hatua.html
 ui/hatua_fragment.html
 __pycache__/

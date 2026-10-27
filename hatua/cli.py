@@ -9,7 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from . import auth, config, gate, store, tools
+from . import auth, config, gate, importer, store, tools
 from .summary import GateBlocked
 
 
@@ -28,6 +28,12 @@ def cmd_setup(args) -> None:
 
 def cmd_ingest(args) -> None:
     print(json.dumps(tools.ingest_record(args.file), indent=1, ensure_ascii=False))
+
+
+def cmd_map_export(args) -> None:
+    """Turn a school's own CSV into Hatua's columns, keeping only what the mapping names."""
+    report = importer.map_export(Path(args.file), Path(args.mapping), args.out)
+    print(json.dumps(report, indent=1, ensure_ascii=False))
 
 
 def cmd_patterns(args) -> None:
@@ -159,6 +165,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("ingest", help="Add a new CSV export from data/inbox")
     s.add_argument("file")
     s.set_defaults(fn=cmd_ingest)
+    s = sub.add_parser("map-export", help="Convert a school's own CSV into Hatua's columns")
+    s.add_argument("file")
+    s.add_argument("--mapping", required=True, help="JSON mapping file, see data/mappings/")
+    s.add_argument("--out", help="Output file name inside data/inbox (default: <name>_hatua.csv)")
+    s.set_defaults(fn=cmd_map_export)
     s = sub.add_parser("patterns", help="Show cited patterns for a learner")
     s.add_argument("learner_id")
     s.set_defaults(fn=cmd_patterns)
