@@ -23,6 +23,7 @@ Nothing here calls an outside service. The model and both MCP servers run on thi
 from __future__ import annotations
 
 import asyncio
+import getpass
 import json
 import os
 import shutil
@@ -39,7 +40,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
 
-from . import audit, config, gate, guard, store
+from . import audit, auth, config, gate, guard, store
 from . import tools as hatua_tools
 from .summary import GateBlocked
 from .local_model import local_host, open_local
@@ -324,6 +325,7 @@ def build_graph(tools: list, model=None):
             return {}
         decision = interrupt({"waiting_for": "named class teacher", "drafts": ready})
         teacher = (decision or {}).get("teacher", "").strip()
+        session = (decision or {}).get("session")
         results = []
         for c in ready:
             choice = (decision or {}).get("decisions", {}).get(c["draft_id"], "pending")
@@ -331,7 +333,8 @@ def build_graph(tools: list, model=None):
                 results.append({"draft_id": c["draft_id"], "result": "left pending"})
                 continue
             try:
-                gate.approve(c["draft_id"], teacher=teacher, decision=choice, expected_hash=c["hash"])
+                gate.approve(c["draft_id"], teacher=teacher, decision=choice,
+                             expected_hash=c["hash"], session=session)
                 saved = hatua_tools.update_profile(c["draft_id"])["saved"] if choice == "approve" else None
                 results.append({"draft_id": c["draft_id"], "result": choice, "saved": saved})
             except (GateBlocked, ValueError) as exc:
@@ -423,21 +426,32 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
 
 
 def cli_decide(drafts: list[dict]) -> dict:
-    """Ask the teacher in the terminal."""
+    """Ask the teacher in the terminal. When sign-in is on, the PIN is never kept."""
     by_id = {d["draft_id"]: d for d in store.load("drafts")}
     print("\n=== Paused for the class teacher. Nothing is saved until you approve. ===")
     if not sys.stdin.isatty():
         print("No terminal input available, so all drafts are left pending.")
         return {"teacher": "", "decisions": {}}
-    teacher = input("Your full name (Enter to leave everything pending): ").strip()
+    session = None
+    if config.require_auth():
+        teacher_id = input("Your teacher ID: ").strip()
+        try:
+            identity = auth.login(teacher_id, getpass.getpass("Your PIN (input is hidden): "))
+        except GateBlocked as exc:
+            print(f"Sign-in failed, so every draft is left pending. {exc}")
+            return {"teacher": "", "decisions": {}}
+        teacher, session = identity["name"], identity["session"]
+        print(f"Signed in as {teacher} ({identity['teacher_id']}).")
+    else:
+        teacher = input("Your full name (Enter to leave everything pending): ").strip()
+        if not teacher:
+            return {"teacher": "", "decisions": {}}
     decisions = {}
-    if not teacher:
-        return {"teacher": "", "decisions": {}}
     for d in drafts:
         print("\n" + "-" * 70 + "\n" + by_id[d["draft_id"]]["text"] + "\n" + "-" * 70)
         a = input(f"{d['learner_id']}: [a]pprove, [r]eject, Enter to leave pending: ").strip().lower()
         decisions[d["draft_id"]] = {"a": "approve", "r": "reject"}.get(a[:1], "pending")
-    return {"teacher": teacher, "decisions": decisions}
+    return {"teacher": teacher, "decisions": decisions, "session": session}
 
 
 def main(max_learners: int = 3, rules: bool = False, no_fs: bool = False) -> None:

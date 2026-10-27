@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from . import audit, config, guard, store
+from . import audit, auth, config, guard, store
 from .summary import GateBlocked, text_hash
 
 
@@ -27,12 +27,18 @@ def _approvals() -> list[dict]:
 
 
 @audit.audited("approve", actor="teacher")
-def approve(draft_id: str, teacher: str, decision: str = "approve", edited_text: str | None = None,
+def approve(draft_id: str, teacher: str = "", decision: str = "approve", edited_text: str | None = None,
             share_with_guardian: bool = False, reason: str = "", removed_pattern_ids: list[str] | None = None,
-            expected_hash: str | None = None) -> dict:
-    teacher = (teacher or "").strip()
-    if len(teacher) < 3:
-        raise GateBlocked("A named teacher must approve. Enter your full name.")
+            expected_hash: str | None = None, *, session: str | None = None) -> dict:
+    """Record a teacher's decision. `session` is a sign-in token, never a PIN."""
+    identity = auth.resolve(session) if (session is not None or config.require_auth()) else None
+    if identity is not None:
+        # The registry name wins: a typed name cannot stand in for a signed-in teacher.
+        teacher, teacher_id, authenticated = identity["name"], identity["teacher_id"], True
+    else:
+        teacher, teacher_id, authenticated = (teacher or "").strip(), None, False
+        if len(teacher) < 3:
+            raise GateBlocked("A named teacher must approve. Enter your full name.")
     if decision not in ("approve", "reject"):
         raise ValueError("decision must be 'approve' or 'reject'")
     drafts: list[dict] = store.load("drafts")  # type: ignore[assignment]
@@ -52,6 +58,7 @@ def approve(draft_id: str, teacher: str, decision: str = "approve", edited_text:
             raise GateBlocked("Tick 'share with guardian' to approve a guardian message.")
     entry = {"approval_id": f"AP-{len(_approvals()) + 1:05d}", "draft_id": draft_id,
              "learner_id": d["learner_id"], "audience": d["audience"], "teacher": teacher,
+             "teacher_id": teacher_id, "authenticated": authenticated,
              "decision": decision, "final_hash": text_hash(final), "edited": edited_text is not None,
              "share_with_guardian": share_with_guardian, "reason": reason, "ts": _now()}
     config.LOGS.mkdir(parents=True, exist_ok=True)
@@ -74,6 +81,8 @@ def update_profile(draft_id: str) -> dict:
     ap = next((a for a in _approvals() if a["approval_id"] == d.get("approval_id")), None)
     if not ap or ap["decision"] != "approve" or ap["final_hash"] != text_hash(d["final_text"]):
         raise GateBlocked("Blocked: the approval record does not match this text.")
+    if config.require_auth() and not ap.get("authenticated"):
+        raise GateBlocked("Blocked: this approval was not made by a signed-in teacher.")
     config.PROFILES.mkdir(parents=True, exist_ok=True)
     lid = d["learner_id"]
     if d["audience"] == "guardian":
@@ -87,7 +96,9 @@ def update_profile(draft_id: str) -> dict:
         profile = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"learner_id": lid, "entries": []}
         if any(e["draft_id"] == draft_id for e in profile["entries"]):
             return {"saved": str(path.relative_to(config.ROOT)), "note": "Already in the profile."}
-        profile["entries"].append({"draft_id": draft_id, "approved_by": ap["teacher"], "approved_at": ap["ts"],
+        profile["entries"].append({"draft_id": draft_id, "approved_by": ap["teacher"],
+                                   "approved_by_id": ap.get("teacher_id"),
+                                   "approved_at": ap["ts"],
                                    "text": d["final_text"], "citations": guard.citations(d["final_text"])})
         path.write_text(json.dumps(profile, ensure_ascii=False, indent=1), encoding="utf-8")
         result = {"saved": str(path.relative_to(config.ROOT)), "entries": len(profile["entries"])}

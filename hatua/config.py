@@ -16,6 +16,12 @@ UI = ROOT / "ui"
 
 AUDIT_LOG = LOGS / "audit.jsonl"
 APPROVALS_LOG = LOGS / "approvals.jsonl"
+PRIVATE = DATA / "private"  # real-to-pseudonymous ID maps; git-ignored
+
+
+def require_auth() -> bool:
+    """Sign-in for the approval gate is OFF by default. HATUA_REQUIRE_AUTH=1 switches it on."""
+    return os.environ.get("HATUA_REQUIRE_AUTH", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def today() -> date:

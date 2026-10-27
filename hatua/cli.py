@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import runpy
 import shutil
 import sys
 from pathlib import Path
 
-from . import config, gate, store, tools
+from . import auth, config, gate, store, tools
 from .summary import GateBlocked
 
 
@@ -44,10 +45,37 @@ def cmd_draft(args) -> None:
     print(f"\n{d['draft_id']}  status={d['status']}  writer={d['writer']}")
 
 
+def _sign_in(teacher_id: str) -> str:
+    """Ask for the PIN once and return a session token. The PIN is never stored or logged."""
+    pin = getpass.getpass(f"PIN for {teacher_id} (input is hidden): ")
+    return auth.login(teacher_id, pin)["session"]
+
+
+def cmd_teacher_add(args) -> None:
+    pin = getpass.getpass("Choose a PIN (at least 6 characters, input is hidden): ")
+    if pin != getpass.getpass("Type the PIN again: "):
+        raise ValueError("The two PINs do not match.")
+    entry = auth.register(args.id, args.name, pin)
+    print(f"Registered {entry['name']} ({entry['teacher_id']}) on this computer.")
+    print("Sign-in is asked for only when HATUA_REQUIRE_AUTH=1.")
+
+
+def cmd_teacher_list(args) -> None:
+    people = auth.teachers()
+    if not people:
+        print('No teachers registered here. Add one: python -m hatua teacher-add --id you --name "Your Name"')
+        return
+    for person in people:
+        print(f"{person['teacher_id']}  {person['name']}")
+
+
 def cmd_approve(args) -> None:
     edited = Path(args.edited).read_text(encoding="utf-8") if args.edited else None
-    entry = gate.approve(args.draft_id, teacher=args.teacher, decision="reject" if args.reject else "approve",
-                         edited_text=edited, share_with_guardian=args.share, reason=args.reason or "")
+    teacher_id = getattr(args, "teacher_id", None)
+    entry = gate.approve(args.draft_id, teacher=getattr(args, "teacher", "") or "",
+                         decision="reject" if args.reject else "approve",
+                         edited_text=edited, share_with_guardian=args.share, reason=args.reason or "",
+                         session=_sign_in(teacher_id) if teacher_id else None)
     print(json.dumps(entry, indent=1))
 
 
@@ -56,10 +84,16 @@ def cmd_save(args) -> None:
 
 
 def cmd_import(args) -> None:
-    """Apply approvals exported from the Hatua page (ui/hatua.html)."""
+    """Apply approvals exported from the Hatua page (ui/hatua.html).
+
+    With --teacher-id the person at this terminal signs in once and vouches for every
+    decision in the file.
+    """
     items = json.loads(Path(args.file).read_text(encoding="utf-8"))
     if not isinstance(items, list):
         raise ValueError("Approvals file must contain a JSON list.")
+    teacher_id = getattr(args, "teacher_id", None)
+    session = _sign_in(teacher_id) if teacher_id else None
     for it in items:
         if not isinstance(it, dict) or not isinstance(it.get("hash"), str) or len(it["hash"]) != 64:
             print("Decision: NOT applied (missing draft hash; export the reviewed decision again)")
@@ -75,7 +109,7 @@ def cmd_import(args) -> None:
             try:
                 d = tools.draft_summary(it["learner_id"], "guardian", it["language"])
                 gate.approve(d["draft_id"], teacher=it["teacher"], decision="approve", share_with_guardian=True,
-                             expected_hash=it.get("hash"))
+                             expected_hash=it.get("hash"), session=session)
                 print(f"{label}: approved -> {tools.update_profile(d['draft_id'])['saved']}")
             except (GateBlocked, ValueError, KeyError, TypeError) as exc:
                 print(f"{label}: NOT applied ({exc})")
@@ -84,7 +118,7 @@ def cmd_import(args) -> None:
             entry = gate.approve(it["draft_id"], teacher=it["teacher"], decision=it["decision"],
                                  edited_text=it.get("edited_text"), share_with_guardian=it.get("share", False),
                                  reason=it.get("reason", ""), removed_pattern_ids=it.get("removed_pattern_ids"),
-                                 expected_hash=it.get("hash"))
+                                 expected_hash=it.get("hash"), session=session)
             msg = entry["decision"]
             if entry["decision"] == "approve":
                 msg += " -> " + tools.update_profile(it["draft_id"])["saved"]
@@ -135,7 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_draft)
     s = sub.add_parser("approve", help="(Teacher) approve or reject a draft")
     s.add_argument("draft_id")
-    s.add_argument("--teacher", required=True, help="Your full name")
+    s.add_argument("--teacher", help="Your full name (not used when you sign in)")
+    s.add_argument("--teacher-id", help="Sign in with this teacher ID and PIN")
     s.add_argument("--reject", action="store_true")
     s.add_argument("--share", action="store_true", help="Allow a guardian message to be shared")
     s.add_argument("--edited", help="File with your edited text")
@@ -144,8 +179,15 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("save", help="Save an approved draft to the profile (gated)")
     s.add_argument("draft_id")
     s.set_defaults(fn=cmd_save)
+    s = sub.add_parser("teacher-add", help="Register a teacher (ID, name, PIN) on this computer")
+    s.add_argument("--id", required=True, help="3 to 24 letters, digits, '-' or '_'")
+    s.add_argument("--name", required=True, help="The teacher's full name")
+    s.set_defaults(fn=cmd_teacher_add)
+    s = sub.add_parser("teacher-list", help="List the teachers registered on this computer")
+    s.set_defaults(fn=cmd_teacher_list)
     s = sub.add_parser("import-approvals", help="Apply approvals downloaded from the Hatua page")
     s.add_argument("file")
+    s.add_argument("--teacher-id", help="Sign in and vouch for every decision in the file")
     s.set_defaults(fn=cmd_import)
     s = sub.add_parser("agent", help="Run the agent: inbox -> patterns -> drafts -> pause for the teacher")
     s.add_argument("--max", type=int, default=3, help="Most learners to draft for in one run (default 3)")
@@ -162,4 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     except GateBlocked as exc:
         print(f"BLOCKED: {exc}", file=sys.stderr)
         return 2
+    except (ValueError, OSError, KeyError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
     return 0
