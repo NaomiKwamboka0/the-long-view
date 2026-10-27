@@ -407,6 +407,7 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
                                                f"Prepare drafts for up to {max_learners} learners.")],
              "drafts": [], "checked": [], "redrafts": 0, "planner": planner, "fallback": False,
              "max_learners": max_learners, "inbox": str(config.INBOX)}
+    event_mark = len(audit.read_events())
     audit.write_event({"tool": "agent.start", "actor": planner, "ok": True,
                        "inputs": {"max_learners": max_learners, "servers": list(conns)}})
     async for update in graph.astream(start, cfg, stream_mode="updates"):
@@ -414,7 +415,8 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
             _print_step(update)
     snap = graph.get_state(cfg)
     outcome = {"planner": planner, "servers": list(conns), "drafts": snap.values.get("checked", []),
-               "paused": bool(snap.interrupts)}
+               "paused": bool(snap.interrupts),
+               "activity": _activity(snap.values.get("messages", []), event_mark)}
     if snap.interrupts:
         drafts = snap.interrupts[0].value["drafts"]
         resume = decide(drafts) if decide else {"teacher": teacher or "", "decisions": {}}
@@ -423,6 +425,22 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
         final = graph.get_state(cfg).values["messages"][-1]
         outcome["gate"] = json.loads(final.content)
     return outcome
+
+
+def _activity(messages: list, event_mark: int) -> dict:
+    """What the supervisor had to do, and how much work the planner did."""
+    corrections = [c for event in audit.read_events()[event_mark:] if event.get("tool") == "agent.plan"
+                   for c in ((event.get("output") or {}).get("corrections") or [])]
+    nudges = [m for m in messages if isinstance(m, HumanMessage)
+              and str(m.content).startswith("Not finished yet")]
+    tokens = 0
+    for message in messages:
+        if isinstance(message, AIMessage) and getattr(message, "usage_metadata", None):
+            tokens += int(message.usage_metadata.get("total_tokens", 0) or 0)
+    return {"nudges": len(nudges), "corrections": corrections,
+            "tool_calls": sum(len(m.tool_calls) for m in messages if isinstance(m, AIMessage)),
+            "blocked_calls": sum(1 for m in messages if isinstance(m, ToolMessage) and m.status == "error"),
+            "tokens": tokens}
 
 
 def cli_decide(drafts: list[dict]) -> dict:

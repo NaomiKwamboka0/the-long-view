@@ -1,5 +1,14 @@
 # Hardening and honesty — 27 October 2026
 
+## T2: measuring the local model instead of guessing
+
+- New `scripts/measure_agent.py` runs the agent N times, each in a fresh temporary home with a fixed `HATUA_TODAY`, and records for every run: whether it finished all target learners without the supervisor, the nudge count, drafts, tool calls, blocked calls, token counts when Ollama reports them, and wall time. Crashed runs are recorded as failed runs.
+- Results go to `evals/agent_runs.json` with the model name and digest and a description of the machine. Without Ollama the script stops with exit code 2 and never falls back to the rules planner silently.
+- `agent.run()` now returns an `activity` block (nudges, corrections, tool calls, blocked calls, tokens) so the numbers come from the run itself rather than from a log scrape.
+- The arithmetic (median, nearest-rank p90, unaided counting) lives in `hatua/measure.py` and is tested with fabricated records.
+
+**Not done:** the batch itself. This machine has no Ollama model pulled, so `evals/agent_runs.json` does not exist yet and no model-run number is published. Run `python scripts/measure_agent.py --runs 10` once with `qwen2.5:7b` and commit the first complete batch.
+
 ## T1: the guard now checks every sentence
 
 - Text is normalised before matching (Unicode NFKC, lowercase, runs of whitespace, hyphens and underscores collapsed), so `stem  pathway` and `STEM_pathway` no longer slip through.
