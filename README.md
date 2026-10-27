@@ -152,6 +152,26 @@ python -m hatua agent
 - **Records to check** lists what Hatua fixed or wants a teacher to check. **History** shows who did what.
 - Plain words, large touch targets, soft colours with no harsh lines, and a dark mode. It works on a phone.
 
+## Real exports and teacher sign-in
+
+A school's spreadsheet will not use Hatua's headings, and it usually carries names and phone numbers Hatua should never hold. Map it once, copying only the columns you name:
+
+```bash
+python -m hatua map-export my_sheet.csv --mapping data/mappings/school.json
+python -m hatua ingest my_sheet_hatua.csv
+```
+
+The mapping file says which of your headings mean what; start from `data/mappings/example_school_export.json` and `docs/templates/records_template.csv`. Unmapped columns are dropped and listed in the report, and headings that look like names, phones, guardians, health or birth details are named separately. If the mapping points at an `id_map`, real admission numbers become `HT-xxxx`; a real ID missing from the map is skipped, never passed through. See [docs/INGESTION.md](docs/INGESTION.md) and the draft [docs/DPIA.md](docs/DPIA.md).
+
+Sign-in for the approval gate is off by default, so a typed name is still all that is recorded. To require it on a computer:
+
+```bash
+python -m hatua teacher-add --id mary --name "Mary Wambui"     # asks for a PIN twice
+HATUA_REQUIRE_AUTH=1 python -m hatua approve D-xxxx --teacher-id mary
+```
+
+A signed-in approval records the registered name and teacher ID, not the typed name, and a draft approved while sign-in was off cannot be saved once it is on. Sign-in identifies a teacher among those registered on that one computer. It is not TSC or KEMIS sign-on, and anyone who can edit the files in `logs/` can still forge an entry.
+
 ## Evaluation
 
 `python scripts/run_evals.py` runs 21 fixed tasks: 16 for the engine and 5 for the agent. See [EVALS.md](EVALS.md) and the recorded results for the latest run.

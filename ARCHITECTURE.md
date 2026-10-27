@@ -68,10 +68,14 @@ The tool boundaries follow the teacher's own steps, so another school system cou
 - **The model plans; rules write.** The model decides which tools to call. Patterns and drafts come from deterministic code, so a claim about a learner never depends on what the model happened to generate.
 - **Offline teacher page.** All data is embedded in one HTML file, so it runs on a school laptop without internet.
 
+## Data in, and national systems
+
+A school's own export enters through `map-export`, which copies only the columns a mapping names and, if an ID map is given, replaces real admission numbers with `HT-xxxx` kept in `data/private/` (git-ignored). [docs/INGESTION.md](docs/INGESTION.md) shows the whole path, what stays on the device, and why Hatua sits beside NEMIS/KEMIS rather than inside them; a real deployment needs the controller to finish [docs/DPIA.md](docs/DPIA.md), which is a draft, not an approved assessment.
+
 ## Teacher testing and privacy
 
 `package_teacher_demo.py` builds the distribution using a fresh synthetic dataset in a temporary `HATUA_HOME`. It does not copy working school records. The standalone page includes a walkthrough, feedback export and the full privacy notice. Its Content Security Policy blocks application connections and external assets. There are no external fonts.
 
 Browser decisions are namespaced by a fingerprint of the embedded dataset, including draft identities and hashes. Storage errors produce a visible warning. The clear-data action removes Hatua local-storage keys and in-memory feedback and edits, leaving other applications' storage alone. Exports, the embedded dataset, Python records and recipient copies are separate and are explained in the notice.
 
-A previous decision is shown as current only when its source draft hash matches the new draft. Family templates remain locked if the approved teacher text was edited. Approval imports require a source hash; guardian imports also require an explicit sharing decision. The prototype still has no authenticated teacher identities, encryption at rest, concurrent-user storage or automated retention.
+A previous decision is shown as current only when its source draft hash matches the new draft. Family templates remain locked if the approved teacher text was edited. Approval imports require a source hash; guardian imports also require an explicit sharing decision. Sign-in is optional (`HATUA_REQUIRE_AUTH=1`): it checks a registered teacher's PIN and records the registered name and ID instead of a typed name. It identifies a person among the teachers registered on one computer; it is not TSC or KEMIS sign-on, and anyone with file access can still edit the logs. The prototype still has no encryption at rest, concurrent-user storage or automated retention.

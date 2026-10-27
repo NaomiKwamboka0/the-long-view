@@ -1,3 +1,27 @@
+# Data intake, sign-in and data protection — 27 October 2026
+
+This update answers the two questions a panel asks first: how real school data reaches the agent lawfully, and whether "a named teacher approved this" means anything.
+
+## Changes
+
+- **Secrets stay out of the audit log.** A keyword argument named `pin`, `session`, `password`, `token` or `secret` is written to `logs/audit.jsonl` as `[redacted]`. Positional arguments are not scrubbed, and the module says so (A1).
+- **Optional teacher sign-in, off by default** (`HATUA_REQUIRE_AUTH=1`). A teacher registers an ID, a name and a PIN on one computer; the PIN is stored as a salted scrypt hash. Sessions are random tokens kept only as SHA-256 with a 15-minute life, and an ID locks for 15 minutes after 5 failed attempts. A signed-in approval records the registered name and teacher ID, ignores the typed name, and marks the entry as authenticated. A draft approved while sign-in was off cannot be saved once it is on (A2).
+- **New commands:** `teacher-add`, `teacher-list`, `approve --teacher-id`, `import-approvals --teacher-id`, and `map-export`. `GateBlocked` still exits 2; a bad value or missing file now exits 1 with a message instead of a traceback (A2).
+- **`map-export` maps a school's own CSV onto Hatua's columns** from an explicit JSON mapping. It copies only the mapped columns, reports every dropped heading, names the ones that look personal, tidies "Grade 7" to 7, and gives unmapped rows a stable content-hash `record_id`. With an `id_map`, real admission numbers become `HT-xxxx`, and a real ID missing from the map is skipped rather than passed through. `data/private/` is git-ignored (A3).
+- **New documents:** `docs/INGESTION.md` (the data path, what stays on the device, and how NEMIS/KEMIS relate) and `docs/DPIA.md` (a draft for the school to complete, not an approved assessment). `ARCHITECTURE.md`, `README.md`, `PRIVACY.md` and the privacy notice inside the teacher page now describe sign-in and export mapping accurately (A4).
+
+## Verification
+
+- 48 Python regression tests pass (28 existing + 20 new).
+- The 16 engine evaluations pass unchanged, and existing commands behave as before with sign-in off.
+- No real school export has been tried, so `map-export` is proven against the shipped template only.
+
+## Not done
+
+- No real, anonymised school export has been run through `map-export`, and no `.xlsx` support exists; teachers save as CSV.
+- Sign-in is per computer. It is not TSC or KEMIS single sign-on, it does not prove who a person is, and anyone with file access can edit the logs. The offline teacher page still records a typed name.
+- The DPIA is unfinished by design: the lawful basis, retention, notice and sign-off are the school's to complete.
+
 # Teacher testing and privacy update — 20 October 2026
 
 Hatua is an offline, evidence-linked learner review prototype. This update makes its synthetic-data demonstration easier for a teacher to try and makes its data handling more explicit.

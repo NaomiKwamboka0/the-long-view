@@ -34,7 +34,7 @@ The local Python app stores source CSV files, cleaned records, pending drafts, q
 
 The optional Ollama model runs on a loopback address on the same computer. Its endpoint check rejects remote hosts, and its requests disable proxy use and redirects. Installing dependencies, downloading a model and initially obtaining the filesystem tool require internet access. Third-party tracing, cloud backups or separately configured software can change the data flow and must be reviewed by whoever operates the device.
 
-Python records, logs, profiles and generated HTML are ordinary unencrypted files with no automatic retention schedule. The app does not authenticate a typed teacher name or provide tamper-proof audit logs. Device security and file permissions matter; teacher approval is a workflow safeguard, not an identity check.
+Python records, logs, profiles and generated HTML are ordinary unencrypted files with no automatic retention schedule. By default the app does not authenticate a typed teacher name. An optional sign-in (`HATUA_REQUIRE_AUTH=1`) checks a registered teacher's PIN, with the credentials kept in the local `store/` folder, before an approval is recorded. The app still has no tamper-proof audit log. Device security and file permissions matter; teacher approval is a workflow safeguard, not an identity check.
 
 ## Questions, corrections and shared feedback
 
