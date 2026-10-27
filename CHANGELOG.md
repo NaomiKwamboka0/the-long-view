@@ -1,5 +1,10 @@
 # Hardening and honesty — 27 October 2026
 
+## T5: the recipe for a requirement added live
+
+- New `docs/EXTENDING.md`: adding a read-only MCP tool (function with `@audit.audited`, registration in `mcp_server.py`, planner prompt only when the agent should use it, one test, one evaluation row, tool count in ARCHITECTURE.md), adding a pattern type (rules, both family-message languages, guard allowlist), and the list of things that must never be added (approve/share/send tools, unlogged tools, model calls in the rules path).
+- **Verified by doing it:** on a scratch branch I added `list_streams`, its test and an `E17` evaluation row. `ruff`, `pytest` (95 tests) and `run_evals.py` (E17 PASS, 17/22 with the agent tasks failing for the environment reason below) went green in 2 minutes 3 seconds. The branch was deleted and nothing was merged.
+
 ## T4: CI now runs what we claim
 
 - The workflow installs from `requirements.lock.txt` (69 pinned packages) instead of bare `pytest`, lints with `ruff`, runs the 21 evaluations, prints coverage, and still builds and tests the teacher demo. A failed evaluation task now fails the build; `run_evals.py` already exited non-zero, and that is now exercised.
