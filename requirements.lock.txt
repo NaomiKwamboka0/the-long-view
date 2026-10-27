@@ -1,4 +1,4 @@
-﻿# Exact versions for CI and for reproducing a measurement batch.
+# Exact versions for CI and for reproducing a measurement batch.
 # Generated from a clean virtual environment with:
 #     python -m pip install -r requirements.txt ruff pytest-cov
 #     python -c "import importlib.metadata as md; ..."   (or python -m pip freeze)
@@ -53,7 +53,7 @@ pytest==9.1.1
 pytest-cov==7.1.0
 python-dotenv==1.2.4
 python-multipart==0.0.32
-pywin32==312
+pywin32==312; platform_system == "Windows"
 PyYAML==6.0.3
 referencing==0.37.0
 requests==2.34.2
