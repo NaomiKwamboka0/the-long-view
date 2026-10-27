@@ -1,3 +1,20 @@
+# Hardening and honesty — 27 October 2026
+
+## T1: the guard now checks every sentence
+
+- Text is normalised before matching (Unicode NFKC, lowercase, runs of whitespace, hyphens and underscores collapsed), so `stem  pathway` and `STEM_pathway` no longer slip through.
+- Every sentence must be covered by a citation, except the lines the templates write themselves (`TEMPLATE_LINES`, derived from what `summary.py` emits). Previously only bullet lines were checked, so an uncited prose sentence passed.
+- The forbidden list now covers pathway/track/career suggestions, ranking and comparison (`outperforms`, `among the top`, `top 5 in the class`, `best/worse than`), trait labels (`natural leader`, `gifted`, `slow learner`) and four Kiswahili equivalents. Bare "track" is deliberately not blocked. The Kiswahili list is marked for native-speaker review.
+- The optional wording rewrite is kept only when it has the same number of lines and the same citation set on each line; otherwise the template text stands.
+- A teacher's edited text is checked the same way, so adding an uncited sentence is now refused. That is a deliberate change: one existing test was updated to put a citation on its review note.
+- `guard.check` now reads the evidence tables once per call instead of once per citation, which cut the full-class regression from five minutes to thirty seconds.
+
+Tests: 88 pass, including 31 blocked phrases, 11 legitimate sentences, a check of every draft for all 40 learners in English and Kiswahili for both audiences, and the rewrite cases. E09, E10 and E11 are unchanged.
+
+## Not done
+
+- No semantic check of a claim. The guard is a phrase list plus citation coverage; a teacher's reading is still the real control.
+
 # Data intake, sign-in and data protection — 27 October 2026
 
 This update answers the two questions a panel asks first: how real school data reaches the agent lawfully, and whether "a named teacher approved this" means anything.

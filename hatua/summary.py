@@ -120,7 +120,7 @@ def draft(learner_id: str, audience: str = "teacher", language: str = "en") -> d
 
     writer = "template"
     polished = llm.polish(text, language) if audience == "teacher" else None
-    if polished and not guard.check(polished, learner_id) and set(guard.citations(polished)) == set(guard.citations(text)):
+    if polished and llm.rewrite_is_sound(text, polished) and not guard.check(polished, learner_id):
         text, writer = polished, llm.model_name()
 
     problems = guard.check(text, learner_id)

@@ -89,7 +89,10 @@ def local_store(tmp_path, monkeypatch):
 
 def test_family_message_cannot_restore_edited_teacher_text(local_store):
     draft = summary.draft('HT-0001')
-    gate.approve(draft['draft_id'], 'Test Teacher', edited_text=draft['text']+'\nTeacher review note.')
+    # The guard now requires a citation on every sentence a teacher adds, so the note
+    # carries one. What this test checks is unchanged: an edited teacher draft locks the
+    # template family message.
+    gate.approve(draft['draft_id'], 'Test Teacher', edited_text=draft['text']+'\nTeacher review note [R-00000].')
     with pytest.raises(summary.GateBlocked, match='edited'):
         summary.draft('HT-0001', 'guardian')
 
