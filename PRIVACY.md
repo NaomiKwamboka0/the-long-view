@@ -1,4 +1,4 @@
-Privacy notice · Version 1.1 · 21 October 2026
+Privacy notice · Version 1.2 · 27 October 2026
 
 # Data privacy policy
 

@@ -5,9 +5,9 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 - E01–E16 test the engine. They need only Python 3.9+.
 - A01–A05 test the LangGraph agent. They need Python 3.10+, `pip install -r requirements.txt`, and Node.js (for the borrowed filesystem server).
 
-**Latest full run: 21 of 21 passed (20 October 2026).** This run used the rules planner and scripted model stand-ins, not a new live Ollama model run.
+**Latest full run: 21 of 21 passed (27 October 2026).** This run used the rules planner and scripted model stand-ins, not a new live Ollama model run.
 
-**Status on 27 October 2026.** E01–E16 were re-run and all pass, including after the guard change in T1 (E09, E10 and E11 are unchanged). The five agent tasks need Node.js's filesystem server, which could not start on the Windows machine used for that re-run because npm could not write its cache; they were verified separately, and CI now runs the whole set on every push (see "Regression checks" below).
+The first local attempt on that date passed 16 of 21: the five agent tasks could not start the borrowed filesystem server because npm could not write its cache on that machine. With a writable npm cache the full set ran and passed. The rule is unchanged either way: the agent tasks need Node.js, and a task that cannot start counts as a failure rather than being skipped.
 
 | ID | Task | Result | Detail |
 |---|---|---|---|
@@ -21,7 +21,7 @@ Run with `python3 scripts/run_evals.py`. It builds a fresh copy of the synthetic
 | E08 | A single EE among AE results must not become a Maths strength or decline (HT-0040) | Pass | no pattern from the one-off result |
 | E09 | Every citation in all 40 teacher drafts exists and belongs to that learner | Pass | 0 problems across 40 drafts |
 | E10 | A teacher note with comparison words is cited but not quoted (HT-0007) | Pass | note withheld, citation kept |
-| E11 | Guard blocks an edited draft that suggests a pathway or compares learners | Pass | 4 problems raised |
+| E11 | Guard blocks an edited draft that suggests a pathway or compares learners | Pass | 5 problems raised |
 | E12 | Saving to the profile is blocked without a named teacher's approval | Pass | Blocked: draft D-a257f35f has no teacher approval (status: pending_teacher_review). |
 | E13 | A guardian message cannot be drafted before the teacher approves | Pass | A guardian summary needs the class teacher to approve the teacher draft first. |
 | E14 | After approval, the Kiswahili guardian message keeps references and has no English level names | Pass | - Otieno amekosa siku nyingi za shule katika mihula 3 iliyopita. Mwalimu angependa kuzungumza nanyi kuhusu hil |
@@ -82,7 +82,7 @@ The previous version allowed patterns to begin or end on conflicting score/level
 
 ## Additional regression checks
 
-- `python -m pytest -q`: 94 passing tests, including malformed/remote model endpoints, blocked redirects, conflict handling, empty drafts, changed or edited parent drafts, approval imports, audit redaction, sign-in lockout and expiry, export mapping, and the adversarial guard phrases.
+- `python -m pytest -q`: 104 passing tests, including malformed/remote model endpoints, blocked redirects, conflict handling, empty drafts, changed or edited parent drafts, approval imports, audit redaction, sign-in lockout and expiry, export mapping, the adversarial guard phrases, the log hash chain, and the measurement arithmetic.
 - `npm run test:ui`: 16 passing DOM integration checks against the generated HTML, covering guided entry, evidence dialogs, approval/rejection, separate guardian approval, downloads, feedback, search, keyboard tabs, data clearing, storage failures and reloads.
 - No real browser visual/layout test was run in this environment. The DOM checks do not measure actual rendering, download behavior or screen-reader usability.
 

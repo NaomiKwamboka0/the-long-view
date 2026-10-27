@@ -1,5 +1,14 @@
 # Hardening and honesty — 27 October 2026
 
+## Final verification on this branch
+
+- `python -m pytest -q`: **104 passed**.
+- `python scripts/run_evals.py`: **21 of 21 passed**. The first attempt on this machine passed 16 of 21 because npm could not write its cache and the borrowed filesystem server would not start; with a writable cache the whole set ran. A task that cannot start is a failure, never a skip.
+- `ruff check hatua tests scripts`: clean.
+- `npm run test:ui`: **16 of 16 passed**.
+- `python -m hatua demo` and `python scripts/package_teacher_demo.py`: both succeed.
+- Still not run: the model measurement batch (no Ollama model pulled here), the interactive sign-in prompt in a real terminal, and anything in the human-owned list.
+
 ## T7: logs that show when they have been edited
 
 - Every line in `logs/audit.jsonl` and `logs/approvals.jsonl` now carries `prev`, the SHA-256 of the line before it (64 zeros for the first), so editing, deleting or reordering a line breaks the chain.
@@ -16,7 +25,7 @@
 ## T5: the recipe for a requirement added live
 
 - New `docs/EXTENDING.md`: adding a read-only MCP tool (function with `@audit.audited`, registration in `mcp_server.py`, planner prompt only when the agent should use it, one test, one evaluation row, tool count in ARCHITECTURE.md), adding a pattern type (rules, both family-message languages, guard allowlist), and the list of things that must never be added (approve/share/send tools, unlogged tools, model calls in the rules path).
-- **Verified by doing it:** on a scratch branch I added `list_streams`, its test and an `E17` evaluation row. `ruff`, `pytest` (95 tests) and `run_evals.py` (E17 PASS, 17/22 with the agent tasks failing for the environment reason below) went green in 2 minutes 3 seconds. The branch was deleted and nothing was merged.
+- **Verified by doing it:** on a scratch branch I added `list_streams`, its test and an `E17` evaluation row. `ruff`, `pytest` and `run_evals.py` (E17 PASS, 17/22 with the agent tasks failing for the environment reason below) went green in 2 minutes 3 seconds. The branch was deleted and nothing was merged.
 
 ## T4: CI now runs what we claim
 

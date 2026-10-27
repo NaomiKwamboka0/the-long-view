@@ -7,149 +7,147 @@
    "task": "Detect a Mathematics decline across terms (HT-0003)",
    "pass": true,
    "detail": "Mathematics: results fell from Approaching Expectations (Grade 8 Term 1) to Below Expectations (Grade 9 Term 3) over 6 recorded terms.",
-   "ms": 24
+   "ms": 306
   },
   {
    "id": "E02",
    "task": "Detect held strength in Creative Arts (HT-0007)",
    "pass": true,
    "detail": "Creative Arts: Exceeding Expectations in 14 recorded terms in a row, Grade 5 Term 1 to Grade 9 Term 3.",
-   "ms": 24
+   "ms": 183
   },
   {
    "id": "E03",
    "task": "Detect Kiswahili improvement across a missing term (HT-0012)",
    "pass": true,
    "detail": "Kiswahili: results rose from Meeting Expectations (Grade 8 Term 1) to Exceeding Expectations (Grade 9 Term 3) over 6 recorded terms.",
-   "ms": 23
+   "ms": 232
   },
   {
    "id": "E04",
    "task": "Detect an attendance drop and cite attendance entries (HT-0018)",
    "pass": true,
    "detail": "Attendance under 75% for 3 terms in a row (Grade 8 Term 2: 44/70 days, Grade 8 Term 3: 30/45 days, Grade 9 Term 1: 37/63 days).",
-   "ms": 23
+   "ms": 212
   },
   {
    "id": "E05",
    "task": "Report a gap in records for a learner who joined in Grade 7 (HT-0024)",
    "pass": true,
    "detail": "Records start at Grade 7 Term 2. Earlier years are not in Hatua (for example, the learner joined from another school).",
-   "ms": 20
+   "ms": 183
   },
   {
    "id": "E06",
    "task": "Detect held strength in Science from Grade 5 (HT-0031)",
    "pass": true,
    "detail": "Science: Exceeding Expectations in 5 recorded terms in a row, Grade 8 Term 2 to Grade 9 Term 3.",
-   "ms": 21
+   "ms": 186
   },
   {
    "id": "E07",
    "task": "Flag late logging as a records problem, not a learner problem (HT-0036)",
    "pass": true,
    "detail": "71 records were uploaded more than six weeks after the task. Check these before relying on them.",
-   "ms": 23
+   "ms": 194
   },
   {
    "id": "E08",
    "task": "A single EE among AE results must not become a Maths strength or decline (HT-0040)",
    "pass": true,
    "detail": "no pattern from the one-off result",
-   "ms": 42
+   "ms": 408
   },
   {
    "id": "E09",
    "task": "Every citation in all 40 teacher drafts exists and belongs to that learner",
    "pass": true,
    "detail": "0 problems across 40 drafts",
-   "ms": 47400
+   "ms": 21203
   },
   {
    "id": "E10",
    "task": "A teacher note with comparison words is cited but not quoted (HT-0007)",
    "pass": true,
    "detail": "note withheld, citation kept",
-   "ms": 751
+   "ms": 332
   },
   {
    "id": "E11",
    "task": "Guard blocks an edited draft that suggests a pathway or compares learners",
    "pass": true,
-   "detail": "4 problems raised",
-   "ms": 14
+   "detail": "5 problems raised",
+   "ms": 118
   },
   {
    "id": "E12",
    "task": "Saving to the profile is blocked without a named teacher's approval",
    "pass": true,
-   "detail": "Blocked: draft D-a257f35f has no teacher approval (status: pending_teacher_review).",
-   "ms": 1261
+   "detail": "Blocked: draft D-4f24216a has no teacher approval (status: pending_teacher_review).",
+   "ms": 381
   },
   {
    "id": "E13",
    "task": "A guardian message cannot be drafted before the teacher approves",
    "pass": true,
    "detail": "A guardian summary needs the class teacher to approve the teacher draft first.",
-   "ms": 28
+   "ms": 215
   },
   {
    "id": "E14",
    "task": "After approval, the Kiswahili guardian message keeps references and has no English level names",
    "pass": true,
    "detail": "- Otieno amekosa siku nyingi za shule katika mihula 3 iliyopita. Mwalimu angependa kuzungumza nanyi kuhusu hil",
-   "ms": 1716
+   "ms": 804
   },
   {
    "id": "E15",
    "task": "Run-to-run variation: 5 runs give identical patterns for all learners",
    "pass": true,
    "detail": "1 distinct output(s) across 5 runs (template path, no model)",
-   "ms": 4535
+   "ms": 36541
   },
   {
    "id": "E16",
    "task": "No pattern should start or end on a record whose score contradicts its level",
    "pass": true,
    "detail": "0 pattern(s) rest on a conflicting record at an end: []",
-   "ms": 891
+   "ms": 7190
   },
   {
    "id": "A01",
    "task": "Agent (rules planner): reads the inbox through the borrowed filesystem server, ingests, drafts, self-checks, pauses",
    "pass": true,
    "detail": "servers=['hatua', 'filesystem'], drafts=3, paused=True, profiles saved=0",
-   "ms": 51631
+   "ms": 88628
   },
   {
    "id": "A02",
    "task": "Agent: teacher approves one draft and rejects one; only the approved one is saved",
    "pass": true,
    "detail": "results=['approve', 'reject'], saved=['HT-0001.json']",
-   "ms": 29453
+   "ms": 73446
   },
   {
    "id": "A03",
    "task": "Agent: a model that uses a bad ID and tries to save an unapproved draft is recovered from and blocked",
    "pass": true,
    "detail": "bad ID error logged=True, save attempt blocked=True, profiles saved=0, still paused for teacher=True",
-   "ms": 18226
+   "ms": 100253
   },
   {
    "id": "A05",
    "task": "Agent: a model that stops after 1 of 3 learners (as Qwen 7B did on a laptop) still ends with 3 English drafts",
    "pass": true,
    "detail": "drafts=3, languages=['en'], corrections logged=4, rules finished the rest=True, paused=True",
-   "ms": 13736
+   "ms": 68575
   },
   {
    "id": "A04",
    "task": "Agent: every tool call and plan step is in the audit log",
    "pass": true,
    "detail": "24 events; kinds include ['agent.plan', 'agent.self_check', 'agent.start', 'draft_summary']",
-   "ms": 0
+   "ms": 2
   }
- ],
- "run_date": "2026-10-20",
- "environment": "Python 3.12; rules planner and scripted model tests; no new live Ollama run"
+ ]
 }
