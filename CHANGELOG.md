@@ -1,5 +1,11 @@
 # Hardening and honesty — 27 October 2026
 
+## T6: a three-minute runbook with real output in it
+
+- New `docs/DEMO.md`: a storyboard with per-step timings, the exact commands, the output each one prints, a pre-recording checklist, and a closing note not to edit out the pause, the block or the crash.
+- The demo run, the two-learner agent run, the blocked save and the guard-blocked edit were run and their output pasted in. The sign-in block was captured through the CLI test with the hidden prompt stubbed, and the document says so, because a scripted shell cannot answer `getpass`.
+- **Not done:** no video has been recorded. That is H4, and it needs a human in front of a terminal.
+
 ## T5: the recipe for a requirement added live
 
 - New `docs/EXTENDING.md`: adding a read-only MCP tool (function with `@audit.audited`, registration in `mcp_server.py`, planner prompt only when the agent should use it, one test, one evaluation row, tool count in ARCHITECTURE.md), adding a pattern type (rules, both family-message languages, guard allowlist), and the list of things that must never be added (approve/share/send tools, unlogged tools, model calls in the rules path).
