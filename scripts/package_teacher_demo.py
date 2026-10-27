@@ -3,13 +3,13 @@
 Never reads the user's store, profiles, inbox or logs. Standard library only.
     python scripts/package_teacher_demo.py
 """
-from pathlib import Path
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import zipfile
+from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 

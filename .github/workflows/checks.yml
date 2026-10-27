@@ -5,6 +5,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
@@ -14,8 +15,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: python -m pip install pytest
-      - run: python -m pytest -q
-      - run: python scripts/package_teacher_demo.py
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.lock.txt
+      - name: Lint
+        run: ruff check hatua tests scripts
+      - name: Tests (coverage is information only, no threshold)
+        run: python -m pytest -q --cov=hatua --cov-report=term
+      - name: Evaluations (rules planner and scripted stand-ins, no Ollama)
+        run: python scripts/run_evals.py
+      - name: Build the synthetic teacher demo
+        run: python scripts/package_teacher_demo.py
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run test:ui

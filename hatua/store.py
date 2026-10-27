@@ -7,7 +7,9 @@ import json
 from pathlib import Path
 
 from . import config
-from .normalize import area as clean_area, clean_record, flag, learner_id as clean_id, parse_date
+from .normalize import area as clean_area
+from .normalize import clean_record, flag, parse_date
+from .normalize import learner_id as clean_id
 
 FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested")
 

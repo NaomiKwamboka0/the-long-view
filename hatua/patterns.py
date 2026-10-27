@@ -80,7 +80,7 @@ def _runs(series: list[dict], ok) -> list[list[dict]]:
 def _caveats(window: list[dict]) -> list[str]:
     notes = []
     gaps = [(a["ordinal"], b["ordinal"]) for a, b in zip(window, window[1:]) if b["ordinal"] - a["ordinal"] > 1]
-    for a, b in gaps:
+    for a, _gap_end in gaps:
         notes.append(f"No record for {_label(a + 1)}.")
     flagged = [rid for t in window for rid in t["flagged"]]
     if flagged:

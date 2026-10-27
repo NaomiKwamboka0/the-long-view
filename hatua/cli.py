@@ -138,7 +138,7 @@ def cmd_agent(args) -> None:
         from . import agent
     except ImportError as exc:
         print(f"The agent needs Python 3.10+ and: pip install -r requirements.txt  ({exc})", file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     agent.main(max_learners=args.max, rules=args.rules, no_fs=args.no_fs)
 
 

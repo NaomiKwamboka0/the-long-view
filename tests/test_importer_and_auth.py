@@ -30,14 +30,14 @@ def log_lines() -> list[dict]:
 
 
 def example_rows(levels):
-    return [dict(record_id=f'R-{i:05d}', learner_id='HT-0001', family='Mathematics',
-                 ordinal=i, points=p, flags=[]) for i, p in enumerate(levels)]
+    return [{'record_id': f'R-{i:05d}', 'learner_id': 'HT-0001', 'family': 'Mathematics',
+                 'ordinal': i, 'points': p, 'flags': []} for i, p in enumerate(levels)]
 
 
 @pytest.fixture
 def learner(home):
     """One learner with a declining Mathematics record, so a real draft can be built."""
-    store.save('learners', [dict(learner_id='HT-0001', first_name='Example', current_grade=9, stream='9A')])
+    store.save('learners', [{'learner_id': 'HT-0001', 'first_name': 'Example', 'current_grade': 9, 'stream': '9A'}])
     rows = example_rows([4, 4, 3, 2, 2])
     for row in rows:
         row.update(level=config.LEVELS[row['points'] - 1])

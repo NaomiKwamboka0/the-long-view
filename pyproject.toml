@@ -1,0 +1,38 @@
+# Configuration for the checks CI runs. Hatua is run from the checkout, not installed.
+[project]
+name = "hatua"
+version = "0.1.0"
+description = "Cited, teacher-approved CBC learner profiles that stay on the teacher's laptop"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+
+[tool.ruff]
+# The engine runs on Python 3.9+, so rules must not suggest 3.10+ only syntax.
+target-version = "py39"
+line-length = 110
+src = ["."]
+
+[tool.ruff.lint]
+select = [
+    "E4",   # imports: duplicate or shadowed
+    "E7",   # statements that do nothing
+    "E9",   # syntax and runtime errors
+    "F",    # pyflakes: unused names, undefined names
+    "I",    # import order
+    "B",    # bugbear: likely bugs, e.g. mutable defaults
+    "UP",   # pyupgrade, bounded by target-version
+    "C4",   # comprehensions
+]
+ignore = [
+    # audited() must log and re-raise whatever a tool raises; narrowing the except
+    # would let an unexpected error escape unlogged.
+    "BLE001",
+    # `l` is used as a short loop name in single-line comprehensions throughout the
+    # engine (for l in store.load("learners")). Renaming it would touch a lot of code
+    # for no reader benefit; the ambiguity is only in isolation.
+    "E741",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -6,12 +6,12 @@ applies through the same gate as the command line.
 """
 from __future__ import annotations
 
-import json
 import hashlib
-from pathlib import Path
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 
-from . import audit, config, guard, patterns, store, summary, tools
+from . import audit, config, guard, store, summary, tools
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "ui" / "template.html"
 OUT = config.UI / "hatua.html"

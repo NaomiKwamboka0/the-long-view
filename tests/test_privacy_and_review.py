@@ -1,12 +1,12 @@
 """Regression checks for teacher-review boundaries and local data handling."""
 import argparse
 import json
-from pathlib import Path
-from threading import Thread
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Thread
 from urllib.error import HTTPError
 
 import pytest
+
 from hatua import cli, config, gate, guard, patterns, store, summary
 from hatua.local_model import local_host, open_local
 
@@ -41,7 +41,8 @@ def test_model_requests_do_not_follow_redirects(monkeypatch):
             self.end_headers()
         def log_message(self, *args): pass
     server = HTTPServer(('127.0.0.1', 0), Handler)
-    thread = Thread(target=server.serve_forever, daemon=True); thread.start()
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
     monkeypatch.setenv('HTTP_PROXY', 'http://127.0.0.1:1')
     monkeypatch.setenv('NO_PROXY', '')
     try:
@@ -49,12 +50,14 @@ def test_model_requests_do_not_follow_redirects(monkeypatch):
             open_local(f'http://127.0.0.1:{server.server_port}/original', timeout=2)
         assert hits == ['/original']
     finally:
-        server.shutdown(); thread.join(); server.server_close()
+        server.shutdown()
+        thread.join()
+        server.server_close()
 
 
 def rows(levels, conflict=None):
-    return [dict(record_id=f'R-{i:05}', learner_id='HT-0001', family='Mathematics',
-                 ordinal=i, points=p, flags=['score_level_conflict'] if i==conflict else [])
+    return [{'record_id': f'R-{i:05}', 'learner_id': 'HT-0001', 'family': 'Mathematics',
+                 'ordinal': i, 'points': p, 'flags': ['score_level_conflict'] if i==conflict else []}
             for i,p in enumerate(levels)]
 
 
@@ -80,9 +83,10 @@ def local_store(tmp_path, monkeypatch):
                         'LOGS':tmp_path/'logs', 'AUDIT_LOG':tmp_path/'logs/audit.jsonl',
                         'APPROVALS_LOG':tmp_path/'logs/approvals.jsonl'}.items():
         monkeypatch.setattr(config, name, value)
-    store.save('learners', [dict(learner_id='HT-0001', first_name='Example', current_grade=9, stream='9A')])
+    store.save('learners', [{'learner_id': 'HT-0001', 'first_name': 'Example', 'current_grade': 9, 'stream': '9A'}])
     r = rows([4,4,3,2,2])
-    for row in r: row.update(level=config.LEVELS[row['points']-1])
+    for row in r:
+        row.update(level=config.LEVELS[row['points']-1])
     store.save('records', r)
     return tmp_path
 

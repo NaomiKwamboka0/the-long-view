@@ -11,3 +11,5 @@ __pycache__/
 dist/
 release/
 node_modules/
+.coverage
+htmlcov/

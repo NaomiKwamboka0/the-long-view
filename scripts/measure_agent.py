@@ -60,7 +60,6 @@ def child(args) -> int:
 def model_digest(name: str) -> dict:
     """Ask Ollama what it has. Returns {"name", "digest"} or raises RuntimeError."""
     sys.path.insert(0, str(REPO))
-    from hatua import agent
     from hatua.local_model import local_host, open_local
 
     host = local_host()

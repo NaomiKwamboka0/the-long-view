@@ -28,7 +28,6 @@ import json
 import os
 import shutil
 import sys
-import urllib.request
 from pathlib import Path
 from typing import Annotated, Any, TypedDict
 
@@ -42,8 +41,8 @@ from langgraph.types import Command, interrupt
 
 from . import audit, auth, config, gate, guard, store
 from . import tools as hatua_tools
-from .summary import GateBlocked
 from .local_model import local_host, open_local
+from .summary import GateBlocked
 
 FS_TOOLS = {"list_directory", "get_file_info"}  # the only borrowed tools the planner needs
 
@@ -420,7 +419,7 @@ async def run(max_learners: int = 3, use_model: bool = True, use_fs: bool = True
     if snap.interrupts:
         drafts = snap.interrupts[0].value["drafts"]
         resume = decide(drafts) if decide else {"teacher": teacher or "", "decisions": {}}
-        async for update in graph.astream(Command(resume=resume), cfg, stream_mode="updates"):
+        async for _update in graph.astream(Command(resume=resume), cfg, stream_mode="updates"):
             pass
         final = graph.get_state(cfg).values["messages"][-1]
         outcome["gate"] = json.loads(final.content)

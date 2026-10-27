@@ -1,5 +1,12 @@
 # Hardening and honesty — 27 October 2026
 
+## T4: CI now runs what we claim
+
+- The workflow installs from `requirements.lock.txt` (69 pinned packages) instead of bare `pytest`, lints with `ruff`, runs the 21 evaluations, prints coverage, and still builds and tests the teacher demo. A failed evaluation task now fails the build; `run_evals.py` already exited non-zero, and that is now exercised.
+- `pyproject.toml` adds the ruff configuration (target Python 3.9, so no 3.10+ only suggestions) and the pytest settings. 26 pre-existing findings were fixed; `BLE001` and `E741` are ignored with the reasons written in the file.
+- **Verified:** changing one assertion in E01 made that task FAIL and the run exit 1 (15/21 passed). The change was reverted.
+- **Not done:** the workflow has not run on GitHub from this machine (no push credentials available here). Every step was run locally, but the five agent evaluations need Node's filesystem server and were not part of that local proof.
+
 ## T3: EVALS.md now separates what is measured from what is claimed
 
 - New section **"A failure we did not fix"**: in the one real run the model drafted for 1 of 3 learners and stopped, repeated a call, asked for a Kiswahili teacher draft and invented a file name. The supervisor works around all four; the model is not fixed. The next step is named: run the 10-run batch, then compare a larger local model and a stricter tool-schema prompt.

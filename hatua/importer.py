@@ -68,7 +68,7 @@ def _load_mapping(path: Path) -> dict:
 def _read_sheet(path: Path) -> tuple[list[str], list[dict]]:
     with Path(path).open(encoding="utf-8-sig", newline="") as fh:
         reader = csv.DictReader(fh)
-        headings = [h for h in (reader.fieldnames or [])]
+        headings = list(reader.fieldnames or [])
         return headings, list(reader)
 
 
