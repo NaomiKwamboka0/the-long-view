@@ -11,8 +11,9 @@ from .normalize import area as clean_area
 from .normalize import clean_record, flag, parse_date
 from .normalize import learner_id as clean_id
 
-FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments")
-DICT_FILES = {"ingested", "assignments"}  # stored as one JSON object, not a list
+FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments",
+         "drive", "notices", "comments")
+DICT_FILES = {"ingested", "assignments", "drive"}  # stored as one JSON object, not a list
 
 
 def _path(name: str) -> Path:

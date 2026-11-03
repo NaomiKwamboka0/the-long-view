@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hatua portal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Ccircle cx=%226%22 cy=%2222%22 r=%224%22 fill=%22%23cdbfe4%22/%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%224.5%22 fill=%22%234b91a5%22/%3E%3Ccircle cx=%2224%22 cy=%227%22 r=%225%22 fill=%22%236a4c9c%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Hatua teacher portal. Same language as the teacher page: soft sage paper, white
+   surfaces with no borders, jacaranda for actions, amber (never red) for attention. */
+:root {
+  --paper: #eef2ee; --surface: #ffffff; --tint: #f5f7f4; --ink: #213029; --ink-soft: #5b6a63;
+  --jacaranda: #6a4c9c; --jacaranda-soft: #efe9f8; --jacaranda-ink: #ffffff;
+  --leaf: #2d7451; --leaf-soft: #e2f1e8; --sun: #8f5a06; --sun-soft: #fbefd8; --lake: #1f5d72; --lake-soft: #e1eff3;
+  --l4: #1f5d72; --l3: #4b91a5; --l2: #a6cfd9; --l1: #dcedf2;
+  --l4-ink: #fff; --l3-ink: #fff; --l2-ink: #123947; --l1-ink: #123947;
+  --path: #cdbfe4; --focus: #6a4c9c; --shadow: 0 18px 48px -12px rgba(33, 48, 41, .28);
+  --font: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
+  --jacaranda: #bba3e8; --jacaranda-soft: #2f2742; --jacaranda-ink: #1b1428;
+  --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --lake: #8fcbdc; --lake-soft: #18313a;
+  --l4: #8fcbdc; --l3: #4f97ab; --l2: #2b5e6c; --l1: #213c44; --l4-ink: #0f2a33; --l3-ink: #0b1d23; --l2-ink: #e4ebe7; --l1-ink: #c9dfe5;
+  --path: #4a3d66; --focus: #bba3e8; --shadow: 0 18px 48px -12px rgba(0, 0, 0, .6); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
+  --jacaranda: #bba3e8; --jacaranda-soft: #2f2742; --jacaranda-ink: #1b1428;
+  --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --lake: #8fcbdc; --lake-soft: #18313a;
+  --l4: #8fcbdc; --l3: #4f97ab; --l2: #2b5e6c; --l1: #213c44; --l4-ink: #0f2a33; --l3-ink: #0b1d23; --l2-ink: #e4ebe7; --l1-ink: #c9dfe5;
+  --path: #4a3d66; --focus: #bba3e8; --shadow: 0 18px 48px -12px rgba(0, 0, 0, .6); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--font); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 10px; }
+h1, h2, h3 { margin: 0; line-height: 1.25; text-wrap: balance; }
+p { margin: 0; }
+.soft { color: var(--ink-soft); }
+.small { font-size: .88rem; }
+.id { font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: .85em; white-space: nowrap; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px 80px; }
+
+.btn { border: 0; border-radius: 12px; padding: 11px 20px; font-weight: 700; background: var(--jacaranda); color: var(--jacaranda-ink); white-space: nowrap; }
+.btn.quiet { background: var(--tint); color: var(--ink); font-weight: 400; }
+.btn.leaf { background: var(--leaf); color: var(--surface); }
+.btn.small { padding: 7px 14px; font-size: .9rem; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.link { border: 0; background: none; padding: 0; color: var(--jacaranda); text-decoration: underline; text-underline-offset: 3px; }
+.panel { background: var(--surface); border-radius: 24px; padding: 20px; min-width: 0; }
+.pill { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: .8rem; white-space: nowrap; background: var(--tint); color: var(--ink-soft); }
+.pill.waiting { background: var(--jacaranda-soft); color: var(--jacaranda); }
+.pill.approve { background: var(--leaf-soft); color: var(--leaf); }
+.pill.reject { background: var(--sun-soft); color: var(--sun); }
+.pill.watch { background: var(--sun-soft); color: var(--sun); }
+.empty { padding: 26px 12px; text-align: center; color: var(--ink-soft); }
+input[type=text], input[type=password], input[type=search], select, textarea { border: 0; border-radius: 12px; background: var(--tint); padding: 11px 14px; min-width: 0; }
+.error { color: var(--sun); }
+
+/* sign-in */
+.signin { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.signin-card { width: min(440px, 100%); display: grid; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.35rem; }
+.signin form { display: grid; gap: 12px; }
+.signin label { display: grid; gap: 4px; font-size: .9rem; color: var(--ink-soft); }
+.signin input { font-size: 1.05rem; }
+.practice { background: var(--tint); border-radius: 18px; padding: 14px 16px; display: grid; gap: 8px; }
+.practice table { border-collapse: separate; border-spacing: 0 4px; width: 100%; font-size: .92rem; }
+.practice td { padding: 2px 6px; }
+.practice td:last-child { text-align: right; }
+
+/* app top */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 20px 0 6px; }
+.top .who { flex: 1 1 260px; min-width: 0; color: var(--ink-soft); }
+.top .who b { color: var(--ink); }
+.cal { background: var(--lake-soft); color: var(--lake); border-radius: 999px; padding: 4px 12px; font-size: .85rem; }
+.hello { padding: 14px 0 18px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.hello h1 { font-size: clamp(1.4rem, 3.2vw, 1.9rem); flex: 1 1 360px; max-width: 34ch; }
+.tabs { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; background: var(--surface); padding: 6px; border-radius: 999px; width: fit-content; max-width: 100%; margin-bottom: 18px; }
+.tabs button { flex: none; border: 0; background: transparent; padding: 9px 18px; border-radius: 999px; color: var(--ink-soft); }
+.tabs button[aria-selected="true"] { background: var(--jacaranda-soft); color: var(--jacaranda); font-weight: 700; }
+.tabs .n { margin-left: 6px; font-size: .82rem; }
+
+/* lists: search + filters */
+.search { display: flex; gap: 8px; }
+.search input { flex: 1 1 auto; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.filters label { display: grid; gap: 4px; font-size: .85rem; color: var(--ink-soft); min-width: 0; }
+.filters select { width: 100%; }
+.count-line { display: flex; justify-content: space-between; gap: 10px; margin: 14px 2px 8px; font-size: .9rem; color: var(--ink-soft); }
+
+/* today */
+.today { display: grid; gap: 18px; }
+.cards { display: grid; gap: 10px; }
+.card { border-radius: 18px; padding: 14px 16px; background: var(--tint); display: grid; gap: 8px; min-width: 0; }
+.card.watch { background: var(--sun-soft); }
+.card.ok { background: var(--leaf-soft); }
+.card.task { background: var(--jacaranda-soft); }
+.card h3 { font-size: 1.05rem; }
+.card .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.alert-line { display: grid; gap: 2px; }
+.alert-line + .alert-line { padding-top: 8px; }
+
+/* drive */
+.folder { display: grid; gap: 8px; }
+.term { border-radius: 18px; background: var(--tint); padding: 12px 14px; display: grid; gap: 8px; }
+.term-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.term-head h3 { font-size: 1rem; flex: 1 1 auto; }
+.file { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; background: var(--surface); border-radius: 14px; padding: 10px 12px; }
+.file .nm { overflow-wrap: anywhere; }
+.preview { border-radius: 18px; background: var(--surface); padding: 14px 16px; display: grid; gap: 10px; box-shadow: inset 0 0 0 2px var(--jacaranda-soft); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.fact { background: var(--tint); border-radius: 14px; padding: 10px 12px; }
+.fact b { display: block; font-size: 1.35rem; }
+.upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.upload input[type=file] { max-width: 100%; }
+
+/* class */
+.split { display: grid; grid-template-columns: minmax(270px, 330px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 880px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.people { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 64vh; overflow-y: auto; }
+.people button { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0 12px; align-items: center; text-align: left; border: 0; background: transparent; padding: 10px; border-radius: 16px; }
+.people button:hover { background: var(--tint); }
+.people button[aria-current="true"] { background: var(--jacaranda-soft); }
+.face { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--lake-soft); color: var(--lake); }
+.people .txt { display: grid; min-width: 0; }
+.people .what { display: block; font-size: .85rem; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.learner { display: grid; gap: 22px; }
+.learner-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.learner-head .face { width: 54px; height: 54px; font-size: 1.2rem; }
+.learner-head h2 { font-size: 1.6rem; }
+.section { display: grid; gap: 10px; }
+.section h3 { font-size: 1.15rem; }
+.find { border-radius: 16px; padding: 12px 14px; background: var(--tint); display: grid; gap: 4px; }
+.find.up { background: var(--leaf-soft); } .find.down { background: var(--sun-soft); } .find.held { background: var(--lake-soft); }
+.find b { font-size: .92rem; }
+.find.up b { color: var(--leaf); } .find.down b { color: var(--sun); } .find.held b { color: var(--lake); }
+
+/* comment */
+.comment { border-radius: 18px; background: var(--jacaranda-soft); padding: 16px 18px; display: grid; gap: 12px; }
+.comment blockquote { margin: 0; font-size: 1.05rem; line-height: 1.6; max-width: 66ch; }
+.comment textarea { width: 100%; min-height: 110px; line-height: 1.6; background: var(--surface); resize: vertical; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.thumb { border: 0; border-radius: 999px; padding: 9px 18px; background: var(--surface); display: inline-flex; gap: 8px; align-items: center; font-weight: 700; }
+.thumb svg { width: 20px; height: 20px; }
+.thumb.up:hover, .thumb.up[aria-pressed="true"] { background: var(--leaf-soft); color: var(--leaf); }
+.thumb.down:hover, .thumb.down[aria-pressed="true"] { background: var(--sun-soft); color: var(--sun); }
+.reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.reasons label { display: inline-flex; gap: 6px; align-items: center; background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: .9rem; cursor: pointer; }
+.reasons input { accent-color: var(--jacaranda); }
+.versions { display: grid; gap: 6px; }
+.versions li { font-size: .88rem; color: var(--ink-soft); }
+
+/* long view */
+.lv { display: inline-grid; place-items: center; min-width: 2.15em; height: 1.75em; padding: 0 4px; border-radius: 999px; font-size: .74rem; font-weight: 700; }
+.lv.EE { background: var(--l4); color: var(--l4-ink); } .lv.ME { background: var(--l3); color: var(--l3-ink); }
+.lv.AE { background: var(--l2); color: var(--l2-ink); } .lv.BE { background: var(--l1); color: var(--l1-ink); }
+.long-wrap { overflow-x: auto; border-radius: 18px; background: var(--tint); padding: 8px; }
+table.long { border-collapse: separate; border-spacing: 2px 4px; font-size: .78rem; }
+table.long th { font-weight: 400; color: var(--ink-soft); white-space: nowrap; padding: 2px 4px; }
+table.long thead tr:first-child th { color: var(--ink); font-weight: 700; }
+table.long th.ro { color: var(--ink-soft); font-weight: 400; }
+table.long th.area { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--tint); color: var(--ink); font-weight: 700; padding-right: 12px; }
+table.long td { text-align: center; padding: 0; }
+table.long td.g { padding-left: 6px; }
+table.long td.past { opacity: .78; }
+table.long td button { border: 0; padding: 0; background: none; border-radius: 999px; }
+table.long .none { display: inline-block; width: 2.15em; height: 1.75em; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--paper); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--ink-soft); align-items: center; }
+.key span { display: inline-flex; gap: 6px; align-items: center; }
+
+/* calendar */
+.terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.terms .card.now { background: var(--lake-soft); }
+
+dialog { border: 0; border-radius: 24px; padding: 0; width: min(560px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(33, 48, 41, .35); }
+.dlg { padding: 22px; display: grid; gap: 14px; }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.dlg dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
+.dlg dt { color: var(--ink-soft); }
+.dlg dd { margin: 0; overflow-wrap: anywhere; }
+.letter { white-space: pre-wrap; margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--tint); font: inherit; }
+.langs { justify-self: start; display: inline-flex; gap: 4px; background: var(--tint); padding: 4px; border-radius: 999px; }
+.langs button { border: 0; background: transparent; border-radius: 999px; padding: 6px 14px; color: var(--ink-soft); }
+.langs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; }
+.toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); background: var(--ink); color: var(--paper); border-radius: 18px; padding: 14px 18px; box-shadow: var(--shadow); z-index: 9; display: flex; gap: 12px; align-items: center; }
+.toast p { flex: 1 1 auto; }
+.toast .btn { background: var(--paper); color: var(--ink); }
+@media (prefers-reduced-motion: no-preference) { dialog[open], .toast { animation: rise .2s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translate(var(--tx, 0), 10px); } to { opacity: 1; transform: translate(var(--tx, 0), 0); } } }
+.toast { --tx: -50%; }
+@media (max-width: 520px) { body { font-size: 16px; } .panel { padding: 16px; border-radius: 20px; } .file { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+<!-- SIGN IN -->
+<main class="signin" id="signin" hidden>
+  <div class="signin-card">
+    <div class="panel" style="display:grid;gap:16px">
+      <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
+      <div><h1 style="font-size:1.5rem">Sign in to your class</h1><p class="soft" id="si-school"></p></div>
+      <form id="si-form" autocomplete="on">
+        <label>Member number<input type="text" id="si-id" autocomplete="username" placeholder="For example M-6001" required></label>
+        <label>PIN<input type="password" id="si-pin" autocomplete="current-password" inputmode="numeric" required></label>
+        <p class="error small" id="si-error" role="alert" hidden></p>
+        <button class="btn" type="submit" id="si-go">Sign in</button>
+      </form>
+      <p class="small soft">Hatua runs on this computer. Your PIN never leaves it. After 5 wrong PINs, sign-in pauses for 15 minutes.</p>
+    </div>
+    <div class="practice" id="practice" hidden>
+      <p><b>Practice accounts</b> <span class="soft small">(made-up teachers and learners)</span></p>
+      <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a teacher to fill in the member number.</p>
+      <table><tbody id="pr-rows"></tbody></table>
+    </div>
+  </div>
+</main>
+
+<!-- APP -->
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
+    <p class="who" id="who"></p>
+    <span class="cal" id="cal-chip"></span>
+    <button class="btn quiet small" type="button" id="signout">Sign out</button>
+  </header>
+  <section class="hello"><h1 id="hello"></h1></section>
+  <nav class="tabs" role="tablist" aria-label="Parts of the portal">
+    <button role="tab" data-tab="today" aria-selected="true">Today<span class="n" id="n-today"></span></button>
+    <button role="tab" data-tab="drive" aria-selected="false">School drive<span class="n" id="n-drive"></span></button>
+    <button role="tab" data-tab="class" aria-selected="false">My class</button>
+    <button role="tab" data-tab="calendar" aria-selected="false">School calendar</button>
+  </nav>
+
+  <!-- TODAY -->
+  <section id="tab-today" role="tabpanel" class="panel">
+    <form class="search" id="f-today" role="search"><input type="search" id="q-today" placeholder="Learner name or subject" aria-label="Search notices"><button class="btn" type="submit">Search</button></form>
+    <div class="filters">
+      <label>Show<select id="ft-kind"><option value="">Everything</option><option value="learners">Learners to watch</option><option value="uploads">Results and uploads</option></select></label>
+      <label>Parent<select id="ft-told"><option value="">Any</option><option value="no">Not told yet</option><option value="yes">Already told</option></select></label>
+    </div>
+    <div class="count-line"><span id="r-today"></span><button class="link" type="button" id="clear-today">Clear</button></div>
+    <div class="today" id="today"></div>
+  </section>
+
+  <!-- DRIVE -->
+  <section id="tab-drive" role="tabpanel" class="panel" hidden>
+    <p class="soft" style="max-width:68ch;margin-bottom:14px">These are your class's folders on the school drive. A file here is <b>not</b> in Hatua until you approve it. Approving adds only the rows for your own learners.</p>
+    <div class="card task" style="margin-bottom:14px">
+      <h3>Upload term results</h3>
+      <p class="small soft">A CSV with the columns learner_id, grade, year, term, learning_area, level (score and task are optional).</p>
+      <form class="upload" id="up-form">
+        <select id="up-term" aria-label="Term"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select>
+        <input type="file" id="up-file" accept=".csv,text/csv" aria-label="CSV file" required>
+        <button class="btn" type="submit">Upload to the drive</button>
+      </form>
+      <p class="small" id="up-msg" role="status"></p>
+    </div>
+    <form class="search" id="f-drive" role="search"><input type="search" id="q-drive" placeholder="File name" aria-label="Search files"><button class="btn" type="submit">Search</button></form>
+    <div class="filters"><label>Status<select id="fd-status"><option value="">Any</option><option value="waiting">Waiting for me</option><option value="approve">Approved</option><option value="reject">Rejected</option></select></label></div>
+    <div class="count-line"><span id="r-drive"></span><button class="link" type="button" id="clear-drive">Clear</button></div>
+    <div id="drive"></div>
+  </section>
+
+  <!-- CLASS -->
+  <section id="tab-class" role="tabpanel" hidden>
+    <div class="split">
+      <aside class="panel" aria-label="Class list">
+        <form class="search" id="f-class" role="search"><input type="search" id="q-class" placeholder="Name or number" aria-label="Search the class"><button class="btn" type="submit">Search</button></form>
+        <div class="filters">
+          <label>Show<select id="fc-show"><option value="">Everyone</option><option value="alerts">To watch</option><option value="told">Parent told</option></select></label>
+          <label>The records show<select id="fc-kind"><option value="">Anything</option><option value="sustained_strength">A held strength</option><option value="improvement">Going up</option><option value="decline">Going down</option><option value="sustained_struggle">Needs support</option><option value="attendance_drop">Missing school</option></select></label>
+        </div>
+        <div class="count-line"><span id="r-class"></span><button class="link" type="button" id="clear-class">Clear</button></div>
+        <ul class="people" id="people"></ul>
+        <p class="small soft" style="margin-top:10px">Listed by admission number, never by marks.</p>
+      </aside>
+      <main class="panel" id="learner" aria-live="polite"></main>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="tab-calendar" role="tabpanel" class="panel" hidden><div id="calendar"></div></section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
+<div class="toast" id="toast" role="status" hidden><p id="toast-text"></p><button class="btn small" type="button" id="toast-btn">Show me</button></div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const LEVEL = { EE: "Exceeding Expectations", ME: "Meeting Expectations", AE: "Approaching Expectations", BE: "Below Expectations" };
+const KIND = { sustained_strength: ["held", "A held strength"], improvement: ["up", "Going up"], decline: ["down", "Going down"],
+  sustained_struggle: ["down", "Needs support"], attendance_drop: ["down", "Missing school"] };
+const REASONS = [["harsh", "Too harsh"], ["vague", "Too vague"], ["inaccurate", "Not accurate"], ["long", "Too long"], ["formal", "Too formal"]];
+const lv = l => `<span class="lv ${l}" title="${LEVEL[l] || l}">${l}</span>`;
+const fmt = d => new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+let CSRF = null, ME = null, NOTICES = [], CLASS = [], DRIVE = [], CAL = null, selected = null, MODEL = null;
+
+async function api(path, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (opts.method === "POST") { if (CSRF) headers["X-Hatua-CSRF"] = CSRF; if (opts.json !== undefined) headers["Content-Type"] = "application/json"; }
+  const res = await fetch("/api/" + path, { method: opts.method || "GET", headers, credentials: "same-origin",
+    body: opts.json !== undefined ? JSON.stringify(opts.json) : opts.body });
+  const data = await res.json().catch(() => ({ error: "The portal did not answer. Is it still running?" }));
+  if (res.status === 401 && path !== "login") { showSignin("Your sign-in ended. Please sign in again."); throw new Error("signed out"); }
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+
+/* ---------- sign in ---------- */
+async function showSignin(message) {
+  $("app").hidden = true; $("signin").hidden = false; CSRF = null;
+  $("si-error").hidden = !message; $("si-error").textContent = message || "";
+  try {
+    const pub = await api("public");
+    $("si-school").textContent = pub.school;
+    if (pub.practice) {
+      $("practice").hidden = false; $("pr-pin").textContent = pub.practice.pin;
+      $("pr-rows").innerHTML = pub.practice.teachers.map(t => `<tr><td>Grade ${esc(t.stream)}</td><td>${esc(t.name)}</td><td><button class="link" type="button" data-fill="${esc(t.teacher_id)}">${esc(t.teacher_id)}</button></td></tr>`).join("");
+      $("pr-rows").querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => { $("si-id").value = b.dataset.fill; $("si-pin").focus(); }));
+    }
+  } catch (e) {}
+  $("si-id").focus();
+}
+$("si-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("si-go").disabled = true; $("si-error").hidden = true;
+  try {
+    const out = await api("login", { method: "POST", json: { teacher_id: $("si-id").value, pin: $("si-pin").value } });
+    CSRF = out.csrf; $("si-pin").value = "";
+    await start();
+  } catch (err) { $("si-error").hidden = false; $("si-error").textContent = err.message; }
+  finally { $("si-go").disabled = false; }
+});
+$("signout").addEventListener("click", async () => { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(); });
+
+/* ---------- start ---------- */
+async function start() {
+  const me = await api("me");
+  CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model;
+  $("signin").hidden = true; $("app").hidden = false;
+  $("who").innerHTML = `<b>${esc(ME.name)}</b><br>${esc(ME.class_label)} class teacher, ${ME.learners} learners, member number ${esc(ME.teacher_id)}`;
+  $("cal-chip").textContent = CAL.now;
+  const h = new Date().getHours();
+  $("hello").textContent = `${h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"}, ${ME.name.split(" ")[0]}.`;
+  const last = CAL.terms.filter(t => t.results_due <= CAL.today).pop() || CAL.terms[0];
+  if (last) $("up-term").value = String(last.term);
+  await Promise.all([loadNotices(), loadDrive(), loadClass()]);
+  renderCalendar();
+  setTab("today");
+}
+async function loadNotices() { NOTICES = (await api("notices?all=1")).notices; renderToday(); }
+async function loadDrive() { DRIVE = (await api("drive")).folders; renderDrive(); }
+async function loadClass() { CLASS = (await api("class")).learners; renderClass(); renderToday(); }
+
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+function setTab(t) {
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  for (const p of ["today", "drive", "class", "calendar"]) $("tab-" + p).hidden = p !== t;
+}
+
+/* ---------- today ---------- */
+let todayQuery = "";
+$("f-today").addEventListener("submit", e => { e.preventDefault(); todayQuery = $("q-today").value.trim().toLowerCase(); renderToday(); });
+["ft-kind", "ft-told"].forEach(id => $(id).addEventListener("change", renderToday));
+$("clear-today").addEventListener("click", () => { $("q-today").value = ""; todayQuery = ""; $("ft-kind").value = ""; $("ft-told").value = ""; renderToday(); });
+function renderToday() {
+  const open = NOTICES.filter(n => !n.resolved);
+  const learnerN = open.filter(n => n.learner_id), uploadN = open.filter(n => !n.learner_id);
+  $("n-today").textContent = learnerN.filter(n => !n.told_parent).length + uploadN.length ? " " + (learnerN.filter(n => !n.told_parent).length + uploadN.length) : "";
+  const kind = $("ft-kind").value, told = $("ft-told").value;
+  const match = n => (!todayQuery || `${n.title} ${n.text} ${n.family || ""}`.toLowerCase().includes(todayQuery))
+    && (!told || (told === "yes") === Boolean(n.told_parent));
+  const L = kind === "uploads" ? [] : learnerN.filter(match);
+  const U = kind === "learners" || told ? [] : uploadN.filter(match);
+  const groups = {};
+  for (const n of L) (groups[n.learner_id] ||= []).push(n);
+  const people = Object.entries(groups);
+  $("r-today").textContent = `${people.length} learner${people.length === 1 ? "" : "s"} to watch, ${U.length} about results`;
+  const learnerName = id => (CLASS.find(c => c.id === id) || NOTICES.find(n => n.learner_id === id && n.name) || {}).name || id;
+  $("today").innerHTML = `
+    ${U.length ? `<div class="section"><h3>Results and uploads</h3><div class="cards">${U.map(n => `
+      <article class="card task"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p>
+        <div class="row"><button class="btn small" type="button" data-go-drive>${n.kind === "waiting_approval" ? "Review the file" : "Upload the results"}</button></div></article>`).join("")}</div></div>` : ""}
+    <div class="section"><h3>Learners to watch</h3>
+      ${people.length ? `<div class="cards">${people.map(([lid, ns]) => `
+        <article class="card ${ns.every(n => n.told_parent) ? "ok" : "watch"}">
+          <div class="row" style="justify-content:space-between"><h3>${esc(learnerName(lid))} <span class="id">${lid}</span></h3>
+            ${ns.every(n => n.told_parent) ? `<span class="pill approve">Parent told</span>` : ""}</div>
+          ${ns.map(n => `<div class="alert-line"><p><b>${esc(n.kind === "sharp_drop" ? "Early sign" : "Pattern")}:</b> ${esc(n.text)}</p>
+            ${n.told_parent ? `<p class="small soft">You marked the parent as told on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : ""}</div>`).join("")}
+          <div class="row"><button class="btn small" type="button" data-open="${lid}">Open ${esc(learnerName(lid))}</button>
+            ${ns.some(n => !n.told_parent) ? `<button class="btn quiet small" type="button" data-parent="${ns.find(n => !n.told_parent).notice_id}">Message for the parent</button>` : ""}</div>
+        </article>`).join("")}</div>`
+      : `<p class="empty">${L.length || learnerN.length ? "Nothing matches. Try Clear." : "No learner needs attention right now. Alerts appear here as soon as you approve new results."}</p>`}
+    </div>`;
+  wireCommon($("today"));
+}
+function wireCommon(el) {
+  el.querySelectorAll("[data-go-drive]").forEach(b => b.addEventListener("click", () => setTab("drive")));
+  el.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => { setTab("class"); select(b.dataset.open); }));
+  el.querySelectorAll("[data-parent]").forEach(b => b.addEventListener("click", () => parentDialog(b.dataset.parent)));
+  el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => evidence(b.dataset.ev)));
+}
+
+async function parentDialog(noticeId) {
+  const n = NOTICES.find(x => x.notice_id === noticeId);
+  const msg = await api(`notices/${noticeId}/parent`);
+  let lang = "en";
+  const draw = () => {
+    $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Message for the parent</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+      <p class="small soft">Hatua does not send anything. Edit it, then send it your usual way: SMS, WhatsApp, a call, or a note.</p>
+      <div class="langs" role="group" aria-label="Language">${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-l="${k}" aria-pressed="${lang === k}">${t}</button>`).join("")}</div>
+      <textarea id="pm-text" style="width:100%;min-height:150px;line-height:1.6">${esc(msg[lang])}</textarea>
+      <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn quiet" type="button" id="pm-copy">Copy</button>
+        <select id="pm-how" aria-label="How you told the parent"><option>By SMS</option><option>By WhatsApp</option><option>By phone call</option><option>In person</option><option>By a note</option></select>
+        <button class="btn leaf" type="button" id="pm-told">I have told the parent</button></div>`;
+    $("dlg-x").onclick = () => $("dlg").close();
+    $("dlg-body").querySelectorAll("[data-l]").forEach(b => b.onclick = () => { lang = b.dataset.l; draw(); });
+    $("pm-copy").onclick = async () => { try { await navigator.clipboard.writeText($("pm-text").value); $("pm-copy").textContent = "Copied"; } catch (e) { $("pm-text").select(); } };
+    $("pm-told").onclick = async () => {
+      const ids = NOTICES.filter(x => x.learner_id === n.learner_id && !x.told_parent).map(x => x.notice_id);
+      for (const id of ids) await api(`notices/${id}`, { method: "POST", json: { told_parent: $("pm-how").value } });
+      $("dlg").close(); await loadNotices(); await loadClass();
+      if (selected === n.learner_id) select(selected);
+    };
+  };
+  draw(); $("dlg").showModal();
+}
+
+/* ---------- drive ---------- */
+let driveQuery = "";
+$("f-drive").addEventListener("submit", e => { e.preventDefault(); driveQuery = $("q-drive").value.trim().toLowerCase(); renderDrive(); });
+$("fd-status").addEventListener("change", renderDrive);
+$("clear-drive").addEventListener("click", () => { $("q-drive").value = ""; driveQuery = ""; $("fd-status").value = ""; renderDrive(); });
+const STATUS = { waiting: "Waiting for you", approve: "Approved", reject: "Rejected" };
+function renderDrive() {
+  const st = $("fd-status").value;
+  let total = 0, shown = 0;
+  const waiting = DRIVE.flatMap(f => f.terms.flatMap(t => t.files)).filter(f => f.status === "waiting").length;
+  $("n-drive").textContent = waiting ? " " + waiting : "";
+  $("drive").innerHTML = DRIVE.map(f => `<div class="folder"><h3 style="margin:6px 2px">${esc(f.folder)}</h3>${f.terms.map(t => {
+    const files = t.files.filter(x => { total++; return (!st || x.status === st) && (!driveQuery || x.name.toLowerCase().includes(driveQuery)); });
+    shown += files.length;
+    return `<div class="term"><div class="term-head"><h3>${esc(t.label)}</h3><span class="small soft">${t.files.length ? t.files.length + " file" + (t.files.length === 1 ? "" : "s") : "Empty"}</span></div>
+      ${files.map(x => `<div class="file"><span class="pill ${x.status}">${STATUS[x.status]}</span>
+        <div><p class="nm">${esc(x.name)}</p><p class="small soft">${x.status === "waiting" ? "Uploaded " + fmt(x.modified.slice(0, 10)) : `${STATUS[x.status]} by ${esc(x.decided_by)} on ${fmt(x.decided_at.slice(0, 10))}${x.rows_added != null && x.status === "approve" ? `, ${x.rows_added} records added` : ""}`}</p></div>
+        ${x.status === "waiting" ? `<button class="btn small" type="button" data-preview="${esc(x.path)}">Review</button>` : `<span></span>`}</div>
+        <div id="pv-${esc(x.path).replace(/[^a-z0-9]/gi, "_")}" hidden></div>`).join("")}</div>`;
+  }).join("")}</div>`).join("") || `<p class="empty">No folder for your class on the drive.</p>`;
+  $("r-drive").textContent = `Showing ${shown} of ${total} files`;
+  $("drive").querySelectorAll("[data-preview]").forEach(b => b.addEventListener("click", () => preview(b.dataset.preview)));
+}
+async function preview(path) {
+  const box = $("pv-" + path.replace(/[^a-z0-9]/gi, "_"));
+  try {
+    const p = await api("drive/preview?path=" + encodeURIComponent(path));
+    const c = p.counts;
+    box.hidden = false;
+    box.innerHTML = `<div class="preview"><h3>Before you approve: ${esc(p.name)}</h3>
+      ${p.missing_columns.length ? `<p class="error">This file is missing columns: ${esc(p.missing_columns.join(", "))}. It cannot be approved.</p>` : `
+      <div class="facts"><div class="fact"><b>${c.yours}</b>rows for your class</div><div class="fact"><b>${p.learners} of ${p.class_size}</b>of your learners</div>
+        <div class="fact"><b>${c.other_class}</b>rows for another class (left for their teacher)</div><div class="fact"><b>${c.not_on_list + c.not_usable}</b>rows that cannot be used</div></div>
+      <p class="small">Grade ${p.grade}, ${p.year} Term ${p.term}. Learning areas: ${esc(p.learning_areas.join(", ") || "none")}.</p>
+      ${c.wrong_term ? `<p class="error small">${c.wrong_term} rows say a different grade or term than this folder. Check the file before approving.</p>` : ""}
+      ${Object.keys(p.issues).length ? `<p class="small soft">To check after approving: ${Object.entries(p.issues).map(([k, v]) => `${v} ${esc(k.replace(/_/g, " "))}`).join(", ")}.</p>` : ""}
+      <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn leaf" type="button" data-decide="approve">Approve and add to Hatua</button><button class="btn quiet" type="button" data-decide="reject">Reject</button></div>`}
+      </div>`;
+    box.querySelectorAll("[data-decide]").forEach(b => b.addEventListener("click", async () => {
+      b.disabled = true;
+      try {
+        const r = await api("drive/decide", { method: "POST", json: { path, decision: b.dataset.decide } });
+        await Promise.all([loadDrive(), loadNotices(), loadClass()]);
+        if (selected) select(selected);  // the open learner may have new records
+        if (r.decision === "approve") toast(`Added ${r.added} records to Hatua. ${r.notices.length ? `${r.notices.length} alert${r.notices.length === 1 ? "" : "s"} about learners who need attention.` : "No learner needs attention."}`, r.notices.length ? "today" : null);
+        else toast("Rejected. The file stays on the drive but is not in Hatua.");
+      } catch (err) { toast(err.message); b.disabled = false; }
+    }));
+  } catch (err) { toast(err.message); }
+}
+$("up-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = $("up-file").files[0];
+  if (!f) return;
+  $("up-msg").textContent = "Uploading...";
+  try {
+    const year = (CAL.today || "").slice(0, 4);
+    const r = await api(`drive/upload?term=${$("up-term").value}&year=${year}&name=${encodeURIComponent(f.name)}`, { method: "POST", body: await f.arrayBuffer() });
+    $("up-msg").textContent = `Saved to ${r.path}. Review it below, then approve it.`;
+    $("up-file").value = "";
+    await loadDrive(); await loadNotices();
+  } catch (err) { $("up-msg").textContent = err.message; }
+});
+
+/* ---------- class ---------- */
+let classQuery = "";
+$("f-class").addEventListener("submit", e => { e.preventDefault(); classQuery = $("q-class").value.trim().toLowerCase(); renderClass(); });
+["fc-show", "fc-kind"].forEach(id => $(id).addEventListener("change", renderClass));
+$("clear-class").addEventListener("click", () => { $("q-class").value = ""; classQuery = ""; $("fc-show").value = ""; $("fc-kind").value = ""; renderClass(); });
+function renderClass() {
+  const show = $("fc-show").value, kind = $("fc-kind").value;
+  const rows = CLASS.filter(l => (!classQuery || `${l.name} ${l.id}`.toLowerCase().includes(classQuery))
+    && (!show || (show === "alerts" ? l.alerts > 0 : l.told > 0)) && (!kind || l.kinds.includes(kind)));
+  $("r-class").textContent = `Showing ${rows.length} of ${CLASS.length}`;
+  $("people").innerHTML = rows.map(l => `<li><button type="button" data-lid="${l.id}" aria-current="${selected === l.id}">
+    <span class="face" aria-hidden="true">${esc(l.name[0])}</span>
+    <span class="txt"><b>${esc(l.name)}</b><span class="what">${l.id}, ${l.stream}. ${esc(l.kinds.map(k => KIND[k][1]).join(", ") || "No pattern yet")}</span></span>
+    ${l.alerts ? `<span class="pill watch">To watch</span>` : l.told ? `<span class="pill approve">Parent told</span>` : "<span></span>"}</button></li>`).join("")
+    || `<li class="empty">Nobody matches. Try Clear.</li>`;
+  $("people").querySelectorAll("[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid)));
+  if (!selected && CLASS.length) { selected = (CLASS.find(l => l.alerts) || CLASS[0]).id; renderLearnerSoon(); }
+}
+let pending = null;
+function renderLearnerSoon() { clearTimeout(pending); pending = setTimeout(() => select(selected), 0); }
+
+let L = null;
+async function select(lid) {
+  selected = lid; renderClass();
+  try { L = await api("learner/" + lid); renderLearner(); } catch (err) { $("learner").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
+  if (matchMedia("(max-width: 880px)").matches && !$("tab-class").hidden) $("learner").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function renderLearner() {
+  const l = L;
+  const open = l.notices.filter(n => !n.resolved);
+  const finds = l.patterns.filter(p => p.current).map(p => { const [tone, label] = KIND[p.type]; return `<div class="find ${tone}"><b>${label}</b><p>${esc(p.statement)}</p></div>`; }).join("");
+  const latest = l.comments.filter(c => !c.rating).pop();
+  const used = l.comments.filter(c => c.rating === "up").pop();
+  el = $("learner");
+  el.innerHTML = `<div class="learner">
+    <div class="learner-head"><span class="face" aria-hidden="true">${esc(l.name[0])}</span>
+      <div style="flex:1 1 220px;min-width:0"><h2>${esc(l.name)}</h2><p class="soft">${l.id}, Grade ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</p></div></div>
+    ${open.length ? `<div class="cards">${open.map(n => `<article class="card ${n.told_parent ? "ok" : "watch"}"><p><b>${n.kind === "sharp_drop" ? "Early sign" : "Pattern"}:</b> ${esc(n.text)}</p>
+      <div class="row">${n.evidence.slice(0, 6).map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ")}</div>
+      ${n.told_parent ? `<p class="small">Parent told (${esc(n.told_parent.how)}) on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : `<div class="row"><button class="btn quiet small" type="button" data-parent="${n.notice_id}">Message for the parent</button></div>`}</article>`).join("")}</div>` : ""}
+    <div class="section"><h3>Comment for the report</h3>${commentBox(latest, used)}</div>
+    <div class="section"><h3>What the records show</h3>${finds || `<p class="soft">No pattern has held across enough terms yet.</p>`}</div>
+    <div class="section"><h3>The long view, Grade 4 to Grade ${l.grade}</h3>
+      <p class="small soft">You can see ${esc(l.name)}'s full history. Earlier grades were recorded by earlier teachers and are read only. Tap a mark to see the record.</p>
+      <div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span></div>
+      ${longView(l)}</div>
+  </div>`;
+  wireCommon(el);
+  wireComment(latest);
+}
+let el = null;
+const THUMB_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H4V10h3z"/><path d="M7 10l4-7c1.5 0 2.5 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.3 7.5a2 2 0 0 1-2 1.7H7"/></svg>`;
+const THUMB_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3h3v11h-3z"/><path d="M17 14l-4 7c-1.5 0-2.5-1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3L4.6 5.2a2 2 0 0 1 2-1.7H17"/></svg>`;
+function commentBox(c, used) {
+  const by = x => x.writer === "template" ? "Written by Hatua's template (Qwen is not running on this laptop)" : `Written by ${esc(x.writer)} on this laptop`;
+  if (!c) {
+    return `<div class="comment">${used ? `<p class="small soft">The comment you approved:</p><blockquote>${esc(used.teacher_edit || used.text)}</blockquote><p class="small soft">Approved by ${esc(used.rated_by)} on ${fmt(used.rated_at.slice(0, 10))}.</p>` : `<p>Hatua can write a short report comment from ${esc(L.name)}'s records. You decide if it sounds right.</p>`}
+      <div class="thumbs"><button class="btn" type="button" id="cm-write">${used ? "Write a new comment" : "Write a comment"}</button>
+        <span class="small soft">${MODEL ? `Uses ${esc(MODEL)} on this laptop.` : "Qwen is not running, so Hatua's template will write it."}</span></div></div>`;
+  }
+  return `<div class="comment">
+    <blockquote id="cm-text">${esc(c.text)}</blockquote>
+    <p class="small soft">${by(c)}. Based on: ${esc(c.facts.join(" "))}</p>
+    <p><b>Does this sound right for ${esc(L.name)}?</b></p>
+    <div class="thumbs"><button class="thumb up" type="button" id="cm-up" aria-pressed="false">${THUMB_UP} Sounds right</button>
+      <button class="thumb down" type="button" id="cm-down" aria-pressed="false">${THUMB_DOWN} Doesn't sound right</button></div>
+    <div id="cm-more"></div></div>`;
+}
+function wireComment(c) {
+  $("cm-write")?.addEventListener("click", async e => {
+    e.target.disabled = true; e.target.textContent = "Writing...";
+    try { await api(`learner/${L.id}/comment`, { method: "POST", json: {} }); await select(L.id); } catch (err) { toast(err.message); e.target.disabled = false; }
+  });
+  if (!c) return;
+  $("cm-up").addEventListener("click", () => {
+    $("cm-up").setAttribute("aria-pressed", "true"); $("cm-down").setAttribute("aria-pressed", "false");
+    $("cm-more").innerHTML = `<label class="small soft" for="cm-edit">You can change a word before you use it.</label><textarea id="cm-edit">${esc(c.text)}</textarea>
+      <div class="thumbs" style="margin-top:8px"><button class="btn leaf" type="button" id="cm-use">Use this comment</button></div><p class="error small" id="cm-err"></p>`;
+    $("cm-use").onclick = async () => {
+      try { await api(`comment/${c.comment_id}/rate`, { method: "POST", json: { rating: "up", edited_text: $("cm-edit").value } }); toast("Comment saved for the report."); await select(L.id); }
+      catch (err) { $("cm-err").textContent = err.message; }
+    };
+  });
+  $("cm-down").addEventListener("click", () => {
+    $("cm-down").setAttribute("aria-pressed", "true"); $("cm-up").setAttribute("aria-pressed", "false");
+    $("cm-more").innerHTML = `<p class="small">What is wrong with it? Hatua will write it again, and remember this for your next comments.</p>
+      <div class="reasons">${REASONS.map(([k, t]) => `<label><input type="checkbox" value="${k}"> ${t}</label>`).join("")}</div>
+      <div class="thumbs" style="margin-top:10px"><button class="btn" type="button" id="cm-again">Write it again</button></div>`;
+    $("cm-again").onclick = async () => {
+      const reasons = [...$("cm-more").querySelectorAll("input:checked")].map(i => i.value);
+      $("cm-again").disabled = true; $("cm-again").textContent = "Writing...";
+      try { await api(`comment/${c.comment_id}/rate`, { method: "POST", json: { rating: "down", reasons } }); await select(L.id); }
+      catch (err) { toast(err.message); }
+    };
+  });
+}
+function longView(l) {
+  const cells = {}, ords = [];
+  for (let o = 0; o <= (l.grade - 4) * 3 + 2; o++) ords.push(o);
+  for (const r of l.records) ((cells[r[2]] ||= {})[r[1]] ||= []).push(r);
+  const att = Object.fromEntries(l.attendance.map(a => [a[1], a]));
+  const head1 = l.grades.map(g => `<th colspan="3" class="${g.read_only ? "ro" : ""}" title="${esc(g.who)}">Grade ${g.grade}${g.read_only ? "" : ", your class"}</th>`).join("");
+  const head2 = ords.map(o => `<th>T${o % 3 + 1}</th>`).join("");
+  const past = o => Math.floor(o / 3) + 4 < l.grade;
+  const rows = l.families.map(f => `<tr><th class="area" scope="row">${esc(f)}</th>${ords.map(o => {
+    const rs = (cells[f] || {})[o], cls = `${o % 3 === 0 && o ? "g " : ""}${past(o) ? "past" : ""}`;
+    if (!rs) return `<td class="${cls}"><span class="none" title="No record"></span></td>`;
+    const pts = rs.reduce((s, r) => s + ({ BE: 1, AE: 2, ME: 3, EE: 4 })[r[3]], 0) / rs.length;
+    const level = ["BE", "AE", "ME", "EE"][Math.max(0, Math.min(3, Math.floor(pts + .5) - 1))];
+    return `<td class="${cls}"><button type="button" data-ev="${rs[0][0]}" aria-label="Grade ${rs[0][4]} Term ${rs[0][6]}: ${LEVEL[level]}">${lv(level)}</button></td>`;
+  }).join("")}</tr>`).join("");
+  const attRow = `<tr><th class="area" scope="row">Days in school</th>${ords.map(o => { const a = att[o], cls = o % 3 === 0 && o ? "g" : "";
+    if (!a) return `<td class="${cls}"><span class="none"></span></td>`; const pct = Math.round(100 * a[2] / a[3]);
+    return `<td class="${cls}" style="font-size:.72rem;font-weight:700;color:${pct < 75 ? "var(--sun)" : "var(--ink-soft)"}">${pct}%</td>`; }).join("")}</tr>`;
+  return `<div class="long-wrap"><table class="long"><thead><tr><th class="area"></th>${head1}</tr><tr><th class="area">Learning area</th>${head2}</tr></thead><tbody>${rows}${attRow}</tbody></table></div>`;
+}
+function evidence(id) {
+  const r = (L && L.records.find(x => x[0] === id));
+  if (!r) return;
+  const [rid, , fam, level, grade, year, term, area, task, score, teacher, td, flags] = r;
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Assessment record <span class="id">${esc(rid)}</span></h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <dl><dt>When</dt><dd>Grade ${grade}, Term ${term} (${year})</dd><dt>Learning area</dt><dd>${esc(area)}</dd><dt>Task</dt><dd>${esc(task)}</dd>
+    <dt>Level</dt><dd>${lv(level)} ${LEVEL[level]}</dd><dt>Score</dt><dd>${score == null ? "Not recorded" : score + "%"}</dd><dt>Done on</dt><dd>${esc(td || "Not known")}</dd><dt>Teacher</dt><dd>${esc(teacher)}</dd></dl>
+    ${grade < L.grade ? `<p class="small soft">Recorded in an earlier grade. Read only.</p>` : ""}${flags.length ? `<p class="error small">Please check this record: ${esc(flags.join(", ").replace(/_/g, " "))}.</p>` : ""}`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  $("dlg").showModal();
+}
+$("dlg").addEventListener("click", e => { if (e.target === $("dlg")) $("dlg").close(); });
+
+/* ---------- calendar ---------- */
+function renderCalendar() {
+  const c = CAL;
+  $("calendar").innerHTML = `<div class="section"><h3>Kenya school calendar ${c.terms.length ? c.terms[0].opens.slice(0, 4) : ""}</h3>
+    <p>Today is ${fmt(c.today)}: <b>${esc(c.now)}</b></p>
+    <div class="terms">${c.terms.map(t => `<div class="card ${c.today >= t.opens && c.today <= t.closes ? "now" : ""}"><h3>Term ${t.term}</h3>
+      <p>Opens ${fmt(t.opens)}<br>Closes ${fmt(t.closes)}</p><p class="small soft">Results due in Hatua by ${fmt(t.results_due)}</p></div>`).join("")}</div>
+    ${c.national_assessments && c.national_assessments.length ? `<p class="small">National assessments: ${c.national_assessments.map(a => `${esc(a.name)} from ${fmt(a.from)}`).join("; ")}.</p>` : ""}
+    <p class="small soft">${esc(c.source)} ${c.source_urls.map(u => `<a href="${esc(u)}" rel="noreferrer" target="_blank">${esc(new URL(u).hostname)}</a>`).join(", ")}</p></div>`;
+}
+
+/* ---------- toast ---------- */
+let toastTimer = null;
+function toast(text, goTab) {
+  $("toast-text").textContent = text; $("toast").hidden = false; $("toast-btn").hidden = !goTab;
+  $("toast-btn").onclick = () => { setTab(goTab); $("toast").hidden = true; };
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 7000);
+}
+
+/* ---------- go ---------- */
+start().catch(() => showSignin());
+setInterval(() => { if (!$("app").hidden) loadNotices().catch(() => {}); }, 60000);
+</script>
+</body>
+</html>

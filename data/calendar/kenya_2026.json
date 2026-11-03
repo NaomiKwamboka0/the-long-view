@@ -1,0 +1,23 @@
+{
+  "year": 2026,
+  "country": "Kenya",
+  "level": "Basic education (pre-primary, primary, junior and senior school)",
+  "source": "Ministry of Education circular of 9 October 2025, as reported by Kenyans.co.ke and The Star. Check the official circular before relying on these dates; a school can edit this file.",
+  "source_urls": [
+    "https://www.kenyans.co.ke/news/117088-education-ministry-releases-2026-school-calendar-new-term-and-exam-dates",
+    "https://www.the-star.co.ke/news/2025-10-13-government-releases-2026-academic-calendar"
+  ],
+  "results_due_days_after_close": 7,
+  "terms": [
+    {"term": 1, "opens": "2026-01-05", "closes": "2026-04-02",
+     "half_term": {"from": "2026-02-25", "to": "2026-03-01"}},
+    {"term": 2, "opens": "2026-04-27", "closes": "2026-07-31",
+     "half_term": {"from": "2026-06-24", "to": "2026-06-28"}},
+    {"term": 3, "opens": "2026-08-24", "closes": "2026-10-23", "half_term": null}
+  ],
+  "national_assessments": [
+    {"name": "KPSEA (Grade 6)", "from": "2026-10-26", "grades": [6]},
+    {"name": "KJSEA (Grade 9)", "from": "2026-10-26", "grades": [9]},
+    {"name": "KCSE", "from": "2026-11-02", "to": "2026-11-20", "grades": []}
+  ]
+}

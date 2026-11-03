@@ -177,6 +177,11 @@ def cmd_build_ui(args) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv[:1] == ["school-demo"]:  # its own options, passed straight through
+        from . import school_demo
+        school_demo.main(argv[1:])
+        return 0
     ap = argparse.ArgumentParser(prog="hatua", description="Cited, teacher-approved CBC learner profiles.")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("setup", help="Load the synthetic class (and generate it if missing)")
@@ -228,6 +233,14 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--rules", action="store_true", help="Plan with fixed rules instead of the local model")
     s.add_argument("--no-fs", action="store_true", help="Skip the borrowed filesystem MCP server")
     s.set_defaults(fn=cmd_agent)
+    sub.add_parser("school-demo", help="Make the whole-school demo (Grades 4-9) and open the portal "
+                   "(options: --home, --port, --no-serve)")
+    s = sub.add_parser("school-setup", help="(Used by school-demo) load the demo found in HATUA_HOME")
+    s.set_defaults(fn=lambda a: print(json.dumps(__import__("hatua.school_demo", fromlist=["setup"]).setup(),
+                                                 indent=1)))
+    s = sub.add_parser("portal", help="Start the teacher portal on this computer (http://127.0.0.1:8765)")
+    s.add_argument("--port", type=int, default=8765)
+    s.set_defaults(fn=lambda a: __import__("hatua.portal", fromlist=["serve"]).serve(a.port))
     s = sub.add_parser("demo", help="Set up the synthetic class, ingest this term, build the page")
     s.set_defaults(fn=cmd_demo)
     s = sub.add_parser("build-ui", help="Build the offline teacher page ui/hatua.html")

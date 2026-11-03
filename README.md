@@ -22,6 +22,24 @@ The package generator uses fresh synthetic records in an isolated temporary fold
 
 For a public test link, enable GitHub Actions as the Pages source and manually run **Publish synthetic teacher demo**. Use the URL returned by that deployment. See [the teacher guide](TEACHER_TEST.md), [privacy policy](PRIVACY.md) and [GitHub's Pages workflow guide](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
 
+## The whole-school teacher portal
+
+```bash
+python -m hatua school-demo        # then open http://127.0.0.1:8765
+```
+
+A demo school with Grades 4 to 9 and one class teacher per class, each signing in with their own **member number** and PIN. Each teacher:
+
+- sees only their own class, with the full Grade 4 to 9 history of every learner (earlier grades are read-only);
+- **approves term results** from the school drive before Hatua analyses them (`school_drive/Grade N/2026 Term T/`); approval adds only their own learners' rows;
+- is told when a term's results are **overdue**, using Kenya's 2026 school calendar;
+- is told **as soon as** an approved file shows a learner falling in a subject, with a ready message for the parent in English or Kiswahili, and can record that the parent was told;
+- gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones.
+
+Everything runs on the laptop: no outside service, no API. See [docs/PORTAL.md](docs/PORTAL.md).
+
+![The portal's Today tab](docs/portal.png)
+
 ## Problem statement
 
 Under Kenya's Competency-Based Curriculum (CBC), teachers record many marks and notes for each learner every term. These records sit in different places. Some are in a national portal that only the head teacher can open. Some are on paper with teachers who have moved school.
@@ -141,6 +159,8 @@ python -m hatua agent
 | `python -m hatua import-approvals approvals.json` | Apply approvals made on the teacher page |
 | `python -m hatua verify-log` | Check the audit and approval logs for edited or missing lines |
 | `python scripts/run_evals.py` | Run the evaluation tasks |
+| `python -m hatua school-demo` | Make the whole-school demo (Grades 4–9) and open the teacher portal |
+| `python -m hatua portal` | Start the teacher portal for the data in `HATUA_HOME` |
 
 ![The teacher page](docs/teacher-page.png)
 

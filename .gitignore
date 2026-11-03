@@ -13,3 +13,4 @@ release/
 node_modules/
 .coverage
 htmlcov/
+demo_school/

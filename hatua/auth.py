@@ -341,3 +341,27 @@ def logout(session: str | None) -> bool:
     del sessions[digest]
     _write(_path("sessions"), sessions)
     return True
+
+
+def new_csrf(session: str | None) -> str:
+    """Give a signed-in browser a fresh CSRF value (for example after a page reload).
+
+    Only its SHA-256 is stored, like the session token itself.
+    """
+    digest, _ = _valid(session, "human")
+    sessions = _pruned_sessions()
+    value = secrets.token_urlsafe(24)
+    sessions[digest]["csrf"] = _digest(value)
+    _write(_path("sessions"), sessions)
+    return value
+
+
+def csrf_ok(session: str | None, value: str | None) -> bool:
+    """Whether a request's CSRF value matches the one issued to this human session."""
+    if not value:
+        return False
+    try:
+        _, stored = _valid(session, "human")
+    except GateBlocked:
+        return False
+    return hmac.compare_digest(stored.get("csrf", ""), _digest(value))

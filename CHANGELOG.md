@@ -1,3 +1,50 @@
+# Whole-school portal — 4 November 2026
+
+Built on `feature/teacher-portal` (Moses's phase 1: two token kinds and one scope rule), with `main` merged in. The lockfile keeps `jsonpointer==3.6`: `main` had pinned `1.6`, which does not exist on PyPI.
+
+## What is new
+
+- **Whole-school demo** (`scripts/make_school_demo.py`, `python -m hatua school-demo`). Grades 4 to 8 get new synthetic classes with their own history, and the existing Grade 9 class is copied unchanged. There are 7 class teachers with member numbers M-4001 to M-9002. The demo is its own Hatua home (`demo_school/`, git-ignored), so the Grade 9 data used by the tests and evaluations is untouched.
+- **School drive** (`hatua/drive.py`). Results arrive in `school_drive/Grade N/<year> Term T/`. A file is not in Hatua until the class teacher, signed in with a human session, approves it.
+  - Approval copies only that teacher's own learners' rows into `data/inbox`, then ingests them through the audited `ingest_record` tool.
+  - Rows for another stream wait for that stream's teacher.
+  - A file that changes after approval needs approval again.
+  - Paths outside the drive are refused.
+  - There is no MCP tool for this.
+- **Kenya school calendar** (`data/calendar/kenya_2026.json`, `hatua/school_calendar.py`). The Ministry of Education's 2026 term dates and half-terms, with sources. Results are due 7 days after a term closes.
+- **Notices** (`hatua/notify.py`), sent only to the learner's class teacher:
+  - results overdue;
+  - results waiting for approval;
+  - an **early sign** (a learning area fell two rubric levels in the newest term, labelled as one term, not a pattern);
+  - a **pattern** (the existing decline rule, reaching the new term).
+  - Each learner alert has a parent message in English or Kiswahili, and a "parent told" record.
+- **Comments with thumbs up or down** (`hatua/comments.py`):
+  - Qwen 2.5 through Ollama on the same laptop writes the wording from Hatua's pattern facts.
+  - The guard, a length limit and a no-record-numbers check decide whether it is shown; otherwise the template writes it.
+  - Thumbs down asks why and writes it again. Liked comments become style examples for that teacher.
+- **Teacher portal** (`hatua/portal.py`, `ui/portal.html`):
+  - standard-library server on `127.0.0.1`;
+  - sign-in by member number and PIN;
+  - HttpOnly, SameSite=Strict cookie, plus a CSRF header for every change;
+  - Host and Origin checks;
+  - `scope.can_view` on every learner request;
+  - tabs: Today, School drive, My class, School calendar; search and filters on every list.
+- **Sign-in helpers.** `auth.new_csrf` and `auth.csrf_ok`, so a reloaded page can get a fresh CSRF value. Only its digest is stored.
+
+## Verification
+
+- `python -m pytest`: **138 passed** (127 before, plus 11 in `tests/test_school_portal.py`). `ruff check`: clean.
+- `npm run test:ui`: 16 of 16. `python scripts/run_evals.py`: 21 of 21.
+- Clicked through in a browser at 1280px and 390px:
+  - wrong PIN, sign-in;
+  - drive review and approval, with alerts raised at once;
+  - Kiswahili parent message, "parent told";
+  - comment, thumbs down then thumbs up with an edit;
+  - Grade 7 upload clearing the overdue notice;
+  - the Grade 9 file split between 9A and 9B;
+  - a 403 for another grade's learner, a 403 without CSRF.
+- **Not run here:** the real Qwen model (no Ollama on the build machine). The model path is tested with a stand-in server that returns one acceptable and one labelling comment.
+
 # Teacher portal, phase 1 — 3 November 2026
 
 Branch `feature/teacher-portal`, from `feat/hatua-brief` at `db2d7d0`. One commit per ticket.
