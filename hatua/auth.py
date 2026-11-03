@@ -11,6 +11,17 @@ What this does and does not do:
 * It is not TSC or KEMIS single sign-on, and it is not a claim about who someone is.
 * Anyone who can edit the files under store/ and logs/ can still forge an entry.
 
+Two kinds of token share the session store, and `resolve` refuses the wrong kind for a
+job rather than treating them as equal:
+
+* `human` - created by login. It slides by 15 minutes on each authenticated request, up
+  to an absolute 8 hours after sign-in, and it is the only kind that may approve or save.
+* `agent` - minted from a human session for one agent run. It lasts 30 minutes, cannot
+  outlive the human session that minted it, and can read and draft but never approve,
+  save or mint another token.
+
+Only the SHA-256 of a token is stored, never the token itself.
+
 Standard library only. Nothing here makes a network call.
 """
 from __future__ import annotations
@@ -31,7 +42,9 @@ TEACHER_ID = re.compile(r"^[A-Za-z0-9_-]{3,24}$")
 MIN_NAME = 3
 MIN_PIN = 6
 SCRYPT = {"n": 2 ** 14, "r": 8, "p": 1, "dklen": 32}
-SESSION_MINUTES = 15
+SESSION_MINUTES = 15   # a human session slides by this much on each authenticated request
+SESSION_MAX_HOURS = 8  # ... but never further than this after sign-in
+AGENT_MINUTES = 30     # an agent token is minted for one run and does not slide
 LOCK_FAILURES = 5
 LOCK_MINUTES = 15
 
@@ -169,15 +182,57 @@ def login(teacher_id: str, pin: str) -> dict:
     _write(_path("auth_state"), state)
     sessions = _pruned_sessions()
     token = secrets.token_urlsafe(24)
-    expires = _now() + timedelta(minutes=SESSION_MINUTES)
+    csrf = secrets.token_urlsafe(24)
+    now = _now()
     sessions[_digest(token)] = {"teacher_id": teacher_id, "name": entry.get("name", ""),
-                                "expires": expires.isoformat(timespec="seconds")}
+                                "kind": "human", "scope": "human",
+                                "created": _iso(now),
+                                "expires": _iso(now + timedelta(minutes=SESSION_MINUTES)),
+                                "absolute": _iso(now + timedelta(hours=SESSION_MAX_HOURS)),
+                                "csrf": csrf}
     _write(_path("sessions"), sessions)
-    return {"session": token, "teacher_id": teacher_id, "name": entry.get("name", "")}
+    return {"session": token, "teacher_id": teacher_id, "name": entry.get("name", ""),
+            "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60}
 
 
 def _digest(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _iso(when: datetime) -> str:
+    return when.isoformat(timespec="seconds")
+
+
+def _parse(value) -> datetime | None:
+    """A stored timestamp, or None when it is missing or unreadable."""
+    try:
+        return datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _kind(stored: dict) -> str:
+    """Session files written before kinds existed are human sessions."""
+    return stored.get("kind") or "human"
+
+
+def _valid(session: str | None, kind: str) -> tuple[str, dict]:
+    """The stored record for a live session of the required kind, or raise GateBlocked."""
+    if not session:
+        raise GateBlocked("Sign-in required. Approve with --teacher-id and your PIN.")
+    digest = _digest(session)
+    stored = _read(_path("sessions"), {}).get(digest)
+    if stored is None:
+        raise GateBlocked("Sign-in required. That session is not valid on this computer.")
+    now = _now()
+    expires, absolute = _parse(stored.get("expires")), _parse(stored.get("absolute"))
+    if expires is None or expires <= now or (absolute is not None and absolute <= now):
+        raise GateBlocked("Your sign-in expired. Sign in again.")
+    if _kind(stored) != kind:
+        raise GateBlocked("Agent tokens can read and draft but never approve or save. "
+                          "A teacher must sign in." if kind == "human"
+                          else "That is a teacher session, not an agent token.")
+    return digest, stored
 
 
 def _pruned_sessions() -> dict:
@@ -185,28 +240,78 @@ def _pruned_sessions() -> dict:
     now = _now()
     kept = {}
     for digest, s in _read(_path("sessions"), {}).items():
-        try:
-            if datetime.fromisoformat(s["expires"]) > now:
-                kept[digest] = s
-        except (KeyError, TypeError, ValueError):
+        expires, absolute = _parse(s.get("expires")), _parse(s.get("absolute"))
+        if expires is None or expires <= now:
             continue
+        if absolute is not None and absolute <= now:
+            continue
+        kept[digest] = s
     return kept
 
 
-def resolve(session: str | None) -> dict:
-    """Return {teacher_id, name} for a valid session, or raise GateBlocked."""
-    if not session:
-        raise GateBlocked("Sign-in required. Approve with --teacher-id and your PIN.")
-    stored = _read(_path("sessions"), {}).get(_digest(session))
-    if stored is None:
-        raise GateBlocked("Sign-in required. That session is not valid on this computer.")
-    try:
-        expired = datetime.fromisoformat(stored["expires"]) <= _now()
-    except (KeyError, TypeError, ValueError):
-        expired = True
-    if expired:
-        raise GateBlocked("Your sign-in expired. Sign in again.")
-    name = (_read(_path("teachers"), {}).get(stored.get("teacher_id", "")) or {}).get("name")
+def _slide(digest: str, stored: dict) -> None:
+    """Extend a human session by SESSION_MINUTES, never past its absolute expiry."""
+    absolute = _parse(stored.get("absolute"))
+    expires = _now() + timedelta(minutes=SESSION_MINUTES)
+    if absolute is not None:
+        expires = min(expires, absolute)
+    stored["expires"] = _iso(expires)
+    sessions = _read(_path("sessions"), {})
+    sessions[digest] = stored
+    _write(_path("sessions"), sessions)
+
+
+def resolve(session: str | None, kind: str = "human") -> dict:
+    """Return {teacher_id, name, kind} for a valid session, or raise GateBlocked.
+
+    `kind` says what the caller is about to do. A token of the wrong kind is refused
+    rather than treated as equal: an agent token cannot stand in for a teacher at the
+    approval gate, and a teacher session is not an agent token.
+    """
+    digest, stored = _valid(session, kind)
+    teacher_id = stored.get("teacher_id", "")
+    name = (_read(_path("teachers"), {}).get(teacher_id) or {}).get("name")
     if not name:
         raise GateBlocked("Sign-in required. That teacher is no longer registered on this computer.")
-    return {"teacher_id": stored["teacher_id"], "name": name}
+    if kind == "human":
+        _slide(digest, stored)  # each authenticated request buys 15 more minutes
+    return {"teacher_id": teacher_id, "name": name, "kind": kind}
+
+
+def mint_agent_token(session: str | None) -> str:
+    """Create a 30-minute token for an agent run acting as the signed-in teacher.
+
+    Requires a live human session; an agent token cannot mint another token. The new
+    token belongs to the same teacher and never outlives the human session's absolute
+    expiry, so signing out is enough to stop it.
+    """
+    digest, stored = _valid(session, "human")
+    now = _now()
+    expires = now + timedelta(minutes=AGENT_MINUTES)
+    absolute = _parse(stored.get("absolute"))
+    if absolute is not None:
+        expires = min(expires, absolute)
+    token = secrets.token_urlsafe(24)
+    sessions = _pruned_sessions()
+    sessions[_digest(token)] = {"teacher_id": stored.get("teacher_id", ""),
+                                "name": stored.get("name", ""),
+                                "kind": "agent", "scope": "agent",
+                                "created": _iso(now), "expires": _iso(expires),
+                                "absolute": _iso(expires), "parent": digest}
+    _write(_path("sessions"), sessions)
+    return token
+
+
+def logout(session: str | None) -> bool:
+    """Delete a session. Signing out of a human session also kills its agent tokens."""
+    if not session:
+        return False
+    digest = _digest(session)
+    sessions = _pruned_sessions()
+    if digest not in sessions:
+        return False
+    for key in [k for k, s in sessions.items() if s.get("parent") == digest]:
+        del sessions[key]
+    del sessions[digest]
+    _write(_path("sessions"), sessions)
+    return True

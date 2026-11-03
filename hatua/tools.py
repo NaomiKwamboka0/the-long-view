@@ -77,6 +77,10 @@ def draft_summary(learner_id: str, audience: str = "teacher", language: str = "e
 
 
 @audit.audited("update_profile")
-def update_profile(draft_id: str) -> dict:
-    """Save an approved draft to the learner's profile. Blocked without a matching teacher approval."""
-    return gate.update_profile(draft_id)
+def update_profile(draft_id: str, *, session: str | None = None) -> dict:
+    """Save an approved draft to the learner's profile. Blocked without a matching teacher approval.
+
+    `session` is passed through only so a wrong token kind is refused; the agent has no
+    way to produce a human session, so it can never save on its own.
+    """
+    return gate.update_profile(draft_id, session=session)
