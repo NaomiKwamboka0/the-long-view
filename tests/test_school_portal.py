@@ -258,3 +258,65 @@ def test_portal_sign_in_scope_and_csrf(portal):
     assert st == 200 and out["added"] == 70
     assert call(portal, "POST", "/api/logout", {}, cookie=cookie, csrf=csrf)[0] == 200
     assert call(portal, "GET", "/api/class", cookie=cookie)[0] == 401
+
+
+# ---------------------------------------------------------------- the Hatua assistant
+from hatua import assistant  # noqa: E402
+
+
+def test_assistant_refuses_rankings_and_pathways_without_the_model(school_home):
+    for q in ["Who is the best in Maths?", "Rank my class in English", "Compare Kamau with the class",
+              "Nani ni mwanafunzi bora?"]:
+        out = assistant.ask("M-6001", q)
+        assert out.get("refused") and "does not rank" in out["answer"], q
+    assert not assistant.ask("M-6001", "What is the best way to teach fractions?").get("refused")
+    out = assistant.ask("M-6001", "Which pathway should Atieno take?")
+    assert out.get("refused") and "family" in out["answer"]
+
+
+def test_assistant_knows_only_my_class(school_home):
+    drive.decide(G6, login("M-6001"), "approve")
+    ctx = assistant.prepare("M-6001", "How is Kamau doing?")
+    six = {l["learner_id"] for l in school.learners_of("M-6001")}
+    others = [l for l in store.load("learners") if l["learner_id"] not in six]
+    assert all(l["first_name"] not in ctx["data"] and l["learner_id"] not in ctx["data"] for l in others)
+    assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= six
+    out = assistant.ask("M-6001", "How is Kamau doing?")
+    assert out["writer"] == "hatua" and out["citations"]
+    assert {store.get_record(c)["learner_id"] for c in out["citations"]} == {"HT-0603"}
+    assert "can't find Amani" in assistant.ask("M-6001", "Tell me about Amani")["answer"]
+    att = assistant.ask("M-6001", "Who needs my attention?")["answer"]
+    assert "Kamau" in att and "Atieno" in att
+
+
+def test_assistant_with_qwen_checks_every_answer(school_home, fake_qwen, monkeypatch):
+    drive.decide(G6, login("M-6001"), "approve")
+    ctx = assistant.prepare("M-6001", "How is Kamau doing?")
+    good_id = sorted(ctx["allowed"])[0]
+    other_class = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0401")
+    replies = iter([f"Kamau went down in Mathematics this term [{good_id}].",
+                    f"Kamau is weaker than his classmates [{good_id}].",
+                    f"Kamau is doing fine [{other_class}].",
+                    f"Kamau's Mathematics fell this term [{good_id}]."])
+    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies))
+    out = assistant.ask("M-6001", "How is Kamau doing?")
+    assert out["writer"] == "qwen2.5:7b" and out["citations"] == [good_id]
+    out = assistant.ask("M-6001", "How is Kamau doing?")  # a label, then another class's record: both refused
+    assert out["writer"] == "hatua", "neither bad answer is shown; the built-in answer is used instead"
+    out = assistant.ask("M-6001", "How is Kamau doing?")
+    assert out["writer"] == "qwen2.5:7b"
+    events = [e for e in __import__("hatua.audit", fromlist=["x"]).read_events() if e["tool"] == "assistant.ask"]
+    assert events and all("How is" not in json.dumps(e) for e in events), "questions are not written to the log"
+
+
+def test_assistant_and_evidence_endpoints(portal):
+    st, headers, body = call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": PIN})
+    cookie, csrf = headers["Set-Cookie"].split(";")[0], body["csrf"]
+    assert call(portal, "POST", "/api/assistant", {"question": "Who needs my attention?"}, cookie=cookie)[0] == 403
+    st, _, out = call(portal, "POST", "/api/assistant", {"question": "When were Term 3 results due?"},
+                      cookie=cookie, csrf=csrf)
+    assert st == 200 and "2026-10-30" in out["answer"]
+    mine = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0603")
+    theirs = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0401")
+    assert call(portal, "GET", f"/api/evidence/{mine}", cookie=cookie)[2]["learner_id"] == "HT-0603"
+    assert call(portal, "GET", f"/api/evidence/{theirs}", cookie=cookie)[0] == 404

@@ -51,6 +51,42 @@ school_drive/Grade 6/2026 Term 3/grade6_2026_term3_results.csv
 
 **School calendar.** Kenya's 2026 term dates from the Ministry of Education, and when each term's results are due in Hatua.
 
+## The Hatua assistant
+
+Press **Hatua assistant**, either at the bottom right of the screen or in the tab row. A chat window opens where the teacher can ask questions in plain English or Kiswahili, for example:
+
+- "Who needs my attention this week?"
+- "How is Kamau doing, and what should I tell the parent?"
+- "When were Term 3 results due?"
+- "How do I approve this term's results?"
+- "Give me ideas to help a learner who struggles with fractions"
+
+![The Hatua assistant](assistant.png)
+
+**The window.** It stays open while you move between tabs.
+
+| To do this | Do this |
+|---|---|
+| Minimize | Press **–**, or press Esc. It becomes a small button at the bottom right. A dot on the button means a new answer arrived. |
+| Maximize or restore | Press **□**, or double-click the title bar. |
+| Move it | Drag the title bar. |
+| Resize it | Drag the bottom-right corner. |
+| Clear the chat | Press the bin. |
+
+The page remembers the window's size and place on this computer. On a phone the assistant opens full screen.
+
+**Who answers.**
+- **Qwen 2.5 on the laptop**, through Ollama, when it is running. The window's title bar says which model is answering.
+- **Hatua's built-in answers**, when Qwen is off. These cover four things: a learner's progress, who needs attention, the school calendar, and how to use Hatua.
+
+**What keeps it safe.**
+- **Only your own class.** The assistant is given only the signed-in teacher's own class. Another class's learners are never in what Qwen sees.
+- **Record numbers are checked.** When it talks about a learner's results, it must give record numbers (tap them to open the record). An answer that cites a record it was not given is not shown.
+- **Every answer is checked** for labels, rankings, comparisons with classmates, and pathway or career advice. A failed answer is retried once, then replaced with a built-in answer.
+- **Some questions are refused.** Questions that ask to rank learners, or that ask for a pathway, get a polite fixed reply. The model is not asked at all.
+- **It cannot act.** It cannot approve, upload, save or send. It tells the teacher which button to use.
+- **The chat is not saved.** The activity log records only that a question was asked, which learners it was about, and who answered. The question itself is not logged.
+
 ## Comments, and thumbs up or down
 
 1. **Write a comment.** Qwen 2.5 (through Ollama, on the same laptop) writes a two- or three-sentence report comment.

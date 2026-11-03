@@ -24,7 +24,19 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from . import auth, comments, config, drive, notify, patterns, school, school_calendar, scope, store
+from . import (
+    assistant,
+    auth,
+    comments,
+    config,
+    drive,
+    notify,
+    patterns,
+    school,
+    school_calendar,
+    scope,
+    store,
+)
 from .summary import GateBlocked
 
 PAGE = Path(__file__).resolve().parent.parent / "ui" / "portal.html"
@@ -155,8 +167,23 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
         if not path.startswith("/api/"):
             raise Refused(404, "Not found.")
+        if method == "POST" and path == "/api/assistant":
+            return self._assistant()
         with LOCK:
             return self._api(method, path[5:], q)
+
+    def _assistant(self):
+        """Read the store under the lock, then ask the model WITHOUT the lock, so the rest of
+        the portal keeps working while Qwen thinks."""
+        with LOCK:
+            who = self._who()
+            self._check_post()
+            body = self._json()
+            ctx = assistant.prepare(who["teacher_id"], str(body.get("question", "")), body.get("history") or [])
+        out = assistant.answer(ctx)
+        with LOCK:
+            assistant.log(who["teacher_id"], out)
+        return self._send(200, out)
 
     # ---------------------------------------------------------------- API
     def _api(self, method: str, path: str, q: dict):  # noqa: C901 - one flat table of routes
@@ -263,6 +290,16 @@ class Handler(BaseHTTPRequestHandler):
                 raise Refused(403, str(exc)) from None
             except ValueError as exc:
                 raise Refused(400, str(exc)) from None
+        m = re.fullmatch(r"evidence/([RNA]-[A-Za-z0-9-]{1,40})", path)
+        if method == "GET" and m:
+            rec = store.get_record(m.group(1))
+            if not rec or not scope.can_view(tid, rec.get("learner_id", "")):
+                raise Refused(404, "That record is not in your class.")
+            learner = store.learner(rec["learner_id"]) or {}
+            keep = ("record_id", "note_id", "attendance_id", "learner_id", "grade", "year", "term", "learning_area",
+                    "task", "level", "score", "task_date", "teacher", "flags", "text", "days_present", "days_open")
+            return self._send(200, {**{k: rec[k] for k in keep if k in rec}, "name": learner.get("first_name", ""),
+                                    "read_only": int(rec.get("grade", 0) or 0) < int(learner.get("current_grade", 0) or 0)})
         if method == "GET" and path == "calendar":
             return self._send(200, school_calendar.summary(today))
         raise Refused(404, "Not found.")

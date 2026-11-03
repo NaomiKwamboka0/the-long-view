@@ -1,3 +1,21 @@
+# Hatua assistant — 4 November 2026
+
+- **New `hatua/assistant.py`.** A teacher asks a question and Qwen 2.5 on the laptop answers it (Ollama `/api/chat`). The context is built only from the signed-in teacher's own class: the class list, alerts, drive files, the school calendar and, for learners named in the question, their patterns, latest levels, attendance and notes, with record numbers.
+- **Checks on every answer.**
+  - Answers must cite only record numbers they were given, and they pass the guard.
+  - A failed answer is retried once, then replaced with a built-in answer.
+  - Ranking and pathway questions get a fixed reply without calling the model.
+  - When Ollama is off, built-in answers cover a learner's progress, who needs attention, the calendar and how to use Hatua.
+  - The log records who answered and which learners were asked about, never the question.
+- **Portal changes.**
+  - `POST /api/assistant` reads the store under the lock but asks the model outside it, so the portal keeps working while Qwen thinks.
+  - `GET /api/evidence/<id>` opens a cited record, only for the teacher's own learners.
+- **The assistant window.** A floating window on every tab. It can be minimized to a button (with a dot for a new answer), maximized or restored (button or double-click), moved by its title bar and resized from its corner. Its size and place are remembered in this browser. It opens full screen on a phone.
+- **Verification.**
+  - Tests: 142 passed (4 new: refusals, class-only context and citations, a stand-in Qwen giving good and bad answers, and the endpoints).
+  - Clicked through in a browser with a stand-in Qwen server: asking, a refused ranking question, moving, resizing, maximizing, minimizing, reopening after a reload, opening a cited record, and the phone view.
+  - The real Qwen model has still not been run on this build machine.
+
 # Whole-school portal — 4 November 2026
 
 Built on `feature/teacher-portal` (Moses's phase 1: two token kinds and one scope rule), with `main` merged in. The lockfile keeps `jsonpointer==3.6`: `main` had pinned `1.6`, which does not exist on PyPI.

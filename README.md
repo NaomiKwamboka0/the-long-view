@@ -35,6 +35,7 @@ A demo school with Grades 4 to 9 and one class teacher per class, each signing i
 - is told when a term's results are **overdue**, using Kenya's 2026 school calendar;
 - is told **as soon as** an approved file shows a learner falling in a subject, with a ready message for the parent in English or Kiswahili, and can record that the parent was told;
 - gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones.
+- can ask the **Hatua assistant**, a floating chat window run by Qwen on the laptop. It answers questions about their own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It can be minimized, maximized, moved and resized, and it never ranks learners or suggests pathways.
 
 Everything runs on the laptop: no outside service, no API. See [docs/PORTAL.md](docs/PORTAL.md).
 

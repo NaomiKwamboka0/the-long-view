@@ -193,6 +193,42 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
 @media (prefers-reduced-motion: no-preference) { dialog[open], .toast { animation: rise .2s ease-out; }
   @keyframes rise { from { opacity: 0; transform: translate(var(--tx, 0), 10px); } to { opacity: 1; transform: translate(var(--tx, 0), 0); } } }
 .toast { --tx: -50%; }
+
+/* ---------- Hatua assistant: a floating window ---------- */
+.ask-launch { position: fixed; right: 18px; bottom: 18px; z-index: 20; border: 0; border-radius: 999px; padding: 12px 18px 12px 14px;
+  display: inline-flex; align-items: center; gap: 10px; font-weight: 700; background: var(--jacaranda); color: var(--jacaranda-ink); box-shadow: var(--shadow); }
+.ask-launch .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sun-soft); box-shadow: 0 0 0 2px var(--jacaranda); }
+.ask { position: fixed; z-index: 21; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; background: var(--surface);
+  border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; min-width: 300px; min-height: 340px; }
+.ask.max { left: 16px !important; top: 16px !important; width: calc(100vw - 32px) !important; height: calc(100vh - 32px) !important; }
+.ask-bar { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 16px; background: var(--jacaranda-soft); cursor: grab; user-select: none; touch-action: none; }
+.ask.max .ask-bar, .ask.sheet .ask-bar { cursor: default; }
+.ask-bar.dragging { cursor: grabbing; }
+.ask-title { flex: 1 1 auto; min-width: 0; }
+.ask-title b { display: block; color: var(--jacaranda); }
+.ask-title span { display: block; font-size: .8rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.win-btn { border: 0; background: transparent; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--ink); }
+.win-btn:hover { background: var(--surface); }
+.win-btn svg { width: 18px; height: 18px; }
+.ask-note { padding: 8px 16px; font-size: .82rem; color: var(--ink-soft); background: var(--tint); }
+.ask-log { overflow-y: auto; padding: 14px 16px; display: grid; gap: 12px; align-content: start; overscroll-behavior: contain; }
+.msg { max-width: 92%; border-radius: 16px; padding: 10px 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.msg.me { justify-self: end; background: var(--jacaranda-soft); border-bottom-right-radius: 6px; }
+.msg.bot { justify-self: start; background: var(--tint); border-bottom-left-radius: 6px; }
+.msg.bot ul { margin: 4px 0; padding-left: 20px; }
+.msg.bot p + p { margin-top: 6px; }
+.msg .by { margin-top: 6px; font-size: .76rem; color: var(--ink-soft); }
+.msg .cite { border: 0; border-radius: 999px; padding: 1px 8px; margin: 1px 2px; font-size: .74rem; background: var(--surface); color: var(--jacaranda); font-variant-numeric: tabular-nums; }
+.msg.thinking { color: var(--ink-soft); font-style: italic; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 0; border-radius: 999px; padding: 7px 12px; font-size: .86rem; background: var(--surface); color: var(--ink); text-align: left; }
+.chip:hover { background: var(--jacaranda-soft); color: var(--jacaranda); }
+.ask-form { display: flex; gap: 8px; padding: 10px 12px 12px; align-items: flex-end; background: var(--surface); }
+.ask-form textarea { flex: 1 1 auto; resize: none; min-height: 44px; max-height: 140px; line-height: 1.45; }
+.ask-grip { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 55%, var(--path) 55%, var(--path) 62%, transparent 62%, transparent 72%, var(--path) 72%, var(--path) 79%, transparent 79%); }
+.ask.max .ask-grip, .ask.sheet .ask-grip { display: none; }
+.ask.sheet { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100dvh !important; border-radius: 0; }
 @media (max-width: 520px) { body { font-size: 16px; } .panel { padding: 16px; border-radius: 20px; } .file { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
@@ -234,6 +270,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <button role="tab" data-tab="drive" aria-selected="false">School drive<span class="n" id="n-drive"></span></button>
     <button role="tab" data-tab="class" aria-selected="false">My class</button>
     <button role="tab" data-tab="calendar" aria-selected="false">School calendar</button>
+    <button type="button" id="ask-tab" style="color:var(--jacaranda);font-weight:700">Hatua assistant</button>
   </nav>
 
   <!-- TODAY -->
@@ -287,6 +324,27 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   <section id="tab-calendar" role="tabpanel" class="panel" hidden><div id="calendar"></div></section>
 </div>
 
+
+<!-- HATUA ASSISTANT -->
+<button class="ask-launch" type="button" id="ask-launch" hidden aria-controls="ask" aria-expanded="false">
+  <svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l2)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda-ink)"/></svg>
+  Hatua assistant<span class="dot" id="ask-dot" hidden aria-label="New answer"></span>
+</button>
+<section class="ask" id="ask" role="dialog" aria-modal="false" aria-labelledby="ask-name" hidden>
+  <div class="ask-bar" id="ask-bar">
+    <div class="ask-title"><b id="ask-name">Hatua assistant</b><span id="ask-status"></span></div>
+    <button class="win-btn" type="button" id="ask-clear" title="Clear the chat" aria-label="Clear the chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+    <button class="win-btn" type="button" id="ask-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18h14"/></svg></button>
+    <button class="win-btn" type="button" id="ask-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
+  </div>
+  <p class="ask-note">I only know your own class. I never rank learners or suggest pathways. This chat is not saved.</p>
+  <div class="ask-log" id="ask-log" aria-live="polite"></div>
+  <form class="ask-form" id="ask-form">
+    <textarea id="ask-q" rows="1" placeholder="Ask a question" aria-label="Your question"></textarea>
+    <button class="btn" type="submit" id="ask-send">Ask</button>
+  </form>
+  <div class="ask-grip" id="ask-grip" title="Drag to resize" aria-hidden="true"></div>
+</section>
 <dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
 <div class="toast" id="toast" role="status" hidden><p id="toast-text"></p><button class="btn small" type="button" id="toast-btn">Show me</button></div>
 
@@ -316,6 +374,7 @@ async function api(path, opts = {}) {
 /* ---------- sign in ---------- */
 async function showSignin(message) {
   $("app").hidden = true; $("signin").hidden = false; CSRF = null;
+  $("ask").hidden = true; $("ask-launch").hidden = true;
   $("si-error").hidden = !message; $("si-error").textContent = message || "";
   try {
     const pub = await api("public");
@@ -354,14 +413,19 @@ async function start() {
   await Promise.all([loadNotices(), loadDrive(), loadClass()]);
   renderCalendar();
   setTab("today");
+  askStart();
 }
 async function loadNotices() { NOTICES = (await api("notices?all=1")).notices; renderToday(); }
 async function loadDrive() { DRIVE = (await api("drive")).folders; renderDrive(); }
-async function loadClass() { CLASS = (await api("class")).learners; renderClass(); renderToday(); }
+async function loadClass() {
+  CLASS = (await api("class")).learners; renderClass(); renderToday();
+  if (typeof ASK !== "undefined" && !ASK.history.length && $("ask-log").childElementCount) askReset();  // fresh suggestions
+}
 
-document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+document.querySelectorAll(".tabs button[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+$("ask-tab").addEventListener("click", () => askSet(ASK.state === "min" ? "open" : ASK.state));
 function setTab(t) {
-  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  document.querySelectorAll(".tabs button[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
   for (const p of ["today", "drive", "class", "calendar"]) $("tab-" + p).hidden = p !== t;
 }
 
@@ -636,6 +700,148 @@ function renderCalendar() {
       <p>Opens ${fmt(t.opens)}<br>Closes ${fmt(t.closes)}</p><p class="small soft">Results due in Hatua by ${fmt(t.results_due)}</p></div>`).join("")}</div>
     ${c.national_assessments && c.national_assessments.length ? `<p class="small">National assessments: ${c.national_assessments.map(a => `${esc(a.name)} from ${fmt(a.from)}`).join("; ")}.</p>` : ""}
     <p class="small soft">${esc(c.source)} ${c.source_urls.map(u => `<a href="${esc(u)}" rel="noreferrer" target="_blank">${esc(new URL(u).hostname)}</a>`).join(", ")}</p></div>`;
+}
+
+
+/* ---------- Hatua assistant: chat ---------- */
+const ASK = { history: [], busy: false, state: "min", box: null };
+const ICON_MAX = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/></svg>`;
+const ICON_RESTORE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="8" width="12" height="12" rx="2"/><path d="M8 8V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3"/></svg>`;
+const store2 = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const phone = () => matchMedia("(max-width: 600px)").matches;
+
+function askSuggestions() {
+  const watch = CLASS.find(l => l.alerts), any = CLASS[0];
+  const qs = ["Who needs my attention this week?"];
+  if (watch) qs.push(`How is ${watch.name} doing, and what should I tell the parent?`);
+  else if (any) qs.push(`How is ${any.name} doing?`);
+  qs.push("When were Term 3 results due?", "How do I approve this term's results?", "Give me ideas to help a learner who struggles with fractions");
+  return qs;
+}
+function askReset() {
+  ASK.history = [];
+  $("ask-log").innerHTML = `<div class="msg bot"><p>Hello ${esc((ME && ME.name || "").split(" ")[0])}. I can answer questions about ${esc(ME ? ME.class_label : "your class")}, a learner's records, the school calendar, or how to use Hatua.</p>
+    <div class="chips" style="margin-top:10px">${askSuggestions().map(q => `<button class="chip" type="button">${esc(q)}</button>`).join("")}</div></div>`;
+  $("ask-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => askSend(c.textContent)));
+}
+function askStatus() {
+  $("ask-status").textContent = MODEL ? `Answers by ${MODEL} on this laptop` : "Qwen is off: built-in answers only";
+}
+function renderAnswer(text) {
+  const withCites = t => esc(t).replace(/\[((?:[RNA]-[A-Za-z0-9-]+(?:,\s*)?)+)\]/g, (m, ids) =>
+    ids.split(/,\s*/).map(id => `<button class="cite" type="button" data-cite="${id}">${id}</button>`).join(""));
+  const blocks = text.trim().split(/\n{2,}/);
+  return blocks.map(b => {
+    const lines = b.split("\n");
+    if (lines.every(l => /^\s*([-*•]|\d+[.)])\s+/.test(l)))
+      return `<ul>${lines.map(l => `<li>${withCites(l.replace(/^\s*([-*•]|\d+[.)])\s+/, ""))}</li>`).join("")}</ul>`;
+    const head = lines.filter(l => !/^\s*[-*•]\s+/.test(l)), items = lines.filter(l => /^\s*[-*•]\s+/.test(l));
+    return `${head.length ? `<p>${head.map(withCites).join("<br>")}</p>` : ""}${items.length ? `<ul>${items.map(l => `<li>${withCites(l.replace(/^\s*[-*•]\s+/, ""))}</li>`).join("")}</ul>` : ""}`;
+  }).join("");
+}
+function askAdd(role, html, by) {
+  const div = document.createElement("div");
+  div.className = "msg " + (role === "teacher" ? "me" : "bot");
+  div.innerHTML = html + (by ? `<p class="by">${esc(by)}</p>` : "");
+  $("ask-log").appendChild(div);
+  div.querySelectorAll("[data-cite]").forEach(b => b.addEventListener("click", () => evidenceAny(b.dataset.cite)));
+  $("ask-log").scrollTop = $("ask-log").scrollHeight;
+  return div;
+}
+async function askSend(question) {
+  question = (question || "").trim();
+  if (!question || ASK.busy) return;
+  ASK.busy = true; $("ask-send").disabled = true; $("ask-q").value = ""; askGrow();
+  askAdd("teacher", `<p>${esc(question)}</p>`);
+  const wait = askAdd("bot", `<p>${MODEL ? "Thinking... Qwen on this laptop can take up to a minute." : "Looking in your class's records..."}</p>`);
+  wait.classList.add("thinking");
+  try {
+    const out = await api("assistant", { method: "POST", json: { question, history: ASK.history } });
+    wait.remove();
+    const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or pathway advice" : "Built-in answer from Hatua's records")
+      : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
+    askAdd("bot", renderAnswer(out.answer), by);
+    ASK.history.push({ role: "teacher", text: question }, { role: "assistant", text: out.answer });
+    ASK.history = ASK.history.slice(-6);
+    if (ASK.state === "min") $("ask-dot").hidden = false;
+  } catch (err) {
+    wait.classList.remove("thinking"); wait.innerHTML = `<p class="error">${esc(err.message)}</p>`;
+  } finally { ASK.busy = false; $("ask-send").disabled = false; if (ASK.state !== "min") $("ask-q").focus(); }
+}
+function askGrow() { const t = $("ask-q"); t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; }
+$("ask-q").addEventListener("input", askGrow);
+$("ask-q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askSend($("ask-q").value); } });
+$("ask-form").addEventListener("submit", e => { e.preventDefault(); askSend($("ask-q").value); });
+$("ask-clear").addEventListener("click", askReset);
+
+async function evidenceAny(id) {
+  try {
+    const r = await api("evidence/" + encodeURIComponent(id));
+    const row = (k, v) => v === undefined || v === null || v === "" ? "" : `<dt>${k}</dt><dd>${v}</dd>`;
+    const kind = r.record_id ? "Assessment record" : r.note_id ? "Teacher note" : "Attendance";
+    $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">${kind} <span class="id">${esc(id)}</span></h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+      <dl>${row("Learner", esc(r.name) + " " + esc(r.learner_id))}${row("When", `Grade ${r.grade}, Term ${r.term} (${r.year})`)}${row("Learning area", esc(r.learning_area))}${row("Task", esc(r.task))}
+      ${row("Level", r.level ? lv(r.level) + " " + LEVEL[r.level] : "")}${row("Score", r.score == null ? undefined : r.score + "%")}${row("Days in school", r.days_open ? `${r.days_present} of ${r.days_open}` : "")}
+      ${row("Note", r.text ? "&ldquo;" + esc(r.text) + "&rdquo;" : "")}${row("Teacher", esc(r.teacher))}</dl>
+      ${r.read_only ? `<p class="small soft">Recorded in an earlier grade. Read only.</p>` : ""}`;
+    $("dlg-x").onclick = () => $("dlg").close();
+    $("dlg").showModal();
+  } catch (err) { toast(err.message); }
+}
+
+/* ---------- Hatua assistant: window (minimize, maximize, move, resize) ---------- */
+function askDefaultBox() {
+  const w = Math.min(420, innerWidth - 32), h = Math.min(600, innerHeight - 100);
+  return { left: innerWidth - w - 18, top: innerHeight - h - 18, width: w, height: h };
+}
+function askClamp(b) {
+  const w = Math.max(300, Math.min(b.width, innerWidth - 16)), h = Math.max(340, Math.min(b.height, innerHeight - 16));
+  return { width: w, height: h, left: Math.max(8, Math.min(b.left, innerWidth - w - 8)), top: Math.max(8, Math.min(b.top, innerHeight - h - 8)) };
+}
+function askApply() {
+  const el = $("ask"), st = ASK.state;
+  el.hidden = st === "min"; $("ask-launch").hidden = st !== "min" || $("app").hidden;
+  $("ask-launch").setAttribute("aria-expanded", String(st !== "min"));
+  el.classList.toggle("max", st === "max"); el.classList.toggle("sheet", st !== "min" && phone());
+  if (st === "open" && !phone()) {
+    ASK.box = askClamp(ASK.box || askDefaultBox());
+    Object.assign(el.style, { left: ASK.box.left + "px", top: ASK.box.top + "px", width: ASK.box.width + "px", height: ASK.box.height + "px" });
+  }
+  $("ask-max").innerHTML = st === "max" ? ICON_RESTORE : ICON_MAX;
+  $("ask-max").title = $("ask-max").ariaLabel = st === "max" ? "Restore" : "Maximize";
+  $("ask-max").hidden = phone();
+  store2.set("hatua-ask", { state: st === "max" ? "max" : st, box: ASK.box });
+}
+function askSet(state) {
+  ASK.state = state; askApply();
+  if (state !== "min") { $("ask-dot").hidden = true; setTimeout(() => $("ask-q").focus(), 0); }
+  else $("ask-launch").focus();
+}
+$("ask-launch").addEventListener("click", () => askSet(store2.get("hatua-ask")?.state === "max" ? "max" : "open"));
+$("ask-min").addEventListener("click", () => askSet("min"));
+$("ask-max").addEventListener("click", () => askSet(ASK.state === "max" ? "open" : "max"));
+$("ask-bar").addEventListener("dblclick", e => { if (!e.target.closest("button") && !phone()) askSet(ASK.state === "max" ? "open" : "max"); });
+$("ask").addEventListener("keydown", e => { if (e.key === "Escape" && !$("dlg").open) askSet("min"); });
+function askPointer(handle, onMove) {
+  handle.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || e.target.closest("button") || ASK.state !== "open" || phone()) return;
+    e.preventDefault();
+    const start = { x: e.clientX, y: e.clientY, box: { ...ASK.box } };
+    handle.setPointerCapture(e.pointerId); handle.classList.add("dragging");
+    const move = ev => { ASK.box = askClamp(onMove(start, ev.clientX - start.x, ev.clientY - start.y)); askApply(); };
+    const up = () => { handle.classList.remove("dragging"); handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); handle.removeEventListener("pointercancel", up); };
+    handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up); handle.addEventListener("pointercancel", up);
+  });
+}
+askPointer($("ask-bar"), (s, dx, dy) => ({ ...s.box, left: s.box.left + dx, top: s.box.top + dy }));
+askPointer($("ask-grip"), (s, dx, dy) => ({ ...s.box, width: s.box.width + dx, height: s.box.height + dy }));
+addEventListener("resize", () => { if (ASK.state !== "min") askApply(); });
+function askStart() {
+  const saved = store2.get("hatua-ask");
+  ASK.box = saved && saved.box ? saved.box : null;
+  ASK.state = saved && ["open", "max", "min"].includes(saved.state) ? saved.state : "min";
+  askStatus(); askReset(); askApply();
 }
 
 /* ---------- toast ---------- */
