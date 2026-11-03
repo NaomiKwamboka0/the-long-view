@@ -1,3 +1,34 @@
+# Teacher portal, phase 1 — 3 November 2026
+
+Branch `feature/teacher-portal`, from `feat/hatua-brief` at `db2d7d0`. One commit per ticket.
+
+## Where the numbers stood before this work
+
+- `python -m pytest -q`: **104 passed**.
+- `npm run test:ui`: **16 of 16 passed**.
+- `python scripts/run_evals.py`: **16 of 21 here**. The five A-series agent tasks cannot start their subprocess on this machine (`PermissionError: [WinError 5]`), which counts as a failure and never a skip, as `EVALS.md` already states. The 21 of 21 recorded on 27 October came from a machine where those processes could start; nothing in the code changed for those five tasks.
+
+## TP-1: two token kinds, so an agent run cannot approve
+
+- A **human** session is created by `login`. It slides by 15 minutes on each authenticated request and stops dead 8 hours after sign-in. It is the only kind that may approve or save.
+- An **agent** token is minted from a human session (`mint_agent_token`), lasts 30 minutes, belongs to that teacher, and cannot outlive the session that minted it. It cannot approve, save or mint another token.
+- `resolve(session, kind=...)` refuses a token of the wrong kind instead of treating all sessions as equal, so `gate.approve` and `gate.update_profile` reject an agent token structurally. `logout(session)` deletes the session and any agent tokens minted from it.
+- Session records now carry `kind`, `scope`, `created`, `absolute`, `csrf` (human only) and `parent` (agent). Tokens are still stored only as SHA-256. A session file written before this change has no `kind` and is read as human, so the upgrade signs nobody out.
+- **Not done:** no audit event is written for login, logout or minting. The `@audited` decorator records a function's return value, and `mint_agent_token` returns the token, so decorating it would have written the token into `logs/audit.jsonl`. Portal audit belongs to TP-3.
+
+## TP-2: assignments, and one rule for who may see whom
+
+- New `data/raw/teacher_assignments.csv` (synthetic): `T-9A` to stream `9A`, `T-9B` to `9B`. `store.load_assignments` validates it — role must be exactly `class_teacher`, streams are one or more non-empty tokens separated by `;` — and rejects a malformed row with the row number, saving nothing.
+- `store` gains an `assignments` name, cleared by `store.reset` and reloaded by `cmd_setup`, which now prints the count.
+- New `hatua/scope.py`: `visible_learner_ids` and `can_view`, deny by default, decided by the learner's **current** stream only. A teacher with no row, a role other than `class_teacher`, or no streams sees nothing.
+- The stated policy, in the module docstring: a class teacher sees the full Grades 4-9 history of learners currently in their class, including records entered by earlier teachers. That is a data-protection decision the school has not yet confirmed (plan H1), so it is written down rather than assumed silently.
+- **Not done:** no portal or HTTP surface, no agent scoping (`--as`), no admin or head-teacher role.
+
+## After phase 1
+
+- `python -m pytest -q`: **120 passed** (104 + 8 for TP-1 + 8 for TP-2). `ruff check hatua tests scripts`: clean. `npm run test:ui`: 16 of 16, unchanged.
+- **Not done in this phase:** TP-3 onwards (portal API, page, scoped agent, end-to-end test, docs), the three new evaluations, and anything in the human-owned list. The branch has not been pushed or rebased onto `origin/main`; `main` carries a different fix for the same Windows-only lockfile entry (commit `1768ddf`) and the rebase was deliberately deferred.
+
 # Hardening and honesty — 27 October 2026
 
 ## Final verification on this branch
