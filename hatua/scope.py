@@ -2,14 +2,17 @@
 
 Policy: a class teacher sees the full Grades 4-9 history of the learners
 currently in their class, including records entered by earlier teachers. A
-teacher with no assignment, or with a role other than class_teacher, sees
+teacher with no assignment row, or with a role other than class_teacher, sees
 nothing; there is no admin or head-teacher role in this phase. This is a
 data-protection decision for the school to confirm (plan H1); do not widen
 it here.
 
-This module reads only through hatua.store. It performs no I/O and keeps no
-cache, so every call reflects the store as it is at that moment. It does not
-check the teacher registry: assignments, not credentials, decide scope.
+This module reads only through hatua.store: it opens no file itself and keeps
+no cache, so every call reflects the store as it is at that moment. It does not
+check the teacher registry - an assignment row, not a credential, decides scope.
+The rule therefore assumes the people at this computer are who they say they
+are. `teacher-add` will register any ID, so anyone who can reach the machine
+could claim an assigned teacher's ID; sign-in narrows that, it does not close it.
 """
 from __future__ import annotations
 
@@ -19,10 +22,11 @@ from . import store
 def visible_learner_ids(teacher_id: str) -> set[str]:
     """Return the learner IDs whose CURRENT stream is assigned to the teacher.
 
-    Deny by default: an unknown teacher, a non-class_teacher role, a malformed
-    assignment, or no streams all return an empty set. A learner is included
-    only when the loaded class list places them in one of the teacher's
-    streams; a learner who is not in the loaded class list is never included.
+    Deny by default: a teacher with no assignment row, a non-class_teacher role,
+    a malformed assignment, or no streams all return an empty set. A learner is
+    included only when the loaded class list places them in one of the teacher's
+    streams; a learner who is not in the loaded class list is never included,
+    however many records or notes mention them.
     """
     assignments = store.load("assignments")
     if not isinstance(assignments, dict):

@@ -16,11 +16,17 @@ job rather than treating them as equal:
 
 * `human` - created by login. It slides by 15 minutes on each authenticated request, up
   to an absolute 8 hours after sign-in, and it is the only kind that may approve or save.
-* `agent` - minted from a human session for one agent run. It lasts 30 minutes, cannot
-  outlive the human session that minted it, and can read and draft but never approve,
-  save or mint another token.
+* `agent` - minted from a human session for one agent run. It lasts at most 30 minutes,
+  stops working as soon as the human session that minted it ends (idle expiry, the
+  8-hour limit, or `logout`), and can read and draft but never approve, save or mint
+  another token.
 
-Only the SHA-256 of a token is stored, never the token itself.
+Only the SHA-256 of a token - or of a session's CSRF value - is stored, never the value
+itself.
+
+One writer at a time is assumed, exactly as in hatua/audit.py: two processes rewriting
+store/sessions.json at once can lose each other's changes, and every writer uses the
+same temporary file name. One local portal on one computer is the intended deployment.
 
 Standard library only. Nothing here makes a network call.
 """
@@ -30,7 +36,6 @@ import hashlib
 import hmac
 import json
 import os
-import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -38,7 +43,7 @@ from pathlib import Path
 from . import config
 from .summary import GateBlocked
 
-TEACHER_ID = re.compile(r"^[A-Za-z0-9_-]{3,24}$")
+TEACHER_ID = config.TEACHER_ID  # one rule, shared with the assignment loader in store.py
 MIN_NAME = 3
 MIN_PIN = 6
 SCRYPT = {"n": 2 ** 14, "r": 8, "p": 1, "dklen": 32}
@@ -181,16 +186,17 @@ def login(teacher_id: str, pin: str) -> dict:
     state.pop(teacher_id, None)  # a good sign-in clears the failure count
     _write(_path("auth_state"), state)
     sessions = _pruned_sessions()
-    token = secrets.token_urlsafe(24)
-    csrf = secrets.token_urlsafe(24)
+    token, csrf = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
     now = _now()
+    absolute = now + timedelta(hours=SESSION_MAX_HOURS)
     sessions[_digest(token)] = {"teacher_id": teacher_id, "name": entry.get("name", ""),
                                 "kind": "human", "scope": "human",
                                 "created": _iso(now),
-                                "expires": _iso(now + timedelta(minutes=SESSION_MINUTES)),
-                                "absolute": _iso(now + timedelta(hours=SESSION_MAX_HOURS)),
-                                "csrf": csrf}
+                                "expires": _iso(_clamped(now, SESSION_MINUTES, absolute)),
+                                "absolute": _iso(absolute),
+                                "csrf": _digest(csrf)}
     _write(_path("sessions"), sessions)
+    # The CSRF value reaches the caller once and is kept only as its digest.
     return {"session": token, "teacher_id": teacher_id, "name": entry.get("name", ""),
             "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60}
 
@@ -216,81 +222,101 @@ def _kind(stored: dict) -> str:
     return stored.get("kind") or "human"
 
 
-def _valid(session: str | None, kind: str) -> tuple[str, dict]:
-    """The stored record for a live session of the required kind, or raise GateBlocked."""
+def _live(stored: dict, now: datetime) -> bool:
+    """Whether a stored session record is still usable at `now`.
+
+    One copy of the rule, so the check that refuses a request and the cleanup that prunes
+    the file cannot drift apart.
+    """
+    expires = _parse(stored.get("expires"))
+    if expires is None or expires <= now:
+        return False
+    absolute = _parse(stored.get("absolute"))
+    return absolute is None or absolute > now
+
+
+def _clamped(now: datetime, minutes: int, absolute: datetime | None) -> datetime:
+    """A new expiry, never later than the absolute limit that applies to the token."""
+    expires = now + timedelta(minutes=minutes)
+    return expires if absolute is None else min(expires, absolute)
+
+
+def _valid(session: str | None, kind: str, action: str = "continue") -> tuple[str, dict]:
+    """The stored record for a live session of the required kind, or raise GateBlocked.
+
+    `action` only shapes the error a missing session gets, so signing in to save does not
+    tell the person to approve.
+    """
     if not session:
-        raise GateBlocked("Sign-in required. Approve with --teacher-id and your PIN.")
+        raise GateBlocked(f"Sign-in required. Sign in with your teacher ID and PIN to {action}.")
     digest = _digest(session)
-    stored = _read(_path("sessions"), {}).get(digest)
+    sessions = _read(_path("sessions"), {})
+    stored = sessions.get(digest)
     if stored is None:
         raise GateBlocked("Sign-in required. That session is not valid on this computer.")
     now = _now()
-    expires, absolute = _parse(stored.get("expires")), _parse(stored.get("absolute"))
-    if expires is None or expires <= now or (absolute is not None and absolute <= now):
+    if not _live(stored, now):
         raise GateBlocked("Your sign-in expired. Sign in again.")
     if _kind(stored) != kind:
-        raise GateBlocked("Agent tokens can read and draft but never approve or save. "
-                          "A teacher must sign in." if kind == "human"
-                          else "That is a teacher session, not an agent token.")
+        raise GateBlocked("That is an agent token. An agent token can read and draft but cannot "
+                          "approve, save or mint another token; a teacher must sign in."
+                          if kind == "human" else "That is a teacher session, not an agent token.")
+    if kind == "agent" and not _live(sessions.get(stored.get("parent") or "") or {}, now):
+        raise GateBlocked("The teacher's sign-in that started this agent run has ended. "
+                          "Start the run again.")
     return digest, stored
 
 
 def _pruned_sessions() -> dict:
     """Sessions that have not expired. Only the SHA-256 of a token is ever stored."""
     now = _now()
-    kept = {}
-    for digest, s in _read(_path("sessions"), {}).items():
-        expires, absolute = _parse(s.get("expires")), _parse(s.get("absolute"))
-        if expires is None or expires <= now:
-            continue
-        if absolute is not None and absolute <= now:
-            continue
-        kept[digest] = s
-    return kept
+    return {digest: s for digest, s in _read(_path("sessions"), {}).items() if _live(s, now)}
 
 
-def _slide(digest: str, stored: dict) -> None:
-    """Extend a human session by SESSION_MINUTES, never past its absolute expiry."""
-    absolute = _parse(stored.get("absolute"))
-    expires = _now() + timedelta(minutes=SESSION_MINUTES)
-    if absolute is not None:
-        expires = min(expires, absolute)
-    stored["expires"] = _iso(expires)
+def _slide(digest: str) -> None:
+    """Extend a live human session by SESSION_MINUTES, never past its absolute expiry.
+
+    Re-reads the file first, so a session signed out between the check and this write
+    stays signed out instead of being put back by the caller's copy of the record.
+    """
+    now = _now()
     sessions = _read(_path("sessions"), {})
+    stored = sessions.get(digest)
+    if stored is None or not _live(stored, now):
+        return
+    stored["expires"] = _iso(_clamped(now, SESSION_MINUTES, _parse(stored.get("absolute"))))
     sessions[digest] = stored
     _write(_path("sessions"), sessions)
 
 
-def resolve(session: str | None, kind: str = "human") -> dict:
+def resolve(session: str | None, kind: str = "human", action: str = "continue") -> dict:
     """Return {teacher_id, name, kind} for a valid session, or raise GateBlocked.
 
     `kind` says what the caller is about to do. A token of the wrong kind is refused
     rather than treated as equal: an agent token cannot stand in for a teacher at the
     approval gate, and a teacher session is not an agent token.
     """
-    digest, stored = _valid(session, kind)
+    digest, stored = _valid(session, kind, action)
     teacher_id = stored.get("teacher_id", "")
     name = (_read(_path("teachers"), {}).get(teacher_id) or {}).get("name")
     if not name:
         raise GateBlocked("Sign-in required. That teacher is no longer registered on this computer.")
     if kind == "human":
-        _slide(digest, stored)  # each authenticated request buys 15 more minutes
+        _slide(digest)  # each authenticated request buys 15 more minutes
     return {"teacher_id": teacher_id, "name": name, "kind": kind}
 
 
 def mint_agent_token(session: str | None) -> str:
-    """Create a 30-minute token for an agent run acting as the signed-in teacher.
+    """Create a token for one agent run acting as the signed-in teacher.
 
     Requires a live human session; an agent token cannot mint another token. The new
-    token belongs to the same teacher and never outlives the human session's absolute
-    expiry, so signing out is enough to stop it.
+    token lasts at most 30 minutes and shares the human session's absolute expiry, and it
+    dies with that session, so signing out is enough to stop a run.
     """
-    digest, stored = _valid(session, "human")
+    digest, stored = _valid(session, "human", "start an agent run")
     now = _now()
-    expires = now + timedelta(minutes=AGENT_MINUTES)
     absolute = _parse(stored.get("absolute"))
-    if absolute is not None:
-        expires = min(expires, absolute)
+    expires = _clamped(now, AGENT_MINUTES, absolute)
     token = secrets.token_urlsafe(24)
     sessions = _pruned_sessions()
     sessions[_digest(token)] = {"teacher_id": stored.get("teacher_id", ""),

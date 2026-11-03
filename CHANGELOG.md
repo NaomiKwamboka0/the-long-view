@@ -11,14 +11,15 @@ Branch `feature/teacher-portal`, from `feat/hatua-brief` at `db2d7d0`. One commi
 ## TP-1: two token kinds, so an agent run cannot approve
 
 - A **human** session is created by `login`. It slides by 15 minutes on each authenticated request and stops dead 8 hours after sign-in. It is the only kind that may approve or save.
-- An **agent** token is minted from a human session (`mint_agent_token`), lasts 30 minutes, belongs to that teacher, and cannot outlive the session that minted it. It cannot approve, save or mint another token.
+- An **agent** token is minted from a human session (`mint_agent_token`), lasts at most 30 minutes, belongs to that teacher, and stops working as soon as the session that minted it ends - idle expiry, the 8-hour limit, or `logout`. It cannot approve, save or mint another token.
 - `resolve(session, kind=...)` refuses a token of the wrong kind instead of treating all sessions as equal, so `gate.approve` and `gate.update_profile` reject an agent token structurally. `logout(session)` deletes the session and any agent tokens minted from it.
-- Session records now carry `kind`, `scope`, `created`, `absolute`, `csrf` (human only) and `parent` (agent). Tokens are still stored only as SHA-256. A session file written before this change has no `kind` and is read as human, so the upgrade signs nobody out.
+- Session records now carry `kind`, `scope`, `created`, `absolute`, `csrf` (human only) and `parent` (agent). Tokens and the CSRF value are stored only as SHA-256 digests, never in clear text. A session file written before this change has no `kind` and is read as human, so the upgrade signs nobody out.
+- **Limit, stated rather than implied:** the MCP-facing `update_profile` still takes no session argument, so an agent that is handed an already-approved draft, on a computer with sign-in off, can still save it. What stops that in the portal design is the approval record and a human session at the save endpoint (TP-3); this ticket only makes an agent token unusable if one is offered.
 - **Not done:** no audit event is written for login, logout or minting. The `@audited` decorator records a function's return value, and `mint_agent_token` returns the token, so decorating it would have written the token into `logs/audit.jsonl`. Portal audit belongs to TP-3.
 
 ## TP-2: assignments, and one rule for who may see whom
 
-- New `data/raw/teacher_assignments.csv` (synthetic): `T-9A` to stream `9A`, `T-9B` to `9B`. `store.load_assignments` validates it — role must be exactly `class_teacher`, streams are one or more non-empty tokens separated by `;` — and rejects a malformed row with the row number, saving nothing.
+- New `data/raw/teacher_assignments.csv` (synthetic, and now written by `scripts/make_dummy_data.py` so the packaged demo has it too): `T-9A` to stream `9A`, `T-9B` to `9B`. `store.load_assignments` validates it — the ID must pass the same rule as registration, role must be `class_teacher`, streams are one or more non-empty tokens separated by `;` — and rejects a malformed row or a second row for the same teacher, naming the row and saving nothing.
 - `store` gains an `assignments` name, cleared by `store.reset` and reloaded by `cmd_setup`, which now prints the count.
 - New `hatua/scope.py`: `visible_learner_ids` and `can_view`, deny by default, decided by the learner's **current** stream only. A teacher with no row, a role other than `class_teacher`, or no streams sees nothing.
 - The stated policy, in the module docstring: a class teacher sees the full Grades 4-9 history of learners currently in their class, including records entered by earlier teachers. That is a data-protection decision the school has not yet confirmed (plan H1), so it is written down rather than assumed silently.
@@ -26,7 +27,9 @@ Branch `feature/teacher-portal`, from `feat/hatua-brief` at `db2d7d0`. One commi
 
 ## After phase 1
 
-- `python -m pytest -q`: **120 passed** (104 + 8 for TP-1 + 8 for TP-2). `ruff check hatua tests scripts`: clean. `npm run test:ui`: 16 of 16, unchanged.
+- `python -m pytest -q`: **127 passed** (104 baseline + 23 new across the two tickets and the review fixes). `ruff check hatua tests scripts`: clean. `npm run test:ui`: 16 of 16, unchanged.
+- Reviewed on two axes before shipping: **11 of 11** acceptance criteria met, no blocker, six should-fix findings, all addressed - an agent token could outlive the teacher's sign-in, the CSRF value was stored in clear, the liveness and clamp rules were written twice, the assignment loader normalised `role` inconsistently and accepted duplicate rows, and a `session` argument had been added to the MCP-facing `update_profile` (removed: a credential field the model can see, and the check was opt-in anyway).
+- Known gap left open deliberately: the plan's "save: human session only" is enforced only when a session is presented, because requiring one would break `python -m hatua save` and `import-approvals`. TP-3's save endpoint must always pass the signed-in teacher's session.
 - **Not done in this phase:** TP-3 onwards (portal API, page, scoped agent, end-to-end test, docs), the three new evaluations, and anything in the human-owned list. The branch has not been pushed or rebased onto `origin/main`; `main` carries a different fix for the same Windows-only lockfile entry (commit `1768ddf`) and the rebase was deliberately deferred.
 
 # Hardening and honesty — 27 October 2026

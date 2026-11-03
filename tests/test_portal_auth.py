@@ -1,9 +1,11 @@
 """Checks for the two token kinds (ticket TP-1).
 
-A human session may approve and save; an agent token may not. Every test here walks the
-kind rule from the outside: mint, use, and assert the refusal, rather than inspecting the
-session file's internals.
+A human session may approve and save; an agent token may not. Most tests here walk the
+kind rule from the outside: mint, use, and assert the refusal. Two read
+store/sessions.json directly, because what is written at rest - a digest and never the
+token or CSRF value - is itself the guarantee being tested.
 """
+import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -86,7 +88,7 @@ def test_an_agent_token_cannot_mint_another_token(home):
     session = auth.login(teacher_id, PIN)['session']
     token = auth.mint_agent_token(session)
 
-    with pytest.raises(GateBlocked, match='never approve'):
+    with pytest.raises(GateBlocked, match='cannot approve'):
         auth.mint_agent_token(token)
 
 
@@ -141,7 +143,7 @@ def test_logout_ends_the_session_and_its_agent_tokens(home, learner, monkeypatch
         gate.approve(draft['draft_id'], decision='approve', session=token)
 
 
-def test_an_agent_token_cannot_save_a_profile(home, learner, monkeypatch):
+def test_an_agent_token_cannot_save_a_profile(home, learner):
     """Saving is a human act too, even for a draft a teacher already approved."""
     teacher_id = registered()
     draft = summary.draft(learner)
@@ -184,3 +186,26 @@ def test_a_session_file_written_before_kinds_still_works(home):
 
     who = auth.resolve(session)
     assert who == {'teacher_id': teacher_id, 'name': NAME, 'kind': 'human'}
+
+
+def test_an_agent_token_stops_when_the_teachers_sign_in_ends(home, clock):
+    """A run may not outlive the sign-in that started it, even if nobody signs out."""
+    teacher_id = registered()
+    session = auth.login(teacher_id, PIN)['session']
+    token = auth.mint_agent_token(session)
+
+    clock.advance(minutes=auth.SESSION_MINUTES + 1)  # the human session idles out
+
+    with pytest.raises(GateBlocked, match='expired'):
+        auth.resolve(session)
+    with pytest.raises(GateBlocked, match='has ended'):
+        auth.resolve(token, kind='agent')
+
+
+def test_the_csrf_value_is_stored_only_as_a_digest(home):
+    teacher_id = registered()
+    issued = auth.login(teacher_id, PIN)
+
+    stored = (config.STORE / 'sessions.json').read_text(encoding='utf-8')
+    assert issued['csrf'] not in stored
+    assert hashlib.sha256(issued['csrf'].encode('utf-8')).hexdigest() in stored

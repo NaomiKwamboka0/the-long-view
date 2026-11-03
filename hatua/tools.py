@@ -77,10 +77,11 @@ def draft_summary(learner_id: str, audience: str = "teacher", language: str = "e
 
 
 @audit.audited("update_profile")
-def update_profile(draft_id: str, *, session: str | None = None) -> dict:
+def update_profile(draft_id: str) -> dict:
     """Save an approved draft to the learner's profile. Blocked without a matching teacher approval.
 
-    `session` is passed through only so a wrong token kind is refused; the agent has no
-    way to produce a human session, so it can never save on its own.
+    There is deliberately no session argument here: the MCP schema is read by the model,
+    and a credential field would only invite it to try one. The barrier is the approval
+    record, and this server has no tool that can create one.
     """
-    return gate.update_profile(draft_id, session=session)
+    return gate.update_profile(draft_id)

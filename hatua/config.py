@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import date
 from pathlib import Path
 
@@ -17,6 +18,10 @@ UI = ROOT / "ui"
 AUDIT_LOG = LOGS / "audit.jsonl"
 APPROVALS_LOG = LOGS / "approvals.jsonl"
 PRIVATE = DATA / "private"  # real-to-pseudonymous ID maps; git-ignored
+
+# The one shape of a teacher ID: what may be registered, and what an assignment row may
+# name. Kept here so the registry and the assignment loader cannot drift apart.
+TEACHER_ID = re.compile(r"^[A-Za-z0-9_-]{3,24}$")
 
 
 def require_auth() -> bool:

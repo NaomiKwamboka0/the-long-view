@@ -314,6 +314,12 @@ def main() -> None:
     write(RAW / "records_2021_2026.csv", records)
     write(RAW / "attendance.csv", attendance)
     write(RAW / "teacher_notes.csv", notes)
+    # One class teacher per stream, so the portal has something to scope to. Fictional,
+    # like everything else here; the PINs are set later with `python -m hatua teacher-add`.
+    write(RAW / "teacher_assignments.csv", [
+        {"teacher_id": "T-9A", "role": "class_teacher", "streams": "9A", "subjects": ""},
+        {"teacher_id": "T-9B", "role": "class_teacher", "streams": "9B", "subjects": ""},
+    ])
     write(INBOX / "2026_T3_new_records.csv", inbox)
     (ROOT / "data" / "ground_truth.json").write_text(json.dumps(PLANTED, indent=2), encoding="utf-8")
     print(f"learners={len(learners)} records={len(records)} inbox={len(inbox)} "

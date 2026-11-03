@@ -43,7 +43,7 @@ def approve(draft_id: str, teacher: str = "", decision: str = "approve", edited_
             share_with_guardian: bool = False, reason: str = "", removed_pattern_ids: list[str] | None = None,
             expected_hash: str | None = None, *, session: str | None = None) -> dict:
     """Record a teacher's decision. `session` is a sign-in token, never a PIN."""
-    identity = auth.resolve(session, kind="human") if (session is not None or config.require_auth()) else None
+    identity = auth.resolve(session, kind="human", action="approve") if (session is not None or config.require_auth()) else None
     if identity is not None:
         # The registry name wins: a typed name cannot stand in for a signed-in teacher.
         teacher, teacher_id, authenticated = identity["name"], identity["teacher_id"], True
@@ -84,9 +84,15 @@ def approve(draft_id: str, teacher: str = "", decision: str = "approve", edited_
 
 
 def update_profile(draft_id: str, *, session: str | None = None) -> dict:
-    """Save an approved draft. `session` may only ever be a human session, never an agent token."""
+    """Save an approved draft. `session`, when a portal passes one, must be a human
+    session: an agent token is refused here as it is at the gate.
+
+    Passing no session is the command-line path and behaves as it always did. What stops
+    the agent saving is not this argument: it is the approval record, which the MCP server
+    has no tool to create.
+    """
     if session is not None:
-        auth.resolve(session, kind="human")
+        auth.resolve(session, kind="human", action="save")
     drafts: list[dict] = store.load("drafts")  # type: ignore[assignment]
     d = next((x for x in drafts if x["draft_id"] == draft_id), None)
     if not d:

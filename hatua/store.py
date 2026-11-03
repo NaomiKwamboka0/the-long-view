@@ -12,6 +12,7 @@ from .normalize import clean_record, flag, parse_date
 from .normalize import learner_id as clean_id
 
 FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments")
+DICT_FILES = {"ingested", "assignments"}  # stored as one JSON object, not a list
 
 
 def _path(name: str) -> Path:
@@ -21,7 +22,7 @@ def _path(name: str) -> Path:
 def load(name: str) -> list | dict:
     p = _path(name)
     if not p.exists():
-        return {} if name in ("ingested", "assignments") else []
+        return {} if name in DICT_FILES else []
     return json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -52,24 +53,29 @@ def load_class_list(path: Path) -> int:
 def load_assignments(path: Path) -> int:
     """Validate and save teacher assignments, keyed by teacher_id.
 
-    The CSV must have teacher_id, role, streams and subjects columns. A
-    blank or whitespace-only teacher_id is rejected, role must be exactly
-    class_teacher (this phase has no admin or head-teacher role), and streams
-    must be one or more non-empty tokens separated by ';'. Surrounding
-    whitespace is ignored in streams and subjects. subjects may be empty,
-    which stores []. Repeated streams and subjects are stored once, in
-    first-seen order. A malformed row raises ValueError and nothing is saved;
-    a teacher who is not in the file gets no entry.
+    The CSV needs teacher_id, role, streams and subjects columns. teacher_id must look
+    like a teacher ID (the same rule registration uses), role must be exactly
+    class_teacher - this phase has no admin or head-teacher role - and streams must be
+    one or more non-empty tokens separated by ';'. Surrounding whitespace is ignored in
+    role, streams and subjects. subjects may be empty, which stores []. Repeated streams
+    and subjects are stored once, in first-seen order. A malformed row, or a second row
+    for a teacher who already has one, raises ValueError naming the row, and nothing is
+    saved. A teacher who is not in the file gets no entry.
     """
     assignments: dict[str, dict] = {}
     for number, row in enumerate(read_csv(path), start=2):
         teacher_id = (row.get("teacher_id") or "").strip()
         if not teacher_id:
             raise ValueError(f"Teacher assignment row {number}: teacher_id is missing or empty.")
-        role = row.get("role") or ""
+        if not config.TEACHER_ID.match(teacher_id):
+            raise ValueError(f"Teacher assignment row {number}: teacher_id {teacher_id!r} is not a "
+                             "valid teacher ID (3 to 24 letters, digits, '-' or '_').")
+        if teacher_id in assignments:
+            raise ValueError(f"Teacher assignment row {number}: {teacher_id} already has a row.")
+        role = (row.get("role") or "").strip()
         if role != "class_teacher":
-            raise ValueError(f"Teacher assignment row {number}: role must be exactly "
-                             f"'class_teacher', got {role!r}.")
+            raise ValueError(f"Teacher assignment row {number}: role must be 'class_teacher', "
+                             f"got {role!r}.")
         raw_streams = (row.get("streams") or "").strip()
         if not raw_streams:
             raise ValueError(f"Teacher assignment row {number}: streams is missing or empty.")

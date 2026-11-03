@@ -1,7 +1,11 @@
 """Scope checks for TP-2: teacher assignments and the one visibility rule."""
+from pathlib import Path
+
 import pytest
 
 from hatua import config, scope, store
+
+REPO = Path(__file__).resolve().parent.parent
 
 CLASS_LIST = [
     {'learner_id': 'HT-0001', 'first_name': 'Achieng', 'stream': '9A', 'current_grade': 9},
@@ -50,12 +54,29 @@ def test_each_class_teacher_sees_only_their_own_stream(loaded):
         'role': 'class_teacher', 'streams': ['9A'], 'subjects': []}
 
 
-def test_stream_sets_are_disjoint_and_cover_the_whole_class_list(loaded):
+def test_a_teacher_assigned_to_two_streams_sees_both(home):
+    """The assignment carries a list of streams, and every one of them counts."""
+    store.save('learners', CLASS_LIST)
+    store.load_assignments(write_assignments('teacher_id,role,streams,subjects\n'
+                                             'T-9AB,class_teacher,9A;9B,\n'))
+
+    assert scope.visible_learner_ids('T-9AB') == {'HT-0001', 'HT-0002', 'HT-0003', 'HT-0004'}
+
+
+def test_together_the_two_class_teachers_cover_the_class_list(loaded):
     nine_a = scope.visible_learner_ids('T-9A')
     nine_b = scope.visible_learner_ids('T-9B')
     classroom = {learner['learner_id'] for learner in store.load('learners')}
-    assert nine_a.isdisjoint(nine_b)
     assert nine_a | nine_b == classroom
+
+
+def test_a_learner_with_records_but_no_class_list_row_is_not_viewable(loaded):
+    """Records mentioning a learner do not put them in anyone's class."""
+    store.save('records', [{'record_id': 'R-99999', 'learner_id': 'HT-0099', 'family': 'Mathematics',
+                            'ordinal': 0, 'points': 3, 'level': 'ME', 'flags': []}])
+
+    assert scope.can_view('T-9A', 'HT-0099') is False
+    assert 'HT-0099' not in scope.visible_learner_ids('T-9A')
 
 
 def test_unknown_teacher_sees_nothing(loaded):
@@ -74,12 +95,32 @@ def test_learner_outside_the_loaded_class_list_is_never_viewable(loaded):
     ('T-9C,admin,9A,', 'class_teacher'),
     ('T-9C,class_teacher,,', 'streams'),
     (',class_teacher,9A,', 'teacher_id'),
+    ('T 9C,class_teacher,9A,', 'valid teacher ID'),
 ])
 def test_malformed_assignment_row_is_rejected(home, row, message):
     path = write_assignments('teacher_id,role,streams,subjects\n' + row + '\n')
     with pytest.raises(ValueError, match=f'row 2.*{message}'):
         store.load_assignments(path)
     assert store.load('assignments') == {}
+
+
+def test_a_second_row_for_the_same_teacher_is_rejected(home):
+    """Two rows and no way to choose between them is ambiguous data, not a last-wins."""
+    path = write_assignments('teacher_id,role,streams,subjects\n'
+                             'T-9A,class_teacher,9A,\nT-9A,class_teacher,9B,\n')
+
+    with pytest.raises(ValueError, match='row 3.*already has a row'):
+        store.load_assignments(path)
+
+
+def test_the_committed_assignment_file_names_one_teacher_per_stream(home):
+    """Guards the data file itself against a silent edit: T-9A sees 9A, T-9B sees 9B."""
+    store.load_assignments(REPO / 'data' / 'raw' / 'teacher_assignments.csv')
+
+    assert store.load('assignments') == {
+        'T-9A': {'role': 'class_teacher', 'streams': ['9A'], 'subjects': []},
+        'T-9B': {'role': 'class_teacher', 'streams': ['9B'], 'subjects': []},
+    }
 
 
 def test_teacher_without_a_row_sees_nothing(loaded):
