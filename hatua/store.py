@@ -11,7 +11,7 @@ from .normalize import area as clean_area
 from .normalize import clean_record, flag, parse_date
 from .normalize import learner_id as clean_id
 
-FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested")
+FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments")
 
 
 def _path(name: str) -> Path:
@@ -21,7 +21,7 @@ def _path(name: str) -> Path:
 def load(name: str) -> list | dict:
     p = _path(name)
     if not p.exists():
-        return {} if name == "ingested" else []
+        return {} if name in ("ingested", "assignments") else []
     return json.loads(p.read_text(encoding="utf-8"))
 
 
@@ -47,6 +47,44 @@ def load_class_list(path: Path) -> int:
     rows = read_csv(path)
     save("learners", rows)
     return len(rows)
+
+
+def load_assignments(path: Path) -> int:
+    """Validate and save teacher assignments, keyed by teacher_id.
+
+    The CSV must have teacher_id, role, streams and subjects columns. A
+    blank or whitespace-only teacher_id is rejected, role must be exactly
+    class_teacher (this phase has no admin or head-teacher role), and streams
+    must be one or more non-empty tokens separated by ';'. Surrounding
+    whitespace is ignored in streams and subjects. subjects may be empty,
+    which stores []. Repeated streams and subjects are stored once, in
+    first-seen order. A malformed row raises ValueError and nothing is saved;
+    a teacher who is not in the file gets no entry.
+    """
+    assignments: dict[str, dict] = {}
+    for number, row in enumerate(read_csv(path), start=2):
+        teacher_id = (row.get("teacher_id") or "").strip()
+        if not teacher_id:
+            raise ValueError(f"Teacher assignment row {number}: teacher_id is missing or empty.")
+        role = row.get("role") or ""
+        if role != "class_teacher":
+            raise ValueError(f"Teacher assignment row {number}: role must be exactly "
+                             f"'class_teacher', got {role!r}.")
+        raw_streams = (row.get("streams") or "").strip()
+        if not raw_streams:
+            raise ValueError(f"Teacher assignment row {number}: streams is missing or empty.")
+        streams = [token.strip() for token in raw_streams.split(";")]
+        if any(not token for token in streams):
+            raise ValueError(f"Teacher assignment row {number}: streams contains an empty token: "
+                             f"{raw_streams!r}.")
+        subjects = [token.strip() for token in (row.get("subjects") or "").split(";")]
+        assignments[teacher_id] = {
+            "role": "class_teacher",
+            "streams": list(dict.fromkeys(streams)),
+            "subjects": [token for token in dict.fromkeys(subjects) if token],
+        }
+    save("assignments", assignments)
+    return len(assignments)
 
 
 def load_attendance(path: Path) -> int:

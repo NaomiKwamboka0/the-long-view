@@ -20,6 +20,9 @@ def cmd_setup(args) -> None:
     for p in (config.LOGS, config.PROFILES):
         shutil.rmtree(p, ignore_errors=True)
     print("class list:", store.load_class_list(config.RAW / "learners.csv"))
+    assignments_path = config.RAW / "teacher_assignments.csv"
+    if assignments_path.exists():
+        print("teacher assignments:", store.load_assignments(assignments_path))
     print("attendance rows:", store.load_attendance(config.RAW / "attendance.csv"))
     print("teacher notes:", store.load_notes(config.RAW / "teacher_notes.csv"))
     print(store.ingest_records(config.RAW / "records_2021_2026.csv")["message"])
