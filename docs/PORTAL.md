@@ -79,13 +79,35 @@ The page remembers the window's size and place on this computer. On a phone the 
 - **Qwen 2.5 on the laptop**, through Ollama, when it is running. The window's title bar says which model is answering.
 - **Hatua's built-in answers**, when Qwen is off. These cover four things: a learner's progress, who needs attention, the school calendar, and how to use Hatua.
 
+**What it knows.** Every pupil in the teacher's own class: their current patterns, latest levels, alerts and, for Grades 7 to 9, the pathway evidence. Each item carries its record numbers. Pupils named in the question get more detail (the last three terms, attendance, notes). Other classes are never included.
+
 **What keeps it safe.**
 - **Only your own class.** The assistant is given only the signed-in teacher's own class. Another class's learners are never in what Qwen sees.
 - **Record numbers are checked.** When it talks about a learner's results, it must give record numbers (tap them to open the record). An answer that cites a record it was not given is not shown.
-- **Every answer is checked** for labels, rankings, comparisons with classmates, and pathway or career advice. A failed answer is retried once, then replaced with a built-in answer.
+- **Every answer is checked** for labels, rankings and comparisons with classmates. Pathway ideas are allowed, but only as options from the evidence: any answer that tells ("should take STEM"), assigns ("the right pathway for her") or labels ("a STEM learner") is not shown. A failed answer is retried once, then replaced with a built-in answer.
 - **Some questions are refused.** Questions that ask to rank learners, or that ask for a pathway, get a polite fixed reply. The model is not asked at all.
 - **It cannot act.** It cannot approve, upload, save or send. It tells the teacher which button to use.
 - **The chat is not saved.** The activity log records only that a question was asked, which learners it was about, and who answered. The question itself is not logged.
+
+## Senior school pathway ideas
+
+For learners in **Grade 9**, the learner page and the assistant show the evidence for each senior school pathway side by side:
+
+| Pathway | Tracks | Junior school learning areas Hatua relates to it |
+|---|---|---|
+| STEM | Pure Sciences, Applied Sciences, Technical and Engineering, Career and Technical Studies | Mathematics, Integrated Science, Pre-Technical Studies, Agriculture |
+| Social Sciences | Languages and Literature, Humanities, Business Science | English, Kiswahili, Social Studies |
+| Arts and Sports Science | Visual Arts, Performing Arts, Sports | Creative Arts and Sports |
+
+- **For each pathway**, Hatua lists the cited strengths (held strengths, areas going up, and areas at Meeting Expectations or above now) and the areas to keep building.
+- **Fixed order.** The three pathways always appear in the same order. Hatua never orders them by fit, never picks one, and never calls a child "a STEM learner".
+- **By grade.** Grades 7 and 8 get the same view labelled *early ideas*, because the choice comes in Grade 9. Grades 4 to 6 get no pathway ideas.
+- **Who decides.** The learner chooses, with their family, using their interests, the KJSEA results, the school's career guidance and KNEC's aptitude tests. Pathway ideas stay with the teacher: they are never added to parent messages or report comments, which still block pathway words.
+- **The mapping is ours.** It is Hatua's assumption, and a school can change it in `hatua/pathways.py`.
+
+![Senior school pathway ideas on a Grade 9 learner's page](pathways.png)
+
+This follows the challenge brief. It allows "plain-language subject or career-direction suggestions" that are "age-appropriate, never prescriptive", for "a teacher to raise with the learner and their guardian". It disqualifies "an agent that assigns a track or label".
 
 ## Comments, and thumbs up or down
 

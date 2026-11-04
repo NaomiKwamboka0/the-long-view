@@ -2,13 +2,17 @@
 
 What keeps it safe:
 
-* It knows only the signed-in teacher's own class. The context sent to the model is
+* It knows the signed-in teacher's whole class - every pupil, with their patterns,
+  latest levels and (Grades 7-9) pathway evidence - and nothing else. The context is
   built from hatua.scope, so another class's learners are never in it.
 * Statements about learners must cite record numbers that were in that context. An
   answer citing anything else is not shown.
-* Every answer goes through the guard: no labels, rankings, comparisons with other
-  learners, or pathway and career advice. Questions that ask for a ranking or a
-  pathway get a fixed, polite answer without calling the model at all.
+* Every answer is checked: no labels, rankings or comparisons with other learners.
+  Ranking questions get a fixed, polite answer without calling the model.
+* Pathways: it may SUGGEST senior school pathways from cited strengths (full ideas in
+  Grade 9, early ideas in Grades 7-8, none in Grades 4-6), always as options for the
+  teacher to raise with the learner and family. It never assigns one, never says a
+  learner "should" take one, and never calls a child "a STEM learner" (hatua.pathways).
 * It cannot approve, upload, save or send. It tells the teacher which button to use.
 * If Ollama is not running, Hatua's built-in answers cover the common questions (a
   learner's progress, who needs attention, the school calendar, how to use Hatua).
@@ -21,7 +25,7 @@ from __future__ import annotations
 import json
 import re
 
-from . import audit, comments, drive, guard, notify, patterns, school, school_calendar, store
+from . import audit, comments, drive, guard, notify, pathways, patterns, school, school_calendar, store
 from .config import LEVELS, today
 from .local_model import local_host, open_local
 
@@ -39,8 +43,18 @@ RANKING = [
     r"\bcompare\b[^?.!]*\b(class|others|other learners|other pupils|classmates|average|rest)\b",
     r"\b(bora zaidi|nafasi ya kwanza|kuliko wengine|mwanafunzi bora)\b",
 ]
-PATHWAY = [r"\b(pathways?|career|careers|stem|subject (track|choice)|senior school (choice|placement)|mkondo)\b",
-           r"\bwhich (school|track)\b"]
+PATHWAY_Q = r"\b(pathways?|careers?|stem|track|senior school|grade 10|subject choice|subjects? to (take|choose)|mkondo)\b"
+# Words the general guard blocks but a pathway SUGGESTION to the teacher may use.
+SUGGESTION_WORDS = [re.compile(p) for p in (r"^pathways?$", r"^stem$", r"^careers?$", r"^(sciences?|arts?|technical) track$")]
+# ... and what a suggestion may never say: an assignment, an order, or a label.
+PRESCRIPTIVE = [re.compile(p, re.I) for p in (
+    r"\b(should|must|ought to|has to|have to|needs? to|is going to|will) (take|choose|join|pursue|go for|go into|select|pick|follow|do|be placed in)\b",
+    r"\b(is|are|as) an? (stem|arts?|sports?|social sciences?|science|maths?|technical|creative) (learner|student|pupil|child|kid|type|person|girl|boy)\b",
+    r"\b(the|her|his|their) (best|right|ideal|perfect|only) (pathway|track|choice|option|fit)\b",
+    r"\b(belongs? in|destined|meant for|cut out for|natural fit)\b",
+    r"\b(i|we|hatua) (recommends?|advises?|suggests?) (that )?(she|he|they|\w+) (take|choose|join|go)\b",
+    r"\b(assign|assigned|place|placed) (her|him|them|\w+) (in|to|into)\b",
+    r"\bbest suited\b")]
 
 ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do these yourself)
 - Today tab: alerts about learners, and about term results that are overdue or waiting.
@@ -52,6 +66,10 @@ ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do
   comment", then thumbs up to use it or thumbs down to get a new version.
 - On an alert, "Message for the parent" gives a message in English or Kiswahili to
   copy and send your usual way. Then press "I have told the parent". Hatua sends nothing.
+- Learner page, "Senior school pathway ideas" (Grades 7 to 9): the cited strengths
+  for each of the three pathways. Hatua never picks one; it is for the conversation
+  with the learner and family. Pathway ideas never go into parent messages or report
+  comments by themselves.
 - Levels: EE Exceeding, ME Meeting, AE Approaching, BE Below Expectations.
 - An early sign means a learning area fell two levels in one term. A pattern means
   several terms in a row."""
@@ -70,7 +88,15 @@ Rules you must never break:
 - Never rank learners or compare one learner with others or with the class.
 - Never label a learner (gifted, lazy, weak, slow, bright and so on). Say what the
   records show instead.
-- Never suggest a senior school pathway, subject track or career.
+- Senior school pathways (STEM; Social Sciences; Arts and Sports Science): you may
+  suggest pathways to EXPLORE, only from the PATHWAY EVIDENCE in CLASS DATA, with its
+  record numbers. Grade 9: give ideas for all three pathways the evidence relates to.
+  Grades 7 and 8: early ideas only, "strengths to explore", and say the choice is in
+  Grade 9. Grades 4 to 6: do not suggest pathways; say it is too early and describe
+  strengths instead. Always offer options, never one answer. Never say a learner
+  should, must or will take a pathway, and never call a child "a STEM learner" or
+  similar. Say the learner chooses with their family, using their interests, KJSEA
+  results and the school's career guidance, and that the teacher raises it with them.
 - You cannot approve, upload, save or send anything. Say which tab and button to use.
 - You only know this teacher's own class. If asked about another learner, say they are
   not in this class.
@@ -105,6 +131,57 @@ def _levels(learner_id: str) -> tuple[list[str], set[str]]:
     return lines, ids
 
 
+def _pattern_short(p: dict) -> str:
+    last = p["trail"][-1]["level"] if p.get("trail") else ""
+    if p["type"] == "attendance_drop":
+        return "missing school (attendance under 75%)"
+    return {"sustained_strength": f"{p['family']} held at {last} for {p['terms']} terms",
+            "improvement": f"{p['family']} going up, now {last}",
+            "decline": f"{p['family']} going down, now {last}",
+            "sustained_struggle": f"{p['family']} at AE or below for {p['terms']} terms"}.get(p["type"], p["statement"])
+
+
+def _pupil_line(l: dict, alerts: list[dict]) -> tuple[str, set[str]]:
+    """Every pupil in the class, compactly, with record numbers for each claim."""
+    lid, ids = l["learner_id"], set()
+    found = patterns.find(lid)
+    out = [f"  - {l['first_name']} ({lid}), Grade {l['current_grade']} {l['stream']}, {found['records_reviewed']} records"]
+    cur = [p for p in found["patterns"] if p["current"]]
+    if cur:
+        bits = []
+        for p in cur:
+            cite = p["evidence"][:3]
+            ids.update(cite)
+            bits.append(f"{_pattern_short(p)} [{', '.join(cite)}]")
+        out.append("      Patterns now: " + "; ".join(bits))
+    else:
+        out.append("      Patterns now: none has held across enough terms yet")
+    latest = []
+    for fam, terms in sorted(notify._term_levels(lid).items()):
+        t = terms[max(terms)]
+        lvl = LEVELS[max(0, min(3, int(t["points"] + 0.5) - 1))]
+        latest.append(f"{fam} {lvl} [{t['ids'][0]}]")
+        ids.add(t["ids"][0])
+    if latest:
+        out.append("      Latest term: " + "; ".join(latest))
+    for n in alerts:
+        ids.update(n["evidence"][:4])
+        told = "parent told" if n.get("told_parent") else "parent not told yet"
+        out.append(f"      Alert: {n['title'].split(': ', 1)[-1]} [{', '.join(n['evidence'][:4])}] ({told})")
+    if int(l["current_grade"]) >= 7:
+        info = pathways.for_learner(lid)
+        label = "Grade 9 pathway ideas" if info["stage"] == "suggest" else "early pathway ideas, choice is in Grade 9"
+        bits = []
+        for pw in info["pathways"]:
+            strong = [x for x in pw["lines"] if x["kind"] in ("strength", "steady")][:3]
+            for x in strong:
+                ids.update(x["evidence"][:2])
+            bits.append(f"{pw['name']}: " + (", ".join(f"{x['text']} [{', '.join(x['evidence'][:2])}]" for x in strong)
+                                            or "no strengths in its learning areas yet"))
+        out.append(f"      Pathway evidence ({label}): " + "; ".join(bits))
+    return "\n".join(out), ids
+
+
 def _learner_block(l: dict, teacher_id: str) -> tuple[str, set[str]]:
     lid, ids = l["learner_id"], set()
     found = patterns.find(lid)
@@ -136,6 +213,11 @@ def _learner_block(l: dict, teacher_id: str) -> tuple[str, set[str]]:
             ids.update(n["evidence"])
             told = f" Parent told {n['told_parent']['how'].lower()}." if n.get("told_parent") else " Parent not told yet."
             out.append(f"    Alert: {n['text']} [{', '.join(n['evidence'][:4])}]{told}")
+    if int(l["current_grade"]) >= 7:
+        info = pathways.for_learner(lid)
+        out.append("    PATHWAY EVIDENCE: " + pathways.text(lid).replace("\n", "\n      "))
+        for pw in info["pathways"]:
+            ids.update(pw["evidence"])
     used = [c for c in comments.for_learner(lid, teacher_id) if c.get("rating") == "up"]
     if used:
         out.append(f'    Report comment the teacher approved: "{used[-1].get("teacher_edit") or used[-1]["text"]}"')
@@ -159,22 +241,20 @@ def context(teacher_id: str, question: str, history: list[dict]) -> dict:
     for a in cal.get("national_assessments", []):
         lines.append(f"  {a['name']} from {a['from']}.")
     lines.append(f"  Hatua has no school calendar for {int(cal['today'][:4]) + 1} yet.")
-    lines.append("Class list (admission-number order, not by results):")
+    lines.append("EVERY PUPIL IN THIS CLASS (admission-number order, never by results):")
     open_n = notify.for_teacher(teacher_id)
+    all_n = notify.for_teacher(teacher_id, include_resolved=True)
     for l in mine:
-        found = patterns.find(l["learner_id"])
-        kinds = sorted({f"{KIND_TEXT[p['type']]}" + (f" in {p['family']}" if p["family"] else "")
-                        for p in found["patterns"] if p["current"]})
-        alerts = [n for n in open_n if n.get("learner_id") == l["learner_id"] and not n.get("told_parent")]
-        lines.append(f"  - {l['first_name']} ({l['learner_id']}): {', '.join(kinds) or 'no pattern yet'}"
-                     + (f"; {len(alerts)} open alert(s)" if alerts else ""))
+        line, ids = _pupil_line(l, [n for n in all_n if n.get("learner_id") == l["learner_id"]])
+        lines.append(line)
+        allowed |= ids
     results = [n for n in open_n if not n.get("learner_id")]
     lines.append("Results and uploads: " + (" ".join(n["text"] for n in results) if results else "nothing overdue or waiting."))
     files = [f"{t['label']}: " + ", ".join(f"{f['name']} ({f['status']})" for f in t["files"])
              for g in drive.folders(teacher_id) for t in g["terms"] if t["files"]]
     lines.append("Files on the school drive for this class: " + ("; ".join(files) or "none."))
     if focus:
-        lines.append("Details for the learners in the question:")
+        lines.append("MORE DETAIL for the learners in the question:")
         for l in focus[:3]:
             block, ids = _learner_block(l, teacher_id)
             lines.append(block)
@@ -195,15 +275,17 @@ def refusal(question: str, ctx: dict) -> str | None:
         return ("Hatua does not rank learners or compare them with each other. Each child is measured against "
                 "the CBC expectations, not against classmates. I can tell you how any one learner is doing over "
                 "time, or which learners have an alert. Who would you like to look at?")
-    if any(re.search(p, q) for p in PATHWAY):
-        return ("Choosing a senior school pathway is a decision for the learner and their family, so Hatua does "
-                "not suggest one. What I can do is show a learner's held strengths and how they changed over the "
-                "years, with the records behind them, to help that conversation. Which learner?")
     return None
 
 
+def _allowed_word(w: str) -> bool:
+    return any(rx.match(w.strip()) for rx in SUGGESTION_WORDS)
+
+
 def problems(answer: str, ctx: dict) -> list[str]:
-    out = [f'uses "{w}"' for w in guard.labels_in(answer)]
+    """Why an answer may not be shown. Pathway words are allowed; assigning or labelling is not."""
+    out = [f'uses "{w}"' for w in guard.labels_in(answer) if not _allowed_word(w)]
+    out += [f'tells or labels instead of suggesting ("{m.group(0)}")' for rx in PRESCRIPTIVE if (m := rx.search(answer))]
     unknown = sorted(set(guard.citations(answer)) - ctx["allowed"])
     if unknown:
         out.append("cites records that were not given: " + ", ".join(unknown[:5]))
@@ -215,6 +297,27 @@ def problems(answer: str, ctx: dict) -> list[str]:
 # ---------------------------------------------------------------- built-in answers (no model)
 def builtin(question: str, ctx: dict) -> str | None:
     q = question.lower()
+    if ctx["focus"] and re.search(PATHWAY_Q, q):
+        parts = []
+        for l in ctx["focus"][:2]:
+            if int(l["current_grade"]) >= 7:
+                parts.append(pathways.text(l["learner_id"]) + "\n\nThese are ideas for your conversation with the "
+                             "learner and family, not a choice. The learner page shows the same evidence under "
+                             "\"Senior school pathway ideas\".")
+            else:
+                cur = [p for p in patterns.find(l["learner_id"])["patterns"] if p["current"] and p["type"] in pathways.STRONG]
+                parts.append(pathways.for_learner(l["learner_id"])["intro"] + (
+                    " Strengths the records show now:\n" + "\n".join(
+                        f"- {_pattern_short(p)} [{', '.join(p['evidence'][:3])}]" for p in cur) if cur else ""))
+        return "\n\n".join(parts)
+    if re.search(PATHWAY_Q, q):
+        grade = int(ctx["learners"][0]["current_grade"]) if ctx["learners"] else 0
+        if grade < 7:
+            return ("Senior school pathways are chosen in Grade 9, so Hatua does not suggest them for Grade "
+                    f"{grade}. Ask me about any learner's strengths instead.")
+        return ("Kenya's senior school has three pathways: STEM; Social Sciences; and Arts and Sports Science. "
+                "Ask me about one learner, for example \"What pathways could " + ctx["learners"][0]["first_name"]
+                + " explore?\", and I will show the strengths in their records that relate to each one.")
     if ctx["focus"]:
         parts = []
         for l in ctx["focus"][:2]:
@@ -262,11 +365,11 @@ def _chat(model: str, system: str, history: list[dict], question: str, extra: st
         msgs.append({"role": role, "content": str(t.get("text", ""))[:1500]})
     msgs.append({"role": "user", "content": question + (f"\n\n(Note from Hatua: {extra})" if extra else "")})
     body = json.dumps({"model": model, "messages": msgs, "stream": False,
-                       "options": {"temperature": 0.3, "num_ctx": 8192, "num_predict": 450}}).encode()
+                       "options": {"temperature": 0.3, "num_ctx": 12288, "num_predict": 500}}).encode()
     try:
         import urllib.request
         req = urllib.request.Request(f"{local_host()}/api/chat", data=body, headers={"Content-Type": "application/json"})
-        with open_local(req, timeout=150) as resp:
+        with open_local(req, timeout=240) as resp:  # a big class on a MacBook Air can take a while
             return json.loads(resp.read())["message"]["content"].strip()
     except Exception:
         return None

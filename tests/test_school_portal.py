@@ -264,14 +264,14 @@ def test_portal_sign_in_scope_and_csrf(portal):
 from hatua import assistant  # noqa: E402
 
 
-def test_assistant_refuses_rankings_and_pathways_without_the_model(school_home):
+def test_assistant_refuses_rankings_without_the_model(school_home):
     for q in ["Who is the best in Maths?", "Rank my class in English", "Compare Kamau with the class",
               "Nani ni mwanafunzi bora?"]:
         out = assistant.ask("M-6001", q)
         assert out.get("refused") and "does not rank" in out["answer"], q
     assert not assistant.ask("M-6001", "What is the best way to teach fractions?").get("refused")
     out = assistant.ask("M-6001", "Which pathway should Atieno take?")
-    assert out.get("refused") and "family" in out["answer"]
+    assert not out.get("refused") and "chosen in Grade 9" in out["answer"], "Grade 6: too early for pathways"
 
 
 def test_assistant_knows_only_my_class(school_home):
@@ -320,3 +320,52 @@ def test_assistant_and_evidence_endpoints(portal):
     theirs = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0401")
     assert call(portal, "GET", f"/api/evidence/{mine}", cookie=cookie)[2]["learner_id"] == "HT-0603"
     assert call(portal, "GET", f"/api/evidence/{theirs}", cookie=cookie)[0] == 404
+
+
+# ---------------------------------------------------------------- pathways
+from hatua import pathways  # noqa: E402
+
+
+def test_pathway_ideas_by_grade_and_never_a_pick(school_home):
+    assert pathways.for_learner("HT-0603")["stage"] == "too_early"
+    assert pathways.for_learner("HT-0805")["stage"] == "explore"
+    nine = pathways.for_learner("HT-0007")
+    assert nine["stage"] == "suggest"
+    assert [p["name"] for p in nine["pathways"]] == ["STEM", "Social Sciences", "Arts and Sports Science"]
+    for pw in nine["pathways"]:
+        assert all(store.get_record(e)["learner_id"] == "HT-0007" for e in pw["evidence"])
+    arts = nine["pathways"][2]
+    assert arts["strengths"] >= 1 and any("Creative Arts" in x["text"] for x in arts["lines"])
+    text = pathways.text("HT-0007")
+    assert not assistant.problems(text, {"allowed": set(assistant.guard.citations(text))})
+    assert "learner chooses" in text
+
+
+def test_assistant_suggests_pathways_but_never_prescribes(school_home, monkeypatch):
+    out = assistant.ask("M-9001", "What pathways could Kiprono explore?")
+    assert not out.get("refused") and "STEM" in out["answer"] and "Arts and Sports Science" in out["answer"]
+    assert {store.get_record(c)["learner_id"] for c in out["citations"]} == {"HT-0007"}
+    ok = "Kiprono could explore STEM, for example Technical and Engineering, and Arts and Sports Science."
+    assert assistant.problems(ok, {"allowed": set()}) == []
+    for bad in ["Kiprono should take STEM.", "Kiprono is a STEM learner.", "The best pathway for him is STEM.",
+                "Arts and Sports Science is the right choice for her.", "He is destined for engineering."]:
+        assert assistant.problems(bad, {"allowed": set()}), bad
+    ctx = assistant.prepare("M-9001", "What pathways could Kiprono explore?")
+    good_id = sorted(ctx["allowed"] & set(pathways.for_learner("HT-0007")["pathways"][2]["evidence"]))[0]
+    replies = iter([f"Kiprono should take the Arts and Sports Science pathway [{good_id}].",
+                    f"Kiprono could explore Arts and Sports Science: Creative Arts has held at EE [{good_id}]. "
+                    "Ask what he enjoys; he and his family choose."])
+    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies))
+    monkeypatch.setattr(assistant.comments, "model_name", lambda: "qwen2.5:7b")
+    out = assistant.ask("M-9001", "What pathways could Kiprono explore?")
+    assert out["writer"] == "qwen2.5:7b" and "could explore" in out["answer"], "the prescriptive answer was not shown"
+
+
+def test_assistant_knows_every_pupil_in_the_class(school_home):
+    ctx = assistant.prepare("M-9002", "Which of my learners have a held strength in Science?")
+    mine = school.learners_of("M-9002")
+    assert len(mine) == 20 and all(l["learner_id"] in ctx["data"] for l in mine)
+    assert "Pathway evidence (Grade 9 pathway ideas)" in ctx["data"]
+    nine_a = {l["learner_id"] for l in school.learners_of("M-9001")}
+    assert not any(lid in ctx["data"] for lid in nine_a), "the other Grade 9 stream stays private"
+    assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= {l["learner_id"] for l in mine}

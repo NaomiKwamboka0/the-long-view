@@ -31,6 +31,7 @@ from . import (
     config,
     drive,
     notify,
+    pathways,
     patterns,
     school,
     school_calendar,
@@ -101,6 +102,7 @@ def _learner_detail(teacher_id: str, learner_id: str) -> dict:
         "notices": [n for n in notify.for_teacher(teacher_id, include_resolved=True)
                     if n.get("learner_id") == learner_id],
         "comments": comments.for_learner(learner_id, teacher_id),
+        "pathways": pathways.for_learner(learner_id),
         "model": comments.model_name(),
     }
 

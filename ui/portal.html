@@ -172,6 +172,12 @@ table.long .none { display: inline-block; width: 2.15em; height: 1.75em; border-
 .key { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--ink-soft); align-items: center; }
 .key span { display: inline-flex; gap: 6px; align-items: center; }
 
+.pw { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.pw-card { border-radius: 16px; background: var(--tint); padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.pw-card h4 { margin: 0; font-size: 1rem; }
+.pw-card ul { margin: 0; padding-left: 18px; font-size: .9rem; }
+.pw-card li.build { color: var(--sun); }
+.pw-card .cites2 { display: inline; }
 /* calendar */
 .terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .terms .card.now { background: var(--lake-soft); }
@@ -337,7 +343,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <button class="win-btn" type="button" id="ask-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18h14"/></svg></button>
     <button class="win-btn" type="button" id="ask-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
   </div>
-  <p class="ask-note">I only know your own class. I never rank learners or suggest pathways. This chat is not saved.</p>
+  <p class="ask-note">I know every pupil in your class, and only your class. I never rank learners. Pathway ideas are for you to discuss; the learner and family choose. This chat is not saved.</p>
   <div class="ask-log" id="ask-log" aria-live="polite"></div>
   <form class="ask-form" id="ask-form">
     <textarea id="ask-q" rows="1" placeholder="Ask a question" aria-label="Your question"></textarea>
@@ -404,6 +410,7 @@ async function start() {
   const me = await api("me");
   CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model;
   $("signin").hidden = true; $("app").hidden = false;
+  setTab("today");  // before loading, so a tab the teacher picks while it loads is kept
   $("who").innerHTML = `<b>${esc(ME.name)}</b><br>${esc(ME.class_label)} class teacher, ${ME.learners} learners, member number ${esc(ME.teacher_id)}`;
   $("cal-chip").textContent = CAL.now;
   const h = new Date().getHours();
@@ -412,7 +419,6 @@ async function start() {
   if (last) $("up-term").value = String(last.term);
   await Promise.all([loadNotices(), loadDrive(), loadClass()]);
   renderCalendar();
-  setTab("today");
   askStart();
 }
 async function loadNotices() { NOTICES = (await api("notices?all=1")).notices; renderToday(); }
@@ -604,6 +610,7 @@ function renderLearner() {
       ${n.told_parent ? `<p class="small">Parent told (${esc(n.told_parent.how)}) on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : `<div class="row"><button class="btn quiet small" type="button" data-parent="${n.notice_id}">Message for the parent</button></div>`}</article>`).join("")}</div>` : ""}
     <div class="section"><h3>Comment for the report</h3>${commentBox(latest, used)}</div>
     <div class="section"><h3>What the records show</h3>${finds || `<p class="soft">No pattern has held across enough terms yet.</p>`}</div>
+    ${pathwaysBox(l)}
     <div class="section"><h3>The long view, Grade 4 to Grade ${l.grade}</h3>
       <p class="small soft">You can see ${esc(l.name)}'s full history. Earlier grades were recorded by earlier teachers and are read only. Tap a mark to see the record.</p>
       <div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span></div>
@@ -613,6 +620,19 @@ function renderLearner() {
   wireComment(latest);
 }
 let el = null;
+function pathwaysBox(l) {
+  const info = l.pathways || {};
+  if (info.stage === "too_early") return `<div class="section"><h3>Senior school pathways</h3><p class="soft small">${esc(info.intro)}</p></div>`;
+  if (!info.pathways || !info.pathways.length) return "";
+  const cite = ids => ids.map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ");
+  return `<div class="section"><h3>Senior school pathway ideas${info.stage === "explore" ? " (early ideas)" : ""}</h3>
+    <p class="small soft">${esc(info.intro)}</p>
+    <div class="pw">${info.pathways.map(pw => `<div class="pw-card"><h4>${esc(pw.name)}</h4>
+      <p class="small soft">${esc(pw.tracks)}</p><p class="small">${esc(pw.summary)}</p>
+      ${pw.lines.length ? `<ul>${pw.lines.map(x => `<li class="${x.kind === "to_build" ? "build" : ""}">${esc(x.text)}${x.kind === "to_build" ? " (to keep building)" : ""} ${cite(x.evidence.slice(0, 3))}</li>`).join("")}</ul>` : ""}
+    </div>`).join("")}</div>
+    <p class="small soft">Raise these with ${esc(l.name)} and the family yourself. They are never added to parent messages or report comments.</p></div>`;
+}
 const THUMB_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H4V10h3z"/><path d="M7 10l4-7c1.5 0 2.5 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.3 7.5a2 2 0 0 1-2 1.7H7"/></svg>`;
 const THUMB_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3h3v11h-3z"/><path d="M17 14l-4 7c-1.5 0-2.5-1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3L4.6 5.2a2 2 0 0 1 2-1.7H17"/></svg>`;
 function commentBox(c, used) {
@@ -716,6 +736,7 @@ function askSuggestions() {
   const qs = ["Who needs my attention this week?"];
   if (watch) qs.push(`How is ${watch.name} doing, and what should I tell the parent?`);
   else if (any) qs.push(`How is ${any.name} doing?`);
+  if (ME && ME.grades && Math.max(...ME.grades) >= 7 && any) qs.push(`What pathways could ${(watch || any).name} explore?`);
   qs.push("When were Term 3 results due?", "How do I approve this term's results?", "Give me ideas to help a learner who struggles with fractions");
   return qs;
 }
@@ -759,7 +780,7 @@ async function askSend(question) {
   try {
     const out = await api("assistant", { method: "POST", json: { question, history: ASK.history } });
     wait.remove();
-    const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or pathway advice" : "Built-in answer from Hatua's records")
+    const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or comparisons" : "Built-in answer from Hatua's records")
       : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
     askAdd("bot", renderAnswer(out.answer), by);
     ASK.history.push({ role: "teacher", text: question }, { role: "assistant", text: out.answer });

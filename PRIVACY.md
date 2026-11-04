@@ -46,7 +46,7 @@ Before collecting real school data, the operator must identify the responsible s
 
 A school must assess the lawful basis, child and guardian protections, necessary consent, data minimisation, retention, security, third-party processing and transfers. High-risk processing needs a data protection impact assessment. Establish access controls, a breach response process, correction and deletion procedures, and human review before real use. Never publish a class export or real learner data in a GitHub repository.
 
-Hatua supports teacher review. It does not select careers or pathways, rank classmates, diagnose learners, or automatically send family messages. Checks detect some missing citations and blocked phrases; they do not prove that every edited claim is accurate.
+Hatua supports teacher review. It does not select careers or pathways (from Grade 7 it shows the strengths that relate to each pathway, for the teacher to discuss), rank classmates, diagnose learners, or automatically send family messages. Checks detect some missing citations and blocked phrases; they do not prove that every edited claim is accurate.
 
 ## Sources and changes
 

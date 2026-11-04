@@ -1,3 +1,22 @@
+# Pathway ideas, and the assistant knows the whole class — 4 November 2026
+
+- **New `hatua/pathways.py`.** For Grade 9 learners it sets out the cited strengths for each of Kenya's three senior school pathways (STEM; Social Sciences; Arts and Sports Science), side by side and always in the same order. It also notes the areas to keep building.
+  - Grades 7 and 8 get the same view, labelled early ideas.
+  - Grades 4 to 6 get no pathway ideas.
+  - It never picks or orders pathways, and never labels a child.
+  - This follows the brief, which allows "never prescriptive" subject or career-direction suggestions for the teacher to raise with the learner and guardian, and disqualifies assigning a track or label.
+- **Learner page.** A "Senior school pathway ideas" section for Grades 7 to 9.
+- **The assistant suggests pathways.** It may now suggest pathways to explore, from that evidence.
+  - A new check blocks telling ("should take STEM"), assigning ("the right pathway for her") and labelling ("a STEM learner").
+  - Parent messages, report comments and drafts still block pathway words. Evaluation E11 is unchanged and passes.
+- **The assistant knows the whole class.** Every pupil in the teacher's own class is in its context, with current patterns, latest levels, alerts and pathway evidence, each with record numbers. Pupils named in a question get more detail. Other classes, including the other stream of the same grade, stay out.
+- **Qwen settings.** The model's context is now 12,288 tokens, and its wait is now 240 seconds, because a 20-pupil class is about 5,500 tokens.
+- **Fix.** Choosing a tab while the portal was still loading after sign-in no longer jumps back to Today.
+- **Verification.**
+  - Tests: 145 passed (3 new for pathways and whole-class context; the pathway refusal test now expects suggestions).
+  - Also passing: 16 UI checks and 21 of 21 evaluations.
+  - Browser check of a Grade 9 learner's pathway section and the assistant's pathway answer.
+
 # Hatua assistant — 4 November 2026
 
 - **New `hatua/assistant.py`.** A teacher asks a question and Qwen 2.5 on the laptop answers it (Ollama `/api/chat`). The context is built only from the signed-in teacher's own class: the class list, alerts, drive files, the school calendar and, for learners named in the question, their patterns, latest levels, attendance and notes, with record numbers.

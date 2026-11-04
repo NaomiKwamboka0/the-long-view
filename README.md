@@ -35,7 +35,8 @@ A demo school with Grades 4 to 9 and one class teacher per class, each signing i
 - is told when a term's results are **overdue**, using Kenya's 2026 school calendar;
 - is told **as soon as** an approved file shows a learner falling in a subject, with a ready message for the parent in English or Kiswahili, and can record that the parent was told;
 - gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones.
-- can ask the **Hatua assistant**, a floating chat window run by Qwen on the laptop. It answers questions about their own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It can be minimized, maximized, moved and resized, and it never ranks learners or suggests pathways.
+- can ask the **Hatua assistant**, a floating chat window run by Qwen on the laptop. It answers questions about their own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It can be minimized, maximized, moved and resized, and it never ranks learners. It knows every pupil in the teacher's own class, and for Grades 7 to 9 it can suggest senior school pathways to explore, from the records, without ever choosing one.
+- sees **senior school pathway ideas** for Grade 9 learners (early ideas in Grades 7 and 8): the cited strengths for each of STEM, Social Sciences, and Arts and Sports Science, side by side. Hatua never picks one; the teacher raises them with the learner and family.
 
 Everything runs on the laptop: no outside service, no API. See [docs/PORTAL.md](docs/PORTAL.md).
 
@@ -56,7 +57,7 @@ The teacher puts a new export of marks in a folder. The agent:
 3. writes a short draft for the teacher, where every statement cites the exact record behind it
 4. checks its own draft, then stops and waits for the teacher
 
-Only a named teacher can approve a draft. After approval, Hatua can write a short message for the guardian in English or Kiswahili. Hatua never picks a subject path or career for a child, never gives a label, and never compares a child with classmates.
+Only a named teacher can approve a draft. After approval, Hatua can write a short message for the guardian in English or Kiswahili. Hatua never assigns a pathway or career to a child, never gives a label, and never compares a child with classmates. From Grade 7 it can show which strengths in the records relate to each senior school pathway, for the teacher to raise with the learner and family. These ideas never go into family messages on their own.
 
 ## Target users
 
@@ -116,7 +117,7 @@ There is **no approve tool**. The agent cannot approve its own work. Every call 
 4. Only then can `update_profile` save to the learner's profile.
 5. A guardian message can only be drafted after the teacher approves, and it needs a second "share" approval.
 
-A phrase-and-citation guard blocks common pathway advice, labels, rankings and comparisons. It also checks teacher edits, but does not prove semantic accuracy. Edited teacher drafts lock the prepared family message to avoid silently restoring removed or changed text. A typed teacher name is an acknowledgement, not authenticated identity.
+A phrase-and-citation guard blocks pathway instructions in drafts and family messages, labels, rankings and comparisons. The portal's assistant may suggest pathways to explore, but a separate check blocks telling ("should take STEM") or labelling ("a STEM learner"). It also checks teacher edits, but does not prove semantic accuracy. Edited teacher drafts lock the prepared family message to avoid silently restoring removed or changed text. A typed teacher name is an acknowledgement, not authenticated identity.
 
 ## Technology stack
 
