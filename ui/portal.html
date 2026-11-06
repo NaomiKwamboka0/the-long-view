@@ -461,12 +461,12 @@ function renderToday() {
     <div class="section"><h3>Learners to watch</h3>
       ${people.length ? `<div class="cards">${people.map(([lid, ns]) => `
         <article class="card ${ns.every(n => n.told_parent) ? "ok" : "watch"}">
-          <div class="row" style="justify-content:space-between"><h3>${esc(learnerName(lid))} <span class="id">${lid}</span></h3>
+          <div class="row" style="justify-content:space-between"><h3>${esc(learnerName(lid))} <span class="id">${esc(lid)}</span></h3>
             ${ns.every(n => n.told_parent) ? `<span class="pill approve">Parent told</span>` : ""}</div>
           ${ns.map(n => `<div class="alert-line"><p><b>${esc(n.kind === "sharp_drop" ? "Early sign" : "Pattern")}:</b> ${esc(n.text)}</p>
             ${n.told_parent ? `<p class="small soft">You marked the parent as told on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : ""}</div>`).join("")}
-          <div class="row"><button class="btn small" type="button" data-open="${lid}">Open ${esc(learnerName(lid))}</button>
-            ${ns.some(n => !n.told_parent) ? `<button class="btn quiet small" type="button" data-parent="${ns.find(n => !n.told_parent).notice_id}">Message for the parent</button>` : ""}</div>
+          <div class="row"><button class="btn small" type="button" data-open="${esc(lid)}">Open ${esc(learnerName(lid))}</button>
+            ${ns.some(n => !n.told_parent) ? `<button class="btn quiet small" type="button" data-parent="${esc(ns.find(n => !n.told_parent).notice_id)}">Message for the parent</button>` : ""}</div>
         </article>`).join("")}</div>`
       : `<p class="empty">${L.length || learnerN.length ? "Nothing matches. Try Clear." : "No learner needs attention right now. Alerts appear here as soon as you approve new results."}</p>`}
     </div>`;
@@ -535,9 +535,9 @@ async function preview(path) {
     box.hidden = false;
     box.innerHTML = `<div class="preview"><h3>Before you approve: ${esc(p.name)}</h3>
       ${p.missing_columns.length ? `<p class="error">This file is missing columns: ${esc(p.missing_columns.join(", "))}. It cannot be approved.</p>` : `
-      <div class="facts"><div class="fact"><b>${c.yours}</b>rows for your class</div><div class="fact"><b>${p.learners} of ${p.class_size}</b>of your learners</div>
-        <div class="fact"><b>${c.other_class}</b>rows for another class (left for their teacher)</div><div class="fact"><b>${c.not_on_list + c.not_usable}</b>rows that cannot be used</div></div>
-      <p class="small">Grade ${p.grade}, ${p.year} Term ${p.term}. Learning areas: ${esc(p.learning_areas.join(", ") || "none")}.</p>
+      <div class="facts"><div class="fact"><b>${esc(c.yours)}</b>rows for your class</div><div class="fact"><b>${esc(p.learners)} of ${esc(p.class_size)}</b>of your learners</div>
+        <div class="fact"><b>${esc(c.other_class)}</b>rows for another class (left for their teacher)</div><div class="fact"><b>${esc(c.not_on_list + c.not_usable)}</b>rows that cannot be used</div></div>
+      <p class="small">Grade ${esc(p.grade)}, ${esc(p.year)} Term ${esc(p.term)}. Learning areas: ${esc(p.learning_areas.join(", ") || "none")}.</p>
       ${c.wrong_term ? `<p class="error small">${c.wrong_term} rows say a different grade or term than this folder. Check the file before approving.</p>` : ""}
       ${Object.keys(p.issues).length ? `<p class="small soft">To check after approving: ${Object.entries(p.issues).map(([k, v]) => `${v} ${esc(k.replace(/_/g, " "))}`).join(", ")}.</p>` : ""}
       <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn leaf" type="button" data-decide="approve">Approve and add to Hatua</button><button class="btn quiet" type="button" data-decide="reject">Reject</button></div>`}
@@ -578,9 +578,9 @@ function renderClass() {
   const rows = CLASS.filter(l => (!classQuery || `${l.name} ${l.id}`.toLowerCase().includes(classQuery))
     && (!show || (show === "alerts" ? l.alerts > 0 : l.told > 0)) && (!kind || l.kinds.includes(kind)));
   $("r-class").textContent = `Showing ${rows.length} of ${CLASS.length}`;
-  $("people").innerHTML = rows.map(l => `<li><button type="button" data-lid="${l.id}" aria-current="${selected === l.id}">
+  $("people").innerHTML = rows.map(l => `<li><button type="button" data-lid="${esc(l.id)}" aria-current="${selected === l.id}">
     <span class="face" aria-hidden="true">${esc(l.name[0])}</span>
-    <span class="txt"><b>${esc(l.name)}</b><span class="what">${l.id}, ${l.stream}. ${esc(l.kinds.map(k => KIND[k][1]).join(", ") || "No pattern yet")}</span></span>
+    <span class="txt"><b>${esc(l.name)}</b><span class="what">${esc(l.id)}, ${esc(l.stream)}. ${esc(l.kinds.map(k => KIND[k][1]).join(", ") || "No pattern yet")}</span></span>
     ${l.alerts ? `<span class="pill watch">To watch</span>` : l.told ? `<span class="pill approve">Parent told</span>` : "<span></span>"}</button></li>`).join("")
     || `<li class="empty">Nobody matches. Try Clear.</li>`;
   $("people").querySelectorAll("[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid)));
@@ -604,14 +604,14 @@ function renderLearner() {
   el = $("learner");
   el.innerHTML = `<div class="learner">
     <div class="learner-head"><span class="face" aria-hidden="true">${esc(l.name[0])}</span>
-      <div style="flex:1 1 220px;min-width:0"><h2>${esc(l.name)}</h2><p class="soft">${l.id}, Grade ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</p></div></div>
+      <div style="flex:1 1 220px;min-width:0"><h2>${esc(l.name)}</h2><p class="soft">${esc(l.id)}, Grade ${esc(l.stream)}. ${esc(l.reviewed)} records, ${esc(l.span)}.</p></div></div>
     ${open.length ? `<div class="cards">${open.map(n => `<article class="card ${n.told_parent ? "ok" : "watch"}"><p><b>${n.kind === "sharp_drop" ? "Early sign" : "Pattern"}:</b> ${esc(n.text)}</p>
-      <div class="row">${n.evidence.slice(0, 6).map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ")}</div>
-      ${n.told_parent ? `<p class="small">Parent told (${esc(n.told_parent.how)}) on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : `<div class="row"><button class="btn quiet small" type="button" data-parent="${n.notice_id}">Message for the parent</button></div>`}</article>`).join("")}</div>` : ""}
+      <div class="row">${n.evidence.slice(0, 6).map(e => `<button class="link small" type="button" data-ev="${esc(e)}">${esc(e)}</button>`).join(" ")}</div>
+      ${n.told_parent ? `<p class="small">Parent told (${esc(n.told_parent.how)}) on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : `<div class="row"><button class="btn quiet small" type="button" data-parent="${esc(n.notice_id)}">Message for the parent</button></div>`}</article>`).join("")}</div>` : ""}
     <div class="section"><h3>Comment for the report</h3>${commentBox(latest, used)}</div>
     <div class="section"><h3>What the records show</h3>${finds || `<p class="soft">No pattern has held across enough terms yet.</p>`}</div>
     ${pathwaysBox(l)}
-    <div class="section"><h3>The long view, Grade 4 to Grade ${l.grade}</h3>
+    <div class="section"><h3>The long view, Grade 4 to Grade ${esc(l.grade)}</h3>
       <p class="small soft">You can see ${esc(l.name)}'s full history. Earlier grades were recorded by earlier teachers and are read only. Tap a mark to see the record.</p>
       <div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span></div>
       ${longView(l)}</div>
@@ -624,7 +624,7 @@ function pathwaysBox(l) {
   const info = l.pathways || {};
   if (info.stage === "too_early") return `<div class="section"><h3>Senior school pathways</h3><p class="soft small">${esc(info.intro)}</p></div>`;
   if (!info.pathways || !info.pathways.length) return "";
-  const cite = ids => ids.map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ");
+  const cite = ids => ids.map(e => `<button class="link small" type="button" data-ev="${esc(e)}">${esc(e)}</button>`).join(" ");
   return `<div class="section"><h3>Senior school pathway ideas${info.stage === "explore" ? " (early ideas)" : ""}</h3>
     <p class="small soft">${esc(info.intro)}</p>
     <div class="pw">${info.pathways.map(pw => `<div class="pw-card"><h4>${esc(pw.name)}</h4>
@@ -683,7 +683,7 @@ function longView(l) {
   for (let o = 0; o <= (l.grade - 4) * 3 + 2; o++) ords.push(o);
   for (const r of l.records) ((cells[r[2]] ||= {})[r[1]] ||= []).push(r);
   const att = Object.fromEntries(l.attendance.map(a => [a[1], a]));
-  const head1 = l.grades.map(g => `<th colspan="3" class="${g.read_only ? "ro" : ""}" title="${esc(g.who)}">Grade ${g.grade}${g.read_only ? "" : ", your class"}</th>`).join("");
+  const head1 = l.grades.map(g => `<th colspan="3" class="${g.read_only ? "ro" : ""}" title="${esc(g.who)}">Grade ${esc(g.grade)}${g.read_only ? "" : ", your class"}</th>`).join("");
   const head2 = ords.map(o => `<th>T${o % 3 + 1}</th>`).join("");
   const past = o => Math.floor(o / 3) + 4 < l.grade;
   const rows = l.families.map(f => `<tr><th class="area" scope="row">${esc(f)}</th>${ords.map(o => {
@@ -691,7 +691,7 @@ function longView(l) {
     if (!rs) return `<td class="${cls}"><span class="none" title="No record"></span></td>`;
     const pts = rs.reduce((s, r) => s + ({ BE: 1, AE: 2, ME: 3, EE: 4 })[r[3]], 0) / rs.length;
     const level = ["BE", "AE", "ME", "EE"][Math.max(0, Math.min(3, Math.floor(pts + .5) - 1))];
-    return `<td class="${cls}"><button type="button" data-ev="${rs[0][0]}" aria-label="Grade ${rs[0][4]} Term ${rs[0][6]}: ${LEVEL[level]}">${lv(level)}</button></td>`;
+    return `<td class="${cls}"><button type="button" data-ev="${esc(rs[0][0])}" aria-label="Grade ${esc(rs[0][4])} Term ${esc(rs[0][6])}: ${esc(LEVEL[level])}">${lv(level)}</button></td>`;
   }).join("")}</tr>`).join("");
   const attRow = `<tr><th class="area" scope="row">Days in school</th>${ords.map(o => { const a = att[o], cls = o % 3 === 0 && o ? "g" : "";
     if (!a) return `<td class="${cls}"><span class="none"></span></td>`; const pct = Math.round(100 * a[2] / a[3]);
@@ -703,8 +703,8 @@ function evidence(id) {
   if (!r) return;
   const [rid, , fam, level, grade, year, term, area, task, score, teacher, td, flags] = r;
   $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Assessment record <span class="id">${esc(rid)}</span></h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
-    <dl><dt>When</dt><dd>Grade ${grade}, Term ${term} (${year})</dd><dt>Learning area</dt><dd>${esc(area)}</dd><dt>Task</dt><dd>${esc(task)}</dd>
-    <dt>Level</dt><dd>${lv(level)} ${LEVEL[level]}</dd><dt>Score</dt><dd>${score == null ? "Not recorded" : score + "%"}</dd><dt>Done on</dt><dd>${esc(td || "Not known")}</dd><dt>Teacher</dt><dd>${esc(teacher)}</dd></dl>
+    <dl><dt>When</dt><dd>Grade ${esc(grade)}, Term ${esc(term)} (${esc(year)})</dd><dt>Learning area</dt><dd>${esc(area)}</dd><dt>Task</dt><dd>${esc(task)}</dd>
+    <dt>Level</dt><dd>${lv(level)} ${esc(LEVEL[level] || level)}</dd><dt>Score</dt><dd>${score == null ? "Not recorded" : esc(score) + "%"}</dd><dt>Done on</dt><dd>${esc(td || "Not known")}</dd><dt>Teacher</dt><dd>${esc(teacher)}</dd></dl>
     ${grade < L.grade ? `<p class="small soft">Recorded in an earlier grade. Read only.</p>` : ""}${flags.length ? `<p class="error small">Please check this record: ${esc(flags.join(", ").replace(/_/g, " "))}.</p>` : ""}`;
   $("dlg-x").onclick = () => $("dlg").close();
   $("dlg").showModal();
@@ -799,11 +799,11 @@ $("ask-clear").addEventListener("click", askReset);
 async function evidenceAny(id) {
   try {
     const r = await api("evidence/" + encodeURIComponent(id));
-    const row = (k, v) => v === undefined || v === null || v === "" ? "" : `<dt>${k}</dt><dd>${v}</dd>`;
+    const row = (k, v) => v === undefined || v === null || v === "" ? "" : `<dt>${esc(k)}</dt><dd>${v}</dd>`;
     const kind = r.record_id ? "Assessment record" : r.note_id ? "Teacher note" : "Attendance";
     $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">${kind} <span class="id">${esc(id)}</span></h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
-      <dl>${row("Learner", esc(r.name) + " " + esc(r.learner_id))}${row("When", `Grade ${r.grade}, Term ${r.term} (${r.year})`)}${row("Learning area", esc(r.learning_area))}${row("Task", esc(r.task))}
-      ${row("Level", r.level ? lv(r.level) + " " + LEVEL[r.level] : "")}${row("Score", r.score == null ? undefined : r.score + "%")}${row("Days in school", r.days_open ? `${r.days_present} of ${r.days_open}` : "")}
+      <dl>${row("Learner", esc(r.name) + " " + esc(r.learner_id))}${row("When", `Grade ${esc(r.grade)}, Term ${esc(r.term)} (${esc(r.year)})`)}${row("Learning area", esc(r.learning_area))}${row("Task", esc(r.task))}
+      ${row("Level", r.level ? lv(r.level) + " " + esc(LEVEL[r.level] || r.level) : "")}${row("Score", r.score == null ? undefined : esc(r.score) + "%")}${row("Days in school", r.days_open ? `${esc(r.days_present)} of ${esc(r.days_open)}` : "")}
       ${row("Note", r.text ? "&ldquo;" + esc(r.text) + "&rdquo;" : "")}${row("Teacher", esc(r.teacher))}</dl>
       ${r.read_only ? `<p class="small soft">Recorded in an earlier grade. Read only.</p>` : ""}`;
     $("dlg-x").onclick = () => $("dlg").close();

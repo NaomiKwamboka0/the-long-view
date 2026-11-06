@@ -57,6 +57,35 @@ LOCK_MINUTES = 15
 # about the same time whether or not the ID exists.
 _DUMMY_SALT = bytes(16)
 
+# Python 3.14 on Windows ships without OpenSSL, so hashlib.scrypt and
+# hashlib.pbkdf2_hmac may not exist.  Fall back to a pure-stdlib PBKDF2-HMAC-
+# SHA256 (RFC 2898) using only hashlib.sha256 and hmac, which are always
+# available.  Both paths produce a prefixed hex string so the algorithm is
+# self-describing in the stored record.
+_HAS_SCRYPT = hasattr(hashlib, "scrypt")
+_HAS_PBKDF2 = hasattr(hashlib, "pbkdf2_hmac")
+_PBKDF2_ITERS = 310_000  # NIST 2023 recommendation for PBKDF2-HMAC-SHA256
+# Pure-Python PBKDF2 is slow; use fewer iterations when neither OpenSSL KDF is
+# available.  Still many orders of magnitude harder to brute-force than a plain
+# SHA-256, and adequate for a single-computer local store.
+_PURE_ITERS = 50_000
+_DK_LEN = SCRYPT["dklen"]  # 32 bytes, same for both paths
+
+
+def _pbkdf2_pure(pin_b: bytes, salt: bytes, iterations: int, dklen: int) -> bytes:
+    """PBKDF2-HMAC-SHA256 using only hmac + hashlib.sha256 (RFC 2898 §5.2).
+
+    Used when hashlib.pbkdf2_hmac is not available (Python 3.14 Windows without
+    OpenSSL).  One block only (dklen ≤ 32 bytes = one SHA-256 output).
+    """
+    u = hmac.new(pin_b, salt + b"\x00\x00\x00\x01", hashlib.sha256).digest()
+    result = bytearray(u)
+    for _ in range(iterations - 1):
+        u = hmac.new(pin_b, u, hashlib.sha256).digest()
+        for i, byte in enumerate(u):
+            result[i] ^= byte
+    return bytes(result[:dklen])
+
 
 def _path(name: str) -> Path:
     return config.STORE / f"{name}.json"
@@ -90,12 +119,32 @@ def _write(path: Path, data: dict) -> None:
 
 
 def _hash(pin: str, salt: bytes) -> str:
-    return hashlib.scrypt(pin.encode("utf-8"), salt=salt, **SCRYPT).hex()
+    """Derive a prefixed hex key from a PIN.
+
+    Uses scrypt when available (Linux/macOS with OpenSSL); falls back to
+    PBKDF2-HMAC-SHA256 — via hashlib if present, otherwise via the pure-Python
+    implementation above.  The "scrypt:" or "pbkdf2:" prefix is stored in the
+    teacher record so the right algorithm is chosen on verify.  Cross-machine
+    portability is not needed; this is a single-computer local store.
+    """
+    pin_b = pin.encode("utf-8")
+    if _HAS_SCRYPT:
+        return "scrypt:" + hashlib.scrypt(pin_b, salt=salt, **SCRYPT).hex()
+    if _HAS_PBKDF2:
+        dk = hashlib.pbkdf2_hmac("sha256", pin_b, salt, _PBKDF2_ITERS, dklen=_DK_LEN)
+    else:
+        dk = _pbkdf2_pure(pin_b, salt, _PURE_ITERS, _DK_LEN)
+    return "pbkdf2:" + dk.hex()
+
+
+def _verify_hash(pin: str, salt: bytes, stored: str) -> bool:
+    """Constant-time comparison of a PIN against a stored hash string."""
+    return hmac.compare_digest(_hash(pin, salt), stored)
 
 
 def _burn_time(pin: str) -> None:
     """One hash for an unknown teacher ID. The result is compared and thrown away."""
-    hmac.compare_digest(_hash(pin, _DUMMY_SALT), "0" * (2 * SCRYPT["dklen"]))
+    _verify_hash(pin, _DUMMY_SALT, _hash(pin, _DUMMY_SALT))
 
 
 def _fail_message() -> str:
@@ -116,6 +165,7 @@ def register(teacher_id: str, name: str, pin: str) -> dict:
     salt = secrets.token_bytes(16)
     teachers = _read(_path("teachers"), {})
     teachers[teacher_id] = {"name": name, "salt": salt.hex(), "hash": _hash(pin, salt),
+                            "kdf": "scrypt" if _HAS_SCRYPT else "pbkdf2",
                             "registered": _now().isoformat(timespec="seconds")}
     _write(_path("teachers"), teachers)
     return {"teacher_id": teacher_id, "name": name}
@@ -178,7 +228,7 @@ def login(teacher_id: str, pin: str) -> dict:
         _write(_path("auth_state"), state)
         raise GateBlocked(_fail_message()) from None
 
-    if not hmac.compare_digest(_hash(pin, salt), expected):
+    if not _verify_hash(pin, salt, expected):
         _record_failure(state, teacher_id)
         _write(_path("auth_state"), state)
         raise GateBlocked(_fail_message())

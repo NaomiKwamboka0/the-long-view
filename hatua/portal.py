@@ -26,6 +26,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from . import (
     assistant,
+    audit,
     auth,
     comments,
     config,
@@ -199,20 +200,32 @@ class Handler(BaseHTTPRequestHandler):
         if method == "POST" and path == "login":
             self._check_post(need_csrf=False)
             body = self._json()
+            raw_id = str(body.get("teacher_id", "")).strip().upper()
             try:
-                out = auth.login(str(body.get("teacher_id", "")).strip().upper(), str(body.get("pin", "")))
+                out = auth.login(raw_id, str(body.get("pin", "")))
             except GateBlocked as exc:
+                is_reg = any(t["teacher_id"] == raw_id for t in auth.teachers())
+                audit.record("portal.login", raw_id if is_reg else "unknown_id", success=False, error=str(exc))
                 raise Refused(401, str(exc)) from None
             if not school.streams_of(out["teacher_id"]):
                 auth.logout(out["session"])
+                audit.record("portal.login", out["teacher_id"], success=False, error="no_stream_assigned")
                 raise Refused(403, "You are registered, but no class is assigned to you yet. Ask the school's Hatua admin.")
+            audit.record("portal.login", out["teacher_id"], success=True)
             cookie = f"{COOKIE}={out['session']}; HttpOnly; SameSite=Strict; Path=/; Max-Age={8 * 3600}"
             notify.check_missing(today)
             return self._send(200, {"csrf": out["csrf"], "me": school.profile(out["teacher_id"])},
                               extra={"Set-Cookie": cookie})
         if method == "POST" and path == "logout":
             self._check_post()
+            who = None
+            try:
+                who = self._who()
+            except Refused:
+                pass
             auth.logout(self._session())
+            if who:
+                audit.record("portal.logout", who["teacher_id"])
             return self._send(200, {"ok": True},
                               extra={"Set-Cookie": f"{COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"})
 
@@ -239,11 +252,17 @@ class Handler(BaseHTTPRequestHandler):
                 raise Refused(404, str(exc)) from None
             return self._send(200, {"notice": n})
         if method == "GET" and path == "class":
+            audit.record("portal.view_class", tid)
             notices = notify.for_teacher(tid, include_resolved=True)
             return self._send(200, {"learners": [_learner_card(l, notices) for l in school.learners_of(tid)]})
         m = re.fullmatch(r"learner/(HT-\d{4})", path)
         if method == "GET" and m:
-            return self._send(200, _learner_detail(tid, m.group(1)))
+            lid = m.group(1)
+            detail = _learner_detail(tid, lid)
+            audit.record("portal.view_learner", tid, learner_id=lid)
+            if detail.get("grade", 0) >= 7 and detail.get("pathways", {}).get("stage") in ("explore", "suggest"):
+                audit.record("portal.view_pathways", tid, teacher_id=tid, learner_id=lid)
+            return self._send(200, detail)
         m = re.fullmatch(r"learner/(HT-\d{4})/comment", path)
         if method == "POST" and m:
             self._check_post()
@@ -297,6 +316,7 @@ class Handler(BaseHTTPRequestHandler):
             rec = store.get_record(m.group(1))
             if not rec or not scope.can_view(tid, rec.get("learner_id", "")):
                 raise Refused(404, "That record is not in your class.")
+            audit.record("portal.view_evidence", tid, evidence_id=m.group(1), learner_id=rec.get("learner_id", ""))
             learner = store.learner(rec["learner_id"]) or {}
             keep = ("record_id", "note_id", "attendance_id", "learner_id", "grade", "year", "term", "learning_area",
                     "task", "level", "score", "task_date", "teacher", "flags", "text", "days_present", "days_open")
