@@ -1,3 +1,22 @@
+# Freeze and harden — 6 November 2026
+
+Branch `chore/freeze-and-harden`, from `main` at `982755c`. One commit per work package.
+
+## WP0: Sync, freeze, tag `pre-hardening`
+
+- **Synced with `main` at `982755c`:** brings in the whole-school portal, school drive, alerts, calendar, report comments, Qwen chat assistant, and senior school pathway ideas.
+- **`hatua/auth.py` Windows portability fix:** on Python 3.14 on Windows where `hashlib.scrypt` and `hashlib.pbkdf2_hmac` are not compiled, gracefully falls back to a pure-stdlib PBKDF2-HMAC-SHA256 (RFC 2898) implementation. Hash strings carry self-describing prefixes (`scrypt:`, `pbkdf2:`).
+- **Inventory frozen (`docs/FROZEN.md`):** catalog of all core modules (agent loop, MCP server & 7 tools, gate, guard, pattern engine, pathway pillar, audit log, scope, auth, evals) and supporting modules (portal server & UI, assistant, drive, notify, calendar, comments). Theme recorded as *Longitudinal strength tracking*.
+- **Questions tracker (`QUESTIONS.md`):** documented H1 (theme confirmation), H2/WP1.2 (pathway gate interpretation), H8 (single theme with pathway pillar), and deadline rules.
+- **Walkthrough (`docs/WALKTHROUGH.md`):** added WP0 notes for live review.
+- **Baseline counts recorded:**
+  - `python -m pytest -q`: **145 passed**.
+  - `npm run test:ui`: **16 passed**.
+  - `python scripts/package_teacher_demo.py`: **clean packaging** (`dist/Hatua-Teacher-Test.zip`).
+  - `python scripts/run_evals.py`: **16 of 17 passed** (E01–E16 pass; A01–A05 agent tasks skipped on this Windows machine due to pywintypes DLL; runs on Naomi's machine).
+  - `ruff check`: blocked by Windows Python 3.14 process issue; checked in CI.
+- **Tag:** `pre-hardening`.
+
 # Pathway ideas, and the assistant knows the whole class — 4 November 2026
 
 - **New `hatua/pathways.py`.** For Grade 9 learners it sets out the cited strengths for each of Kenya's three senior school pathways (STEM; Social Sciences; Arts and Sports Science), side by side and always in the same order. It also notes the areas to keep building.
