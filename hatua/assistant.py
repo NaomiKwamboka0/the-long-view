@@ -49,12 +49,42 @@ SUGGESTION_WORDS = [re.compile(p) for p in (r"^pathways?$", r"^stem$", r"^career
 # ... and what a suggestion may never say: an assignment, an order, or a label.
 PRESCRIPTIVE = [re.compile(p, re.I) for p in (
     r"\b(should|must|ought to|has to|have to|needs? to|is going to|will) (take|choose|join|pursue|go for|go into|select|pick|follow|do|be placed in)\b",
+    r"\bshould consider\b",
+    r"\b(would|will|could) thrive in\b",
+    r"\b(right|correct|ideal|natural) direction\b",
+    r"\b(encourage|urge|steer|point towards|advise|counsel)\b[^.!?]*\b(go for|take|choose|pursue|join|enter|go into)\b",
+    r"\bnatural at (stem|arts|science|maths|social sciences)\b",
+    r"\b(better|worse|preferred|preferable|more suitable) (choice|option|path|pathway) than\b",
+    r"\b(better|worse) than (stem|arts|social sciences)\b",
+    r"\b(stem|arts|social sciences|social studies) it is\b",
     r"\b(is|are|as) an? (stem|arts?|sports?|social sciences?|science|maths?|technical|creative) (learner|student|pupil|child|kid|type|person|girl|boy)\b",
     r"\b(the|her|his|their) (best|right|ideal|perfect|only) (pathway|track|choice|option|fit)\b",
     r"\b(belongs? in|destined|meant for|cut out for|natural fit)\b",
     r"\b(i|we|hatua) (recommends?|advises?|suggests?) (that )?(she|he|they|\w+) (take|choose|join|go)\b",
     r"\b(assign|assigned|place|placed) (her|him|them|\w+) (in|to|into)\b",
-    r"\bbest suited\b")]
+    r"\bbest suited\b",
+    r"\b(strongest|weakest|best|worst|top|highest|lowest|smartest|brightest) in (the|her|his|their|class)\b",
+    r"\b(strongest|weakest|best|worst|top) (in|of) (the|her|his|their) class\b",
+)]
+
+RESULT_CLAIM = re.compile(
+    r"\b("
+    r"(exceeding|meeting|approaching|below)\s+expectations"
+    r"|(at|level|scored|got)\s+(ee|me|ae|be)\b"
+    r"|\b(ee|me|ae|be)\s+(in|for)\b"
+    r"|results?\s+(fell|rose|dropped|improved|went up|went down|declined)"
+    r"|fell\s+(from|to)|rose\s+(from|to)|improved\s+(from|to)|declined\s+(from|to)"
+    r"|held\s+(at|for|strength)"
+    r"|needs\s+support\s+(in|for)?"
+    r"|missing\s+school"
+    r"|attendance\s+(was|under|dropped|below|is|fell)"
+    r"|absent\s+for\s+\d+\s+days?"
+    r"|\d+\s*/\s*\d+\s*days?"
+    r"|score\s+of\s+\d+"
+    r"|\b\d+%"
+    r")\b",
+    re.I,
+)
 
 ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do these yourself)
 - Today tab: alerts about learners, and about term results that are overdue or waiting.
@@ -141,7 +171,7 @@ def _pattern_short(p: dict) -> str:
             "sustained_struggle": f"{p['family']} at AE or below for {p['terms']} terms"}.get(p["type"], p["statement"])
 
 
-def _pupil_line(l: dict, alerts: list[dict]) -> tuple[str, set[str]]:
+def _pupil_line(l: dict, alerts: list[dict], wants_pathways: bool = False) -> tuple[str, set[str]]:
     """Every pupil in the class, compactly, with record numbers for each claim."""
     lid, ids = l["learner_id"], set()
     found = patterns.find(lid)
@@ -168,7 +198,7 @@ def _pupil_line(l: dict, alerts: list[dict]) -> tuple[str, set[str]]:
         ids.update(n["evidence"][:4])
         told = "parent told" if n.get("told_parent") else "parent not told yet"
         out.append(f"      Alert: {n['title'].split(': ', 1)[-1]} [{', '.join(n['evidence'][:4])}] ({told})")
-    if int(l["current_grade"]) >= 7:
+    if int(l["current_grade"]) >= 7 and wants_pathways:
         info = pathways.for_learner(lid)
         label = "Grade 9 pathway ideas" if info["stage"] == "suggest" else "early pathway ideas, choice is in Grade 9"
         bits = []
@@ -182,7 +212,7 @@ def _pupil_line(l: dict, alerts: list[dict]) -> tuple[str, set[str]]:
     return "\n".join(out), ids
 
 
-def _learner_block(l: dict, teacher_id: str) -> tuple[str, set[str]]:
+def _learner_block(l: dict, teacher_id: str, wants_pathways: bool = False) -> tuple[str, set[str]]:
     lid, ids = l["learner_id"], set()
     found = patterns.find(lid)
     out = [f"  {l['first_name']} ({lid}), Grade {l['current_grade']} {l['stream']}. {found['records_reviewed']} records, "
@@ -213,7 +243,7 @@ def _learner_block(l: dict, teacher_id: str) -> tuple[str, set[str]]:
             ids.update(n["evidence"])
             told = f" Parent told {n['told_parent']['how'].lower()}." if n.get("told_parent") else " Parent not told yet."
             out.append(f"    Alert: {n['text']} [{', '.join(n['evidence'][:4])}]{told}")
-    if int(l["current_grade"]) >= 7:
+    if int(l["current_grade"]) >= 7 and wants_pathways:
         info = pathways.for_learner(lid)
         out.append("    PATHWAY EVIDENCE: " + pathways.text(lid).replace("\n", "\n      "))
         for pw in info["pathways"]:
@@ -231,6 +261,7 @@ def context(teacher_id: str, question: str, history: list[dict]) -> dict:
     cal = school_calendar.summary(today())
     recent = " ".join(t.get("text", "") for t in history[-4:] if t.get("role") == "teacher")
     focus = mentioned(question, mine) or mentioned(recent, mine)
+    wants_pathways = bool(re.search(PATHWAY_Q, question, re.I))
     allowed: set[str] = set()
     lines = [f"Teacher: {me['name']}, member number {me['teacher_id']}, class {me['class_label']}, "
              f"{len(mine)} learners."]
@@ -245,7 +276,7 @@ def context(teacher_id: str, question: str, history: list[dict]) -> dict:
     open_n = notify.for_teacher(teacher_id)
     all_n = notify.for_teacher(teacher_id, include_resolved=True)
     for l in mine:
-        line, ids = _pupil_line(l, [n for n in all_n if n.get("learner_id") == l["learner_id"]])
+        line, ids = _pupil_line(l, [n for n in all_n if n.get("learner_id") == l["learner_id"]], wants_pathways)
         lines.append(line)
         allowed |= ids
     results = [n for n in open_n if not n.get("learner_id")]
@@ -256,7 +287,7 @@ def context(teacher_id: str, question: str, history: list[dict]) -> dict:
     if focus:
         lines.append("MORE DETAIL for the learners in the question:")
         for l in focus[:3]:
-            block, ids = _learner_block(l, teacher_id)
+            block, ids = _learner_block(l, teacher_id, wants_pathways)
             lines.append(block)
             allowed |= ids
     else:
@@ -286,9 +317,18 @@ def problems(answer: str, ctx: dict) -> list[str]:
     """Why an answer may not be shown. Pathway words are allowed; assigning or labelling is not."""
     out = [f'uses "{w}"' for w in guard.labels_in(answer) if not _allowed_word(w)]
     out += [f'tells or labels instead of suggesting ("{m.group(0)}")' for rx in PRESCRIPTIVE if (m := rx.search(answer))]
-    unknown = sorted(set(guard.citations(answer)) - ctx["allowed"])
+    allowed = ctx.get("allowed", set())
+    unknown = sorted(set(guard.citations(answer)) - allowed)
     if unknown:
         out.append("cites records that were not given: " + ", ".join(unknown[:5]))
+    for line in answer.splitlines():
+        if not line.strip():
+            continue
+        for s in guard.sentences(line):
+            if RESULT_CLAIM.search(s):
+                cites = [c for c in guard.citations(s) if c in allowed]
+                if not cites:
+                    out.append(f"states a result without a citation from class data: '{s.strip()[:60]}'")
     if len(answer) > 2500:
         out.append("too long")
     return out
@@ -394,6 +434,16 @@ def answer(ctx: dict) -> dict:
     fixed = refusal(question, ctx)
     if fixed:
         return {**result, "answer": fixed, "writer": "hatua", "refused": True}
+    if re.search(PATHWAY_Q, question, re.I):
+        text = builtin(question, ctx)
+        if text:
+            for l in ctx.get("focus", []):
+                if int(l.get("current_grade", 0)) >= 7:
+                    audit.record("portal.view_pathways", me["teacher_id"],
+                                 teacher_id=me["teacher_id"], learner_id=l["learner_id"],
+                                 via="assistant")
+            return {**result, "answer": text, "writer": "hatua",
+                    "citations": sorted(set(guard.citations(text)))}
     if ctx["model"]:
         system = SYSTEM.format(teacher=me["name"], klass=me["class_label"], school=(ctx["learners"] or [{}])[0].get("school", ""),
                                today=ctx["calendar"]["today"], now=ctx["calendar"]["now"], about=ABOUT_HATUA, data=ctx["data"])
@@ -404,6 +454,12 @@ def answer(ctx: dict) -> dict:
                 break
             issues = problems(text, ctx)
             if not issues:
+                if any(pw in text for pw in ("STEM", "Social Sciences", "Arts and Sports Science")):
+                    for l in ctx.get("focus", []):
+                        if int(l.get("current_grade", 0)) >= 7:
+                            audit.record("portal.view_pathways", me["teacher_id"],
+                                         teacher_id=me["teacher_id"], learner_id=l["learner_id"],
+                                         via="assistant")
                 return {**result, "answer": text, "writer": ctx["model"],
                         "citations": sorted(set(guard.citations(text)))}
             extra = ("Your last answer broke a rule (" + "; ".join(issues) + "). Answer again, following every rule, "

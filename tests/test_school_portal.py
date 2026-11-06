@@ -350,22 +350,196 @@ def test_assistant_suggests_pathways_but_never_prescribes(school_home, monkeypat
     for bad in ["Kiprono should take STEM.", "Kiprono is a STEM learner.", "The best pathway for him is STEM.",
                 "Arts and Sports Science is the right choice for her.", "He is destined for engineering."]:
         assert assistant.problems(bad, {"allowed": set()}), bad
-    ctx = assistant.prepare("M-9001", "What pathways could Kiprono explore?")
-    good_id = sorted(ctx["allowed"] & set(pathways.for_learner("HT-0007")["pathways"][2]["evidence"]))[0]
-    replies = iter([f"Kiprono should take the Arts and Sports Science pathway [{good_id}].",
-                    f"Kiprono could explore Arts and Sports Science: Creative Arts has held at EE [{good_id}]. "
-                    "Ask what he enjoys; he and his family choose."])
-    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies))
+    # WP-P (P1): Pathway questions never reach the model; they return deterministic builtin text
+    model_called = []
+    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: model_called.append(True) or "mock reply")
     monkeypatch.setattr(assistant.comments, "model_name", lambda: "qwen2.5:7b")
     out = assistant.ask("M-9001", "What pathways could Kiprono explore?")
-    assert out["writer"] == "qwen2.5:7b" and "could explore" in out["answer"], "the prescriptive answer was not shown"
+    assert out["writer"] == "hatua" and len(model_called) == 0, "pathway questions skip the model completely"
 
 
 def test_assistant_knows_every_pupil_in_the_class(school_home):
     ctx = assistant.prepare("M-9002", "Which of my learners have a held strength in Science?")
     mine = school.learners_of("M-9002")
     assert len(mine) == 20 and all(l["learner_id"] in ctx["data"] for l in mine)
-    assert "Pathway evidence (Grade 9 pathway ideas)" in ctx["data"]
+    # WP1.8: Non-pathway question produces a context with no pathway evidence
+    assert "Pathway evidence" not in ctx["data"]
+    # ... but a pathway question includes it
+    ctx_pw = assistant.prepare("M-9002", "What pathways could Kiprono explore?")
+    assert "Pathway evidence (Grade 9 pathway ideas)" in ctx_pw["data"]
     nine_a = {l["learner_id"] for l in school.learners_of("M-9001")}
     assert not any(lid in ctx["data"] for lid in nine_a), "the other Grade 9 stream stays private"
     assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= {l["learner_id"] for l in mine}
+
+
+# ---------------------------------------------------------------- WP1 hardening tests
+
+def test_assistant_rejects_uncited_result_claims(school_home):
+    ctx = {"allowed": {"R-0001", "R-0002"}}
+    # Sentences with results and no citation are rejected (WP1.1)
+    uncited_cases = [
+        "Amina is at Exceeding Expectations in Mathematics.",
+        "Her Mathematics results fell from Meeting Expectations.",
+        "Attendance dropped to 44/70 days last term.",
+        "She scored 85% in Science.",
+        "He needs support in Kiswahili.",
+        "Kamau got EE in Creative Arts.",
+        "Results declined over the last two terms.",
+    ]
+    for sentence in uncited_cases:
+        probs = assistant.problems(sentence, ctx)
+        assert probs, f"Expected uncited claim to be rejected: {sentence}"
+        assert any("states a result without a citation" in p for p in probs)
+
+    # Valid citations pass
+    valid = "Amina is at Exceeding Expectations in Mathematics [R-0001]."
+    assert assistant.problems(valid, ctx) == []
+
+    # Citation not in ctx["allowed"] is rejected
+    alien = "Amina is at Exceeding Expectations in Mathematics [R-9999]."
+    probs = assistant.problems(alien, ctx)
+    assert any("cites records that were not given" in p for p in probs)
+
+    # General statements with no result claim pass without citations
+    assert assistant.problems("Open the My class tab to see the long view.", ctx) == []
+    assert assistant.problems("Today is Friday and Term 3 closes next week.", ctx) == []
+
+
+def test_assistant_blocks_probe_phrases_and_allows_legitimate_suggestions(school_home):
+    ctx = {"allowed": {"R-1", "R-2"}}
+    # 7 probe sentences from WP1.7 + class ranking sentence
+    probes = [
+        "Amina should consider STEM",
+        "would thrive in the Social Sciences pathway",
+        "STEM looks like the right direction for Amina",
+        "I'd encourage Amina to go for Arts and Sports Science",
+        "Amina is a natural at STEM",
+        "STEM is a better choice than Arts for Amina",
+        "STEM it is",
+        "Amina is the strongest in the class at maths",
+    ]
+    for probe in probes:
+        with_cite = f"{probe} [R-1]"
+        probs = assistant.problems(with_cite, ctx)
+        assert probs, f"Expected probe to be blocked: '{probe}'"
+
+    # At least 10 legitimate suggestion sentences that must pass
+    legit = [
+        "Her strengths point to STEM and Arts and Sports Science [R-1].",
+        "She could explore STEM and Social Sciences [R-1].",
+        "The records show strengths in Creative Arts and Integrated Science [R-1].",
+        "Options for the family to explore include STEM and Arts and Sports Science [R-1].",
+        "Kiprono could explore Arts and Sports Science: Creative Arts has held at EE [R-1].",
+        "Her evidence relates to all three pathways [R-1].",
+        "These are ideas for your conversation with the learner and family [R-1].",
+        "The learner and family choose based on interests and KJSEA results [R-1].",
+        "Strengths the records show now include Technical Studies and Mathematics [R-1].",
+        "Areas to explore further include Social Sciences and STEM [R-1].",
+    ]
+    for sentence in legit:
+        probs = assistant.problems(sentence, ctx)
+        assert probs == [], f"Legitimate suggestion was wrongly blocked: '{sentence}', issues: {probs}"
+
+
+def test_pathway_views_logged_and_omitted_for_grades_4_to_6(portal):
+    st, headers, body = call(portal, "POST", "/api/login", {"teacher_id": "M-9001", "pin": PIN})
+    cookie, csrf = headers["Set-Cookie"].split(";")[0], body["csrf"]
+
+    # View Grade 9 learner -> writes portal.view_pathways (WP1.2)
+    st, _, out = call(portal, "GET", "/api/learner/HT-0007", cookie=cookie)
+    assert st == 200 and out["grade"] == 9
+    events = [e for e in audit.read_events() if e.get("action") == "portal.view_pathways" and e.get("via") != "assistant"]
+    assert any(e.get("learner_id") == "HT-0007" and e.get("actor") == "M-9001" for e in events)
+
+    # View Grade 6 learner with Grade 6 teacher -> NO portal.view_pathways event
+    st6, h6, b6 = call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": PIN})
+    cookie6 = h6["Set-Cookie"].split(";")[0]
+    st, _, out6 = call(portal, "GET", "/api/learner/HT-0603", cookie=cookie6)
+    assert st == 200 and out6["grade"] == 6
+    g6_events = [e for e in audit.read_events() if e.get("action") == "portal.view_pathways" and e.get("learner_id") == "HT-0603"]
+    assert len(g6_events) == 0, "Grades 4-6 must never write portal.view_pathways"
+
+    # Assistant pathway question for Grade 9 learner logs portal.view_pathways with via: assistant
+    st, _, out_as = call(portal, "POST", "/api/assistant", {"question": "What pathways could Kiprono explore?"},
+                          cookie=cookie, csrf=csrf)
+    assert st == 200
+    as_events = [e for e in audit.read_events() if e.get("action") == "portal.view_pathways" and e.get("via") == "assistant"]
+    assert any(e.get("learner_id") == "HT-0007" for e in as_events)
+
+
+def test_portal_audit_coverage_and_chain_integrity(portal):
+    # 1. Login success
+    st, headers, body = call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": PIN})
+    assert st == 200
+    cookie, csrf = headers["Set-Cookie"].split(";")[0], body["csrf"]
+
+    # 2. Login failure with registered teacher
+    st_fail, _, _ = call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": "000000"})
+    assert st_fail == 401
+
+    # 3. Login failure with unknown teacher ID
+    st_unk, _, _ = call(portal, "POST", "/api/login", {"teacher_id": "UNKNOWN_TEACHER", "pin": "000000"})
+    assert st_unk == 401
+
+    # 4. View class
+    st_cls, _, _ = call(portal, "GET", "/api/class", cookie=cookie)
+    assert st_cls == 200
+
+    # 5. View learner
+    st_lrn, _, _ = call(portal, "GET", "/api/learner/HT-0603", cookie=cookie)
+    assert st_lrn == 200
+
+    # 6. View evidence
+    rec_id = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0603")
+    st_ev, _, _ = call(portal, "GET", f"/api/evidence/{rec_id}", cookie=cookie)
+    assert st_ev == 200
+
+    # 7. Logout
+    st_out, _, _ = call(portal, "POST", "/api/logout", {}, cookie=cookie, csrf=csrf)
+    assert st_out == 200
+
+    # Verify audit events and chain
+    events = audit.read_events()
+    actions = {e.get("action") for e in events}
+    assert "portal.login" in actions
+    assert "portal.logout" in actions
+    assert "portal.view_class" in actions
+    assert "portal.view_learner" in actions
+    assert "portal.view_evidence" in actions
+
+    # Check unknown ID did not leak in failure event
+    unk_logins = [e for e in events if e.get("action") == "portal.login" and e.get("actor") == "unknown_id"]
+    assert len(unk_logins) >= 1
+    assert all("UNKNOWN_TEACHER" not in json.dumps(e) for e in unk_logins)
+
+    # Check no PIN, session, or csrf values leaked anywhere in audit.jsonl
+    raw_log = config.AUDIT_LOG.read_text(encoding="utf-8")
+    assert PIN not in raw_log
+    assert csrf not in raw_log
+
+    # Verify log chain is intact
+    chain_check = audit.verify_jsonl(config.AUDIT_LOG)
+    assert chain_check["ok"] is True and chain_check["chained"] is True
+
+
+def test_drive_file_safety(school_home):
+    session = auth.login("M-6001", PIN)["session"]
+
+    # 1. Traversal and HTML in filename are stripped and bounded (WP1.5)
+    csv_data = "learner_id,grade,year,term,learning_area,level\nHT-0603,6,2026,3,Mathematics,ME\n".encode("utf-8")
+    up = drive.upload(session, "../../<script>alert(1)</script>very_long_file_name_that_should_be_bounded_properly.csv",
+                      csv_data, 2026, 3)
+    assert ".." not in up["path"]
+    assert "<" not in up["path"]
+    assert up["path"].endswith(".csv")
+
+    # 2. File with rows for another stream is not applied by the wrong teacher
+    # Create CSV where rows belong to Grade 6 stream B (HT-0621), not stream A (M-6001)
+    other_stream_row = "learner_id,grade,year,term,learning_area,level\nHT-0621,6,2026,3,Mathematics,ME\n".encode("utf-8")
+    up_other = drive.upload(session, "other_stream.csv", other_stream_row, 2026, 3)
+    prev = drive.preview(up_other["path"], "M-6001")
+    assert prev["counts"]["yours"] == 0
+    assert prev["counts"]["other_class"] == 1
+    with pytest.raises(GateBlocked, match="No rows in this file are for your class"):
+        drive.decide(up_other["path"], session, "approve")
+

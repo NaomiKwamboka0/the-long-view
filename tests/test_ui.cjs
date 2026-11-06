@@ -108,3 +108,4 @@ check('keyboard tab navigation moves the selected panel',()=>{
 assert.equal(errors.length,0);
 main.dom.window.close();
 console.log(`${checks} UI integration checks passed.`);
+require('./test_portal_xss.cjs');

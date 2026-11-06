@@ -29,7 +29,7 @@ GENESIS = "0" * 64
 # would otherwise sit in logs/audit.jsonl forever.
 # Secrets MUST be passed as keyword arguments: positional arguments are logged as
 # they are, so `approve("D-1", "name", "approve", "pin")` would still be stored.
-SECRET_KEYS = {"pin", "session", "password", "token", "secret"}
+SECRET_KEYS = {"pin", "session", "password", "token", "secret", "csrf"}
 REDACTED = "[redacted]"
 
 
@@ -37,6 +37,22 @@ def scrub(kwargs: dict) -> dict:
     """Return the keyword arguments with every secret-bearing value replaced."""
     return {key: REDACTED if str(key).lower() in SECRET_KEYS else value
             for key, value in kwargs.items()}
+
+
+def record(action: str, actor: str, **fields) -> dict:
+    """Append one audit event with scrubbed fields, timestamped and hash-chained."""
+    clean = scrub(fields)
+    event = {
+        "action": action,
+        "tool": action,
+        "actor": actor,
+        "inputs": _short({"kwargs": clean}) if clean else {},
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    for k, v in clean.items():
+        if k not in event:
+            event[k] = v
+    return append_jsonl(config.AUDIT_LOG, event)
 
 
 def _short(value: Any, limit: int = 2000) -> Any:

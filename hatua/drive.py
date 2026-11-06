@@ -202,8 +202,8 @@ def upload(session: str, filename: str, content: bytes, year: int, term: int) ->
         raise ValueError("The file is missing columns: " + ", ".join(missing) +
                          ". Use the records template in docs/templates.")
     name = SAFE_NAME.sub("", Path(filename or "results.csv").name).strip() or "results.csv"
-    if not name.lower().endswith(".csv"):
-        name += ".csv"
+    stem = Path(name).stem[:60].strip() or "results"
+    name = f"{stem}.csv"
     folder = root() / f"Grade {grades[0]}" / f"{year} Term {term}"
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / name
