@@ -526,7 +526,7 @@ def test_drive_file_safety(school_home):
     session = auth.login("M-6001", PIN)["session"]
 
     # 1. Traversal and HTML in filename are stripped and bounded (WP1.5)
-    csv_data = "learner_id,grade,year,term,learning_area,level\nHT-0603,6,2026,3,Mathematics,ME\n".encode("utf-8")
+    csv_data = b"learner_id,grade,year,term,learning_area,level\nHT-0603,6,2026,3,Mathematics,ME\n"
     up = drive.upload(session, "../../<script>alert(1)</script>very_long_file_name_that_should_be_bounded_properly.csv",
                       csv_data, 2026, 3)
     assert ".." not in up["path"]
@@ -535,7 +535,7 @@ def test_drive_file_safety(school_home):
 
     # 2. File with rows for another class/stream is not applied by the wrong teacher
     # Create CSV where rows belong to Grade 4 (HT-0401), not Grade 6 stream A (M-6001)
-    other_stream_row = "learner_id,grade,year,term,learning_area,level\nHT-0401,6,2026,3,Mathematics,ME\n".encode("utf-8")
+    other_stream_row = b"learner_id,grade,year,term,learning_area,level\nHT-0401,6,2026,3,Mathematics,ME\n"
     up_other = drive.upload(session, "other_stream.csv", other_stream_row, 2026, 3)
     prev = drive.preview(up_other["path"], "M-6001")
     assert prev["counts"]["yours"] == 0
