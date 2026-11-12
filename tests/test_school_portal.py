@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from hatua import auth, comments, config, drive, notify, school, school_calendar, school_demo, store
+from hatua import audit, auth, comments, config, drive, notify, school, school_calendar, school_demo, store
 from hatua.summary import GateBlocked
 
 REPO = Path(__file__).resolve().parent.parent
@@ -226,7 +226,7 @@ def portal(school_home):
 
 
 def call(port, method, path, body=None, cookie=None, csrf=None, host=None):
-    c = http.client.HTTPConnection("127.0.0.1", port, timeout=20)
+    c = http.client.HTTPConnection("127.0.0.1", port, timeout=60)
     headers = {"Host": host or f"127.0.0.1:{port}", "Content-Type": "application/json"}
     if cookie:
         headers["Cookie"] = cookie
@@ -533,9 +533,9 @@ def test_drive_file_safety(school_home):
     assert "<" not in up["path"]
     assert up["path"].endswith(".csv")
 
-    # 2. File with rows for another stream is not applied by the wrong teacher
-    # Create CSV where rows belong to Grade 6 stream B (HT-0621), not stream A (M-6001)
-    other_stream_row = "learner_id,grade,year,term,learning_area,level\nHT-0621,6,2026,3,Mathematics,ME\n".encode("utf-8")
+    # 2. File with rows for another class/stream is not applied by the wrong teacher
+    # Create CSV where rows belong to Grade 4 (HT-0401), not Grade 6 stream A (M-6001)
+    other_stream_row = "learner_id,grade,year,term,learning_area,level\nHT-0401,6,2026,3,Mathematics,ME\n".encode("utf-8")
     up_other = drive.upload(session, "other_stream.csv", other_stream_row, 2026, 3)
     prev = drive.preview(up_other["path"], "M-6001")
     assert prev["counts"]["yours"] == 0

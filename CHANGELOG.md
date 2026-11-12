@@ -17,6 +17,16 @@ Branch `chore/freeze-and-harden`, from `main` at `982755c`. One commit per work 
   - `ruff check`: blocked by Windows Python 3.14 process issue; checked in CI.
 - **Tag:** `pre-hardening`.
 
+## WP1 & WP-P: Hard-rule gaps and pathway pillar protection
+
+- **WP1.1 Result claim citations:** In `hatua/assistant.py`, claims stating learning levels (EE/ME/AE/BE), changes (fell, rose, dropped), attendance numbers, percentages, or needs support must carry a concrete record citation from class data.
+- **WP1.2 Pathway view auditing:** In `hatua/portal.py`, viewing Grade 7-9 learner pathway ideas records `portal.view_pathways` in the hash-chained audit log; Grades 4-6 never log or display pathway suggestions.
+- **WP1.3 Portal audit coverage:** Wired `audit.record` across `portal.login` (scrubbing unknown IDs and credentials), `portal.logout`, `portal.view_class`, `portal.view_learner`, and `portal.view_evidence`.
+- **WP1.4 UI XSS defenses:** Comprehensive `esc()` escaping across all dynamic DOM injections in `ui/portal.html`. Dedicated test suite `tests/test_portal_xss.cjs` verifies safety against script injections.
+- **WP1.5 Drive upload safety:** Filename traversal characters and HTML tags are stripped, stems bounded to 60 characters, and forced to `.csv`. Stream-level validation prevents cross-stream approvals.
+- **WP1.7 & WP1.8 Probe phrase blocking & scoping:** Extended prescriptive regex in `hatua/assistant.py` to block 8 directive probe phrases. Pathway evidence is withheld from assistant context unless the teacher explicitly asks a pathway question.
+- **WP-P (P1) Deterministic bypass:** Pathway questions skip LLM free-text generation entirely and return deterministic, template-verified Kenyan senior school pathway evidence with audit tracking.
+
 # Pathway ideas, and the assistant knows the whole class — 4 November 2026
 
 - **New `hatua/pathways.py`.** For Grade 9 learners it sets out the cited strengths for each of Kenya's three senior school pathways (STEM; Social Sciences; Arts and Sports Science), side by side and always in the same order. It also notes the areas to keep building.

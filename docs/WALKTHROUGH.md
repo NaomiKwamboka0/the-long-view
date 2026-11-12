@@ -32,3 +32,16 @@ then `python -m hatua verify-log`. On Windows the PIN is hashed with
 sign-in experience.
 
 ---
+
+
+## WP1 & WP-P — Hard-rule gaps and pathway pillar protection
+
+**What changed:** Hard boundary defenses added across assistant, audit, drive, and portal.
+- `hatua/assistant.py`: `RESULT_CLAIM` requires concrete citations for all performance claims. Prescription regex expanded with 8 probe phrases. Context only includes pathway evidence if explicitly requested. Model is bypassed for pathway questions (P1) to prevent hallucinations.
+- `hatua/audit.py` & `hatua/portal.py`: Auditing wired across all portal access (`portal.login`, `portal.logout`, `portal.view_class`, `portal.view_learner`, `portal.view_evidence`, `portal.view_pathways`). Secrets (PIN, CSRF, session tokens) scrubbed.
+- `ui/portal.html` & `tests/test_portal_xss.cjs`: Complete HTML escaping for learner details, calendar, and evidence dialogs.
+- `hatua/drive.py`: Traversal characters stripped, uploaded filenames bounded to 60 chars.
+
+**Why this way:** Ensures Kenya CBC senior school pathway recommendations never hallucinate directive commands ("should take STEM"), while preserving tamper-evident hash chaining.
+
+**How to demonstrate:** Run `python -m pytest tests/test_school_portal.py` (23 tests pass) and `npm run test:ui` (includes portal XSS audit checks).

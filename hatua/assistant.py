@@ -82,7 +82,7 @@ RESULT_CLAIM = re.compile(
     r"|\d+\s*/\s*\d+\s*days?"
     r"|score\s+of\s+\d+"
     r"|\b\d+%"
-    r")\b",
+    r")",
     re.I,
 )
 
@@ -324,10 +324,11 @@ def problems(answer: str, ctx: dict) -> list[str]:
     for line in answer.splitlines():
         if not line.strip():
             continue
+        line_cites = [c for c in guard.citations(line) if c in allowed]
         for s in guard.sentences(line):
             if RESULT_CLAIM.search(s):
                 cites = [c for c in guard.citations(s) if c in allowed]
-                if not cites:
+                if not cites and not line_cites:
                     out.append(f"states a result without a citation from class data: '{s.strip()[:60]}'")
     if len(answer) > 2500:
         out.append("too long")
