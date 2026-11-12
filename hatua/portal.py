@@ -11,8 +11,13 @@ Every request after sign-in carries:
 
 What a teacher can see is decided by hatua.scope only: their own learners, with the
 full Grade 4 to 9 history of each one. Earlier grades are read-only: there is no
-endpoint that edits a record. Approving a drive file, rating a comment and marking that
-the parent was told all need a signed-in teacher (a human session, never an agent token).
+endpoint that edits a record. Approving a drive file, opening pathway ideas, rating a
+comment and marking that the parent was told all need a signed-in teacher (a human
+session, never an agent token).
+
+Sign-in: a one-time PIN opens nothing but the "choose your own PIN" step; signing in
+ends the same member number's sign-in anywhere else; and every sign-in, failed PIN,
+sign-out and PIN change is written to the audit log, where the teacher can see their own.
 """
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from . import (
     assistant,
+    audit,
     auth,
     comments,
     config,
@@ -45,10 +51,10 @@ COOKIE = "hatua_session"
 LOCK = threading.Lock()  # one request at a time touches the JSON store
 MAX_BODY = 6 * 1024 * 1024
 HEADERS = {
-    "Content-Security-Policy": ("default-src 'self'; script-src 'self' 'unsafe-inline'; "
-                                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                                "font-src https://fonts.gstatic.com; img-src 'self' data:; "
-                                "connect-src 'self'; frame-ancestors 'none'; form-action 'self'"),
+    # Nothing may load from, or be sent to, anywhere but this computer: no web font, no image, no call.
+    "Content-Security-Policy": ("default-src 'none'; script-src 'self' 'unsafe-inline'; "
+                                "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                                "connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
     "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer",
     "X-Frame-Options": "DENY", "Cache-Control": "no-store",
 }
@@ -63,6 +69,56 @@ class Refused(Exception):
 def _demo() -> dict | None:
     p = config.ROOT / "demo.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
+
+def _auth_event(what: str, actor: str, ok: bool, **output) -> None:
+    audit.write_event({"tool": f"auth.{what}", "actor": actor, "ok": ok, "output": output})
+
+
+AUTH_WORDS = {"auth.sign_in": ("Signed in", "Wrong PIN tried"), "auth.sign_out": ("Signed out", "Signed out"),
+              "auth.pin_change": ("PIN changed", "PIN change refused")}
+
+
+def _did(e: dict) -> str | None:
+    """One audit-log line in a teacher's words, or None for lines that are not worth showing."""
+    tool, out = e.get("tool", ""), e.get("output") or {}
+    kwargs = (e.get("inputs") or {}).get("kwargs") or {}
+    name = str(kwargs.get("file", "")).rsplit("/", 1)[-1]
+    learner = store.learner(kwargs.get("learner_id", "")) or {}
+    child = f"{learner.get('first_name', '')} ({kwargs.get('learner_id', '')})"
+    if tool == "drive.approve":
+        return f"Approved the file '{name}': {out.get('added', 0)} results added to Hatua"
+    if tool == "drive.reject":
+        return f"Rejected the file '{name}'"
+    if tool == "drive.upload":
+        return f"Uploaded the file '{name}' to the school drive"
+    if tool == "pathways.open":
+        return f"Opened pathway ideas for {child}"
+    if tool == "parent.told":
+        return f"Recorded that the parent of {child} was told ({str(out.get('how', '')).lower()})"
+    if tool == "comment.rate":
+        return f"Gave a report comment a thumbs {out.get('rating', '')}"
+    if tool == "assistant.ask" and out.get("step") == "answer":
+        return "Asked the assistant a question" + (" (refused: no rankings)" if out.get("refused") else "")
+    return None
+
+
+def _account(teacher_id: str) -> dict:
+    """The teacher's own account: sign-ins, wrong PINs tried on their number, and what they did."""
+    mine = [e for e in audit.read_events() if e.get("actor") == teacher_id]
+    events = [e for e in mine if e.get("tool") in AUTH_WORDS]
+    did = [{"when": e.get("ts"), "what": w} for e in mine if (w := _did(e))][-15:][::-1]
+    recent = [{"when": e.get("ts"), "ok": bool(e.get("ok")),
+               "what": ("Sign-in locked for 15 minutes" if (e.get("output") or {}).get("reason") == "locked"
+                        else AUTH_WORDS[e["tool"]][0 if e.get("ok") else 1])}
+              for e in events[-12:]][::-1]
+    return {**auth.account(teacher_id), "recent": recent, "did": did}
+
+
+def _states(teacher_id: str, today) -> list[dict]:
+    return [{"term": s["term"], "label": s["label"], "state": s["state"], "folder": s["folder"],
+             "closes": s["closes"].isoformat(), "due": s["due"].isoformat(), "files": s["files"]}
+            for s in notify.term_states(teacher_id, today)]
 
 
 def _learner_card(l: dict, notices: list[dict]) -> dict:
@@ -102,7 +158,7 @@ def _learner_detail(teacher_id: str, learner_id: str) -> dict:
         "notices": [n for n in notify.for_teacher(teacher_id, include_resolved=True)
                     if n.get("learner_id") == learner_id],
         "comments": comments.for_learner(learner_id, teacher_id),
-        "pathways": pathways.for_learner(learner_id),
+        "pathways": pathways.for_teacher(teacher_id, learner_id),
         "model": comments.model_name(),
     }
 
@@ -134,11 +190,14 @@ class Handler(BaseHTTPRequestHandler):
         jar = cookies.SimpleCookie(self.headers.get("Cookie") or "")
         return jar[COOKIE].value if COOKIE in jar else None
 
-    def _who(self) -> dict:
+    def _who(self, allow_limited: bool = False) -> dict:
         try:
-            return auth.resolve(self._session(), kind="human")
+            who = auth.resolve(self._session(), kind="human", allow_limited=True)
         except GateBlocked as exc:
             raise Refused(401, str(exc)) from None
+        if who.get("limited") and not allow_limited:
+            raise Refused(403, "Choose your own PIN first.")
+        return who
 
     def _body(self) -> bytes:
         n = int(self.headers.get("Content-Length") or 0)
@@ -181,8 +240,24 @@ class Handler(BaseHTTPRequestHandler):
             who = self._who()
             self._check_post()
             body = self._json()
-            ctx = assistant.prepare(who["teacher_id"], str(body.get("question", "")), body.get("history") or [])
+            tid, history = who["teacher_id"], body.get("history") or []
+            if body.get("ask_id"):
+                # Step 2: the teacher answered Hatua's follow-up question. Now it may answer.
+                try:
+                    item = assistant.take_follow_up(tid, str(body["ask_id"]), str(body.get("reply", "")))
+                except ValueError as exc:
+                    raise Refused(400, str(exc)) from None
+                ctx = assistant.prepare(tid, item["question"], history, {"asked": item["asked"], "reply": item["reply"]})
+            else:
+                # Step 1: every new question gets a follow-up question first. Only a refusal
+                # (a ranking question) is given at once, and it tells the teacher nothing new.
+                ctx = assistant.prepare(tid, str(body.get("question", "")), history)
+                if ctx["question"] and not assistant.refusal(ctx["question"], ctx):
+                    out = assistant.open_follow_up(tid, ctx)
+                    assistant.log(tid, out)
+                    return self._send(200, out)
         out = assistant.answer(ctx)
+        out["kind"] = "answer"
         with LOCK:
             assistant.log(who["teacher_id"], out)
         return self._send(200, out)
@@ -195,33 +270,66 @@ class Handler(BaseHTTPRequestHandler):
             learners = store.load("learners")
             return self._send(200, {"school": (learners[0]["school"] if learners else ""),
                                     "calendar": school_calendar.term_on(today)["text"], "today": today.isoformat(),
-                                    "practice": ({"pin": demo["pin"], "teachers": demo["teachers"]} if demo else None)})
+                                    "practice": ({"pin": demo["pin"], "teachers": demo["teachers"],
+                                                  "one_time": demo.get("first_sign_in", [])} if demo else None)})
         if method == "POST" and path == "login":
             self._check_post(need_csrf=False)
             body = self._json()
+            typed = str(body.get("teacher_id", "")).strip().upper()
             try:
-                out = auth.login(str(body.get("teacher_id", "")).strip().upper(), str(body.get("pin", "")))
+                out = auth.login(typed, str(body.get("pin", "")))
             except GateBlocked as exc:
+                known = any(t["teacher_id"] == typed for t in auth.teachers())
+                _auth_event("sign_in", typed if known else "unknown", False,
+                            reason="locked" if "locked" in str(exc) else "wrong PIN or member number")
                 raise Refused(401, str(exc)) from None
             if not school.streams_of(out["teacher_id"]):
                 auth.logout(out["session"])
                 raise Refused(403, "You are registered, but no class is assigned to you yet. Ask the school's Hatua admin.")
+            ended = auth.end_other_sessions(out["session"])
+            _auth_event("sign_in", out["teacher_id"], True, one_time_pin=out["must_change"], other_sign_ins_ended=ended)
             cookie = f"{COOKIE}={out['session']}; HttpOnly; SameSite=Strict; Path=/; Max-Age={8 * 3600}"
+            if out["must_change"]:
+                return self._send(200, {"csrf": out["csrf"], "must_change": True, "name": out["name"],
+                                        "teacher_id": out["teacher_id"]}, extra={"Set-Cookie": cookie})
             notify.check_missing(today)
-            return self._send(200, {"csrf": out["csrf"], "me": school.profile(out["teacher_id"])},
-                              extra={"Set-Cookie": cookie})
+            return self._send(200, {"csrf": out["csrf"], "me": school.profile(out["teacher_id"]),
+                                    "previous_login": out["previous_login"], "failed_since": out["failed_since"],
+                                    "ended_other": ended}, extra={"Set-Cookie": cookie})
         if method == "POST" and path == "logout":
             self._check_post()
+            try:
+                _auth_event("sign_out", self._who(allow_limited=True)["teacher_id"], True)
+            except Refused:
+                pass
             auth.logout(self._session())
             return self._send(200, {"ok": True},
                               extra={"Set-Cookie": f"{COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"})
+        if method == "POST" and path == "pin":
+            who = self._who(allow_limited=True)
+            self._check_post()
+            body = self._json()
+            try:
+                auth.change_pin(self._session(), str(body.get("current", "")), str(body.get("new", "")))
+            except GateBlocked as exc:
+                _auth_event("pin_change", who["teacher_id"], False, reason="current PIN wrong")
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+            _auth_event("pin_change", who["teacher_id"], True)
+            notify.check_missing(today)
+            return self._send(200, {"ok": True, "me": school.profile(who["teacher_id"])})
 
         who = self._who()
         tid = who["teacher_id"]
         if method == "GET" and path == "me":
             return self._send(200, {"me": school.profile(tid), "csrf": auth.new_csrf(self._session()),
-                                    "calendar": school_calendar.summary(today), "model": comments.model_name()})
+                                    "calendar": school_calendar.summary(today), "model": comments.model_name(),
+                                    "idle_minutes": auth.SESSION_MINUTES})
+        if method == "GET" and path == "account":
+            return self._send(200, _account(tid))
         if method == "GET" and path == "notices":
+            notify.check_missing(today)  # a file deleted from the drive is noticed here
             return self._send(200, {"notices": notify.for_teacher(tid, include_resolved=q.get("all") == "1")})
         m = re.fullmatch(r"notices/(NT-\d+)/parent", path)
         if method == "GET" and m:
@@ -237,6 +345,10 @@ class Handler(BaseHTTPRequestHandler):
                 n = notify.mark(m.group(1), tid, read=body.get("read"), told_parent=body.get("told_parent"))
             except ValueError as exc:
                 raise Refused(404, str(exc)) from None
+            if body.get("told_parent") and n.get("learner_id"):
+                audit.write_event({"tool": "parent.told", "actor": tid, "ok": True,
+                                   "inputs": {"kwargs": {"learner_id": n["learner_id"], "notice": n["notice_id"]}},
+                                   "output": {"how": n["told_parent"]["how"], "recorded_by": who["name"]}})
             return self._send(200, {"notice": n})
         if method == "GET" and path == "class":
             notices = notify.for_teacher(tid, include_resolved=True)
@@ -244,6 +356,14 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"learner/(HT-\d{4})", path)
         if method == "GET" and m:
             return self._send(200, _learner_detail(tid, m.group(1)))
+        m = re.fullmatch(r"learner/(HT-\d{4})/pathways/open", path)
+        if method == "POST" and m:
+            self._check_post()
+            try:
+                pathways.open_ideas(self._session(), m.group(1))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            return self._send(200, {"pathways": pathways.for_teacher(tid, m.group(1))})
         m = re.fullmatch(r"learner/(HT-\d{4})/comment", path)
         if method == "POST" and m:
             self._check_post()
@@ -264,7 +384,9 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError as exc:
                 raise Refused(400, str(exc)) from None
         if method == "GET" and path == "drive":
-            return self._send(200, {"folders": drive.folders(tid), "root_label": "School drive"})
+            notify.check_missing(today)
+            return self._send(200, {"folders": drive.folders(tid, today.year), "terms": _states(tid, today),
+                                    "on_this_computer": str(drive.root())})
         if method == "GET" and path == "drive/preview":
             try:
                 return self._send(200, drive.preview(q.get("path", ""), tid))
@@ -286,8 +408,9 @@ class Handler(BaseHTTPRequestHandler):
             self._check_post()
             try:
                 year, term = int(q.get("year", today.year)), int(q.get("term", 0))
-                return self._send(200, drive.upload(self._session(), q.get("name", "results.csv"), self._body(),
-                                                    year, term))
+                out = drive.upload(self._session(), q.get("name", "results"), self._body(), year, term)
+                notify.check_missing(today)
+                return self._send(200, out)
             except GateBlocked as exc:
                 raise Refused(403, str(exc)) from None
             except ValueError as exc:

@@ -45,15 +45,34 @@ def setup() -> dict:
     counts["history"] = store.ingest_records(raw / "records_2021_2026.csv")["added"]
     for t in info["teachers"]:
         auth.register(t["teacher_id"], t["name"], info["pin"])
-    approved = []
-    for item in info.get("already_approved", []):
+    approved = 0
+    items = sorted(info.get("already_approved", []), key=lambda i: not i.get("earlier"))
+    for n, item in enumerate(items):
+        if n and items[n - 1].get("earlier") and not item.get("earlier"):
+            _forget_old_alerts()
         session = auth.login(item["teacher_id"], info["pin"])["session"]
-        result = drive.decide(item["file"], session, "approve")
+        approved += drive.decide(item["file"], session, "approve")["added"]
         auth.logout(session)
-        approved.append({"file": item["file"], "added": result["added"], "notices": len(result["notices"])})
-    counts["approved_at_setup"] = approved
+    if items and items[-1].get("earlier"):
+        _forget_old_alerts()
+    counts["files_approved_at_setup"] = len(info.get("already_approved", []))
+    counts["records_from_the_drive"] = approved
+    for t in info["teachers"]:  # start clean: nobody has signed in yet, and some hold a one-time PIN
+        auth.register(t["teacher_id"], t["name"], info["pin"],
+                      must_change=t["teacher_id"] in info.get("first_sign_in", []))
+    for name in ("sessions", "auth_state"):
+        (config.STORE / f"{name}.json").unlink(missing_ok=True)
     counts["missing_or_waiting_notices"] = len(notify.check_missing())
     return counts
+
+
+def _forget_old_alerts() -> None:
+    """Terms approved earlier in the year raised their learner alerts back then.
+
+    The demo opens in November, so those alerts are not shown as new. A pattern that
+    reaches the newest term is raised again when that term is approved.
+    """
+    store.save("notices", [n for n in store.load("notices") if not n.get("learner_id")])
 
 
 def main(argv: list[str]) -> None:
@@ -69,6 +88,7 @@ def main(argv: list[str]) -> None:
     env = {**os.environ, "HATUA_HOME": str(home), "PYTHONPATH": str(REPO),
            "HATUA_TODAY": os.environ.get("HATUA_TODAY", info["today"])}
     env.pop("HATUA_DRIVE", None)
+    print("Loading the school and approving Term 1 and Term 2 through the gate. This takes about 20 seconds...")
     subprocess.run([sys.executable, "-m", "hatua", "school-setup"], cwd=REPO, env=env, check=True)
     print("\nPractice accounts (PIN for all: " + info["pin"] + "):")
     for t in info["teachers"]:

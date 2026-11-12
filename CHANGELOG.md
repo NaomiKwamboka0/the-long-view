@@ -1,3 +1,27 @@
+# Excel term folders, safer sign-in, ask-first assistant, pathway gate — 12 November 2026
+
+- **Excel on the school drive.** Each class has a folder for Term 1, 2 and 3 with one Excel results file in it. New `hatua/xlsx.py` reads and writes `.xlsx` with the standard library only (no new dependency). It refuses zip bombs and XML entity tricks and never runs a formula. CSV still works.
+- **A deleted file is noticed.** If a results file is deleted or moved from a term folder, only that class's teacher is told:
+  - *File missing*: results are due and the folder has no file.
+  - *File gone*: the results are in Hatua, but the approved file is no longer in the folder.
+  - The alert closes when the file is back and opens again if it goes missing again. Putting the same file back needs no second approval.
+  - Hatua looks when a teacher signs in, opens Today or School drive, or returns to the window. There is no background watcher.
+- **The demo.** Term 1 and Term 2 of 2026 now come from Excel files on the drive, approved at setup through the real gate. Setup takes about 20 seconds.
+- **Sign-in.**
+  - A one-time PIN (`teacher-add --one-time`, and practice teacher M-5001) opens nothing until the teacher chooses their own PIN.
+  - Easy PINs are refused.
+  - A new sign-in ends that member number's sign-in elsewhere.
+  - The page signs out and clears the screen after 15 minutes without use. Before, a refresh every minute kept a forgotten page signed in for 8 hours.
+  - The teacher sees their last sign-in, wrong PINs tried on their number, and their own activity under **My account**.
+  - Sign-ins, wrong PINs, sign-outs and PIN changes are in the audit log. No PIN is logged.
+- **The assistant asks first.** Every new question gets one short follow-up question with answers to tap. The portal will not answer without it. The follow-up is a fixed rule (instant); Qwen writes the answer and is given the reply. A ranking question is still refused at once.
+- **Pathway ideas are gated.** They are closed for each learner until the signed-in class teacher opens them, which is logged with the teacher's name. Until then the portal sends none and the assistant has none. This is the brief's "pathway suggestions before they reach a teacher ... with a named human approving".
+- **More in the audit log:** comment ratings (`comment.rate`), "I have told the parent" (`parent.told`), file alerts (`notice.raise`), opened pathway ideas (`pathways.open`).
+- **Nothing from the internet.** The portal page no longer loads a web font, and its content security policy now forbids any outside request.
+- **Small fixes.** Dates read day-month-year. Signing out clears the last teacher's class from the page. The sign-in error says "member number".
+- **Docs.** New [docs/SHOW_THE_REQUIREMENTS.md](docs/SHOW_THE_REQUIREMENTS.md): how to show each challenge requirement, with screenshots.
+- **Not done:** Qwen was not run on the build machine, so its answers after a follow-up are untested with the real model. No teacher has tested this yet.
+
 # Pathway ideas, and the assistant knows the whole class — 4 November 2026
 
 - **New `hatua/pathways.py`.** For Grade 9 learners it sets out the cited strengths for each of Kenya's three senior school pathways (STEM; Social Sciences; Arts and Sports Science), side by side and always in the same order. It also notes the areas to keep building.

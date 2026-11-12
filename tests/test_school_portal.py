@@ -14,12 +14,28 @@ from pathlib import Path
 
 import pytest
 
-from hatua import auth, comments, config, drive, notify, school, school_calendar, school_demo, store
+from hatua import (
+    assistant,
+    audit,
+    auth,
+    comments,
+    config,
+    drive,
+    notify,
+    pathways,
+    school,
+    school_calendar,
+    school_demo,
+    store,
+    xlsx,
+)
 from hatua.summary import GateBlocked
 
 REPO = Path(__file__).resolve().parent.parent
 PIN = "246810"
-G6 = "Grade 6/2026 Term 3/grade6_2026_term3_results.csv"
+G6 = "Grade 6/2026 Term 3/Grade 6 Term 3 2026 results.xlsx"
+G6_T1 = "Grade 6/2026 Term 1/Grade 6 Term 1 2026 results.xlsx"
+G9 = "Grade 9/2026 Term 3/Grade 9 Term 3 2026 results.xlsx"
 
 
 def _point(monkeypatch, root: Path):
@@ -57,6 +73,18 @@ def login(teacher_id):
     return auth.login(teacher_id, PIN)["session"]
 
 
+def term3(teacher_id):
+    return [f["status"] for g in drive.folders(teacher_id) for t in g["terms"] if t["term"] == 3 for f in t["files"]]
+
+
+def ask2(teacher_id, question, reply="Everything the records show", history=None):
+    """A full turn: the question, Hatua's follow-up, the teacher's reply, then the answer."""
+    first = assistant.ask(teacher_id, question, history)
+    if first["kind"] != "follow_up":
+        return first
+    return assistant.ask(teacher_id, question, history, ask_id=first["ask_id"], reply=reply)
+
+
 # ---------------------------------------------------------------- calendar
 def test_kenya_2026_calendar_terms_and_due_dates(school_home):
     assert school_calendar.term_on(date(2026, 2, 26))["state"] == "half_term"
@@ -66,6 +94,53 @@ def test_kenya_2026_calendar_terms_and_due_dates(school_home):
     due = school_calendar.due_terms(date(2026, 10, 29))
     assert [d["term"] for d in due] == [1, 2], "Term 3 results are due 7 days after it closes on 23 Oct"
     assert [d["term"] for d in school_calendar.due_terms(date(2026, 10, 30))] == [1, 2, 3]
+
+
+# ---------------------------------------------------------------- Excel sheets
+def test_excel_sheets_are_read_without_any_extra_package(tmp_path):
+    rows = [{"learner_id": "HT-0601", "grade": 6, "year": 2026, "term": 1, "learning_area": "Kiswahili",
+             "level": "ME", "score": "07", "task": "Insha & <ufahamu>"},
+            {"learner_id": "HT-0602", "grade": 6, "year": 2026, "term": 1, "learning_area": "Mathematics",
+             "level": "EE", "score": "", "task": "Fractions"}]
+    path = tmp_path / "sheet.xlsx"
+    xlsx.write(path, rows)
+    header, back = xlsx.read(path)
+    assert header == list(rows[0]) and back == [{k: str(v) for k, v in r.items()} for r in rows]
+    assert xlsx.to_bytes(rows) == path.read_bytes(), "the same rows always give the same file"
+
+
+def test_excel_from_real_excel_shared_strings_and_dates(tmp_path):
+    """Excel itself stores text in a shared table and dates as day numbers."""
+    import zipfile
+    ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    rel = 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+    parts = {
+        "xl/workbook.xml": f'<workbook {ns} {rel}><sheets><sheet name="T1" sheetId="1" r:id="rId7"/></sheets></workbook>',
+        "xl/_rels/workbook.xml.rels": ('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                                       '<Relationship Id="rId7" Target="worksheets/sheet1.xml"/></Relationships>'),
+        "xl/sharedStrings.xml": f'<sst {ns}><si><t>learner_id</t></si><si><t>task_date</t></si><si><r><t>HT-</t></r><r><t>0601</t></r></si></sst>',
+        "xl/styles.xml": f'<styleSheet {ns}><cellXfs><xf numFmtId="0"/><xf numFmtId="14"/></cellXfs></styleSheet>',
+        "xl/worksheets/sheet1.xml": (f'<worksheet {ns}><sheetData><row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>'
+                                     '<row r="2"><c r="A2" t="s"><v>2</v></c><c r="B2" s="1"><v>46063</v></c></row>'
+                                     '<row r="3"></row></sheetData></worksheet>'),
+    }
+    path = tmp_path / "from_excel.xlsx"
+    with zipfile.ZipFile(path, "w") as z:
+        for name, text in parts.items():
+            z.writestr(name, text)
+    assert xlsx.read(path) == (["learner_id", "task_date"], [{"learner_id": "HT-0601", "task_date": "2026-02-10"}])
+
+
+def test_unsafe_or_wrong_excel_files_are_refused(tmp_path):
+    import zipfile
+    with pytest.raises(xlsx.BadSheet):
+        xlsx.read_bytes(b"this is not a zip")
+    bomb = tmp_path / "entities.xlsx"
+    with zipfile.ZipFile(bomb, "w") as z:
+        z.writestr("xl/workbook.xml", '<!DOCTYPE x [<!ENTITY a "aaaa">]><workbook/>')
+        z.writestr("xl/_rels/workbook.xml.rels", "<Relationships/>")
+    with pytest.raises(xlsx.BadSheet):
+        xlsx.read(bomb)
 
 
 # ---------------------------------------------------------------- notices at sign-in
@@ -78,6 +153,57 @@ def test_each_teacher_hears_only_about_their_own_class(school_home):
         assert kinds[t] == ["waiting_approval"]
     wanjiku = notify.for_teacher("M-4001")[0]
     assert wanjiku["learner_id"] == "HT-0405" and "early sign, not a pattern" in wanjiku["text"]
+
+
+def test_every_class_has_an_excel_sheet_for_each_term(school_home):
+    states = {t: [s["state"] for s in notify.term_states(t)] for t in ["M-4001", "M-6001", "M-7001", "M-9002"]}
+    assert states["M-4001"] == ["in_hatua", "in_hatua", "in_hatua"]
+    assert states["M-6001"] == ["in_hatua", "in_hatua", "waiting"]
+    assert states["M-7001"] == ["in_hatua", "in_hatua", "missing"]
+    assert states["M-9002"] == ["in_hatua", "in_hatua", "waiting"]
+    names = [f["name"] for g in drive.folders("M-6001") for t in g["terms"] for f in t["files"]]
+    assert len(names) == 3 and all(n.endswith(".xlsx") for n in names)
+
+
+# ---------------------------------------------------------------- a deleted file
+def test_deleting_an_approved_sheet_tells_only_that_class_teacher(school_home):
+    (drive.root() / G6_T1).unlink()
+    new = notify.check_missing()
+    assert [(n["kind"], n["teacher_id"], n["term"]) for n in new] == [("file_removed", "M-6001", 1)]
+    n = new[0]
+    assert "gone from the school drive" in n["title"] and "still safe in Hatua" in n["text"]
+    assert "Grade 6 Term 1 2026 results.xlsx" in n["text"], "it names the file the teacher approved"
+    for other in ["M-4001", "M-5001", "M-7001", "M-8001", "M-9001", "M-9002"]:
+        assert "file_removed" not in {x["kind"] for x in notify.for_teacher(other)}
+    assert notify.check_missing() == [], "the same notice is not sent twice"
+    raised = [e for e in audit.read_events() if e["tool"] == "notice.raise"]
+    assert raised[-1]["output"] == {"kind": "file_removed", "term": 1}
+    assert [s["state"] for s in notify.term_states("M-6001")][0] == "file_removed"
+
+
+def test_putting_the_sheet_back_closes_the_notice_and_deleting_again_reopens_it(school_home):
+    path = drive.root() / G6_T1
+    content = path.read_bytes()
+    path.unlink()
+    first = notify.check_missing()[0]
+    up = drive.upload(login("M-6001"), path.name, content, 2026, 1)
+    assert up == {"path": G6_T1, "status": "approve"}, "the same file is still approved; no second approval"
+    notify.check_missing()
+    assert "file_removed" not in {n["kind"] for n in notify.for_teacher("M-6001")}
+    path.unlink()
+    again = notify.check_missing()
+    assert [n["notice_id"] for n in again] == [first["notice_id"]] and not again[0]["resolved"]
+
+
+def test_deleting_a_waiting_sheet_or_the_whole_folder_says_missing(school_home):
+    (drive.root() / G6).unlink()
+    new = notify.check_missing()
+    assert [(n["kind"], n["teacher_id"], n["term"]) for n in new] == [("missing_upload", "M-6001", 3)]
+    assert {n["kind"] for n in notify.for_teacher("M-6001")} == {"missing_upload"}, "the waiting notice closed itself"
+    shutil.rmtree(drive.root() / "Grade 8" / "2026 Term 2")
+    new = notify.check_missing()
+    assert [(n["kind"], n["teacher_id"], n["term"]) for n in new] == [("file_removed", "M-8001", 2)]
+    assert [t["label"] for g in drive.folders("M-8001") for t in g["terms"]] == ["2026 Term 3", "2026 Term 2", "2026 Term 1"]
 
 
 # ---------------------------------------------------------------- drive gate
@@ -94,18 +220,17 @@ def test_approving_adds_only_my_rows_and_alerts_at_once(school_home):
 
 
 def test_shared_grade_file_is_split_by_stream(school_home):
-    rel = "Grade 9/2026 Term 3/grade9_2026_term3_results.csv"
-    a = drive.decide(rel, login("M-9001"), "approve")
+    a = drive.decide(G9, login("M-9001"), "approve")
     mine = {l["learner_id"] for l in school.learners_of("M-9001")}
     added = [r for r in store.load("records") if r.get("file") == a["inbox_file"]]
     assert added and {r["learner_id"] for r in added} <= mine
-    assert drive.preview(rel, "M-9002")["counts"]["yours"] == 156  # 9B's rows wait for 9B's teacher
-    assert [f["status"] for g in drive.folders("M-9002") for t in g["terms"] for f in t["files"]] == ["waiting"]
+    assert drive.preview(G9, "M-9002")["counts"]["yours"] == 156  # 9B's rows wait for 9B's teacher
+    assert term3("M-9002") == ["waiting"] and term3("M-9001") == ["approve"]
 
 
 def test_drive_refuses_other_grades_paths_and_agent_tokens(school_home):
     with pytest.raises(GateBlocked):
-        drive.preview(G6, "M-5001")
+        drive.preview(G6, "M-8001")
     with pytest.raises(ValueError):
         drive.preview("../store/teachers.json", "M-6001")
     with pytest.raises(ValueError):
@@ -124,18 +249,25 @@ def test_drive_refuses_other_grades_paths_and_agent_tokens(school_home):
 def test_a_changed_file_needs_approval_again(school_home):
     drive.decide(G6, login("M-6001"), "approve")
     path = drive.root() / G6
-    path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
-    statuses = [f["status"] for g in drive.folders("M-6001") for t in g["terms"] for f in t["files"]]
-    assert statuses == ["waiting"]
+    _, rows = xlsx.read(path)
+    rows[0]["score"] = "1"
+    xlsx.write(path, rows)
+    assert term3("M-6001") == ["waiting"]
 
 
 def test_upload_then_approve_clears_the_missing_notice(school_home):
     session = login("M-7001")
-    sample = school_home / "samples" / "grade7_2026_term3_results.csv"
-    up = drive.upload(session, "../../evil name?.csv", sample.read_bytes(), 2026, 3)
-    assert up["path"] == "Grade 7/2026 Term 3/evil name.csv"
+    sample = school_home / "samples" / "Grade 7 Term 3 2026 results.xlsx"
+    up = drive.upload(session, "../../evil name?.xlsx", sample.read_bytes(), 2026, 3)
+    assert up["path"] == "Grade 7/2026 Term 3/evil name.xlsx"
     with pytest.raises(ValueError):
         drive.upload(session, "x.csv", b"name,score\nA,3\n", 2026, 3)  # missing Hatua's columns
+    with pytest.raises(ValueError):
+        drive.upload(session, "x.xlsx", xlsx.to_bytes([{"name": "A", "score": 3}]), 2026, 3)
+    with pytest.raises(ValueError):
+        drive.upload(session, "x.xlsx", b"PK\x03\x04 not really a zip", 2026, 3)
+    csv_up = drive.upload(session, "old style.csv", b"learner_id,grade,year,term,learning_area,level\n", 2026, 2)
+    assert csv_up["path"].endswith("old style.csv"), "CSV still works"
     result = drive.decide(up["path"], session, "approve")
     assert result["added"] > 0
     assert ("HT-0704", "sharp_drop") in {(n["learner_id"], n["kind"]) for n in result["notices"]}
@@ -171,7 +303,7 @@ def test_comments_scope_template_and_thumbs(school_home):
     with pytest.raises(GateBlocked):
         comments.rate(out["next"]["comment_id"], session, "up")  # already rated
     with pytest.raises(GateBlocked):
-        comments.rate(out["next"]["comment_id"], login("M-5001"), "up")  # not their comment
+        comments.rate(out["next"]["comment_id"], login("M-8001"), "up")  # not their comment
 
 
 class _FakeOllama(BaseHTTPRequestHandler):
@@ -215,6 +347,53 @@ def test_qwen_words_the_comment_and_the_guard_still_decides(school_home, fake_qw
     assert c["writer"] == "template", "a comment that labels or compares is never shown"
 
 
+# ---------------------------------------------------------------- sign-in security
+def test_easy_pins_are_refused():
+    for weak in ["12345", "123456", "654321", "111111", "121212", "246810", "135790", "abcabc", "pin6001x", "password"]:
+        assert auth.pin_problem(weak, "M-6001"), weak
+    for fine in ["739152", "kibera-41", "50 mango trees"]:
+        assert auth.pin_problem(fine, "M-6001") is None, fine
+
+
+def test_a_one_time_pin_opens_nothing_until_the_teacher_chooses_their_own(school_home):
+    out = auth.login("M-5001", PIN)
+    assert out["must_change"] is True
+    with pytest.raises(GateBlocked, match="Choose your own PIN first"):
+        auth.resolve(out["session"])
+    with pytest.raises(GateBlocked):
+        auth.mint_agent_token(out["session"])
+    with pytest.raises(GateBlocked):
+        drive.decide("Grade 5/2026 Term 3/Grade 5 Term 3 2026 results.xlsx", out["session"], "approve")
+    with pytest.raises(GateBlocked, match="current PIN"):
+        auth.change_pin(out["session"], "000000", "739152")
+    with pytest.raises(ValueError, match="in order"):
+        auth.change_pin(out["session"], PIN, "345678")
+    auth.change_pin(out["session"], PIN, "739152")
+    with pytest.raises(ValueError, match="different"):
+        auth.change_pin(out["session"], "739152", "739152")
+    assert auth.resolve(out["session"])["teacher_id"] == "M-5001", "the same sign-in is now a full one"
+    with pytest.raises(GateBlocked):
+        auth.login("M-5001", PIN)  # the one-time PIN is dead
+    again = auth.login("M-5001", "739152")
+    assert again["must_change"] is False and again["failed_since"] == 1 and again["previous_login"]
+    teachers = json.loads((config.STORE / "teachers.json").read_text())
+    assert "739152" not in json.dumps(teachers) and "must_change" not in teachers["M-5001"]
+
+
+def test_changing_a_pin_ends_the_teacher_s_other_sign_ins(school_home):
+    one, two = login("M-6001"), login("M-6001")
+    agent = auth.mint_agent_token(two)
+    auth.change_pin(one, PIN, "408 kisumu road")
+    assert auth.resolve(one)["teacher_id"] == "M-6001"
+    for dead in (two,):
+        with pytest.raises(GateBlocked):
+            auth.resolve(dead)
+    with pytest.raises(GateBlocked):
+        auth.resolve(agent, kind="agent")
+    three = login("M-8001")
+    assert auth.end_other_sessions(three) == 0 and auth.resolve(one), "another teacher's sign-in is untouched"
+
+
 # ---------------------------------------------------------------- the HTTP portal
 @pytest.fixture
 def portal(school_home):
@@ -236,6 +415,12 @@ def call(port, method, path, body=None, cookie=None, csrf=None, host=None):
     r = c.getresponse()
     data = r.read()
     return r.status, dict(r.getheaders()), (json.loads(data) if r.getheader("Content-Type", "").startswith("application/json") else data)
+
+
+def sign_in(port, teacher_id, pin=PIN):
+    st, headers, body = call(port, "POST", "/api/login", {"teacher_id": teacher_id, "pin": pin})
+    assert st == 200, body
+    return headers["Set-Cookie"].split(";")[0], body["csrf"], body
 
 
 def test_portal_sign_in_scope_and_csrf(portal):
@@ -260,17 +445,89 @@ def test_portal_sign_in_scope_and_csrf(portal):
     assert call(portal, "GET", "/api/class", cookie=cookie)[0] == 401
 
 
+def test_portal_sign_in_history_one_place_only_and_the_log(portal):
+    assert call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": "nope-1"})[0] == 401
+    assert call(portal, "POST", "/api/login", {"teacher_id": "M-0000", "pin": "nope-2"})[0] == 401
+    first, _, body = sign_in(portal, "M-6001")
+    assert body["failed_since"] == 1 and body["previous_login"] is None and body["ended_other"] == 0
+    second, csrf, body = sign_in(portal, "M-6001")
+    assert body["ended_other"] == 1 and body["previous_login"] and body["failed_since"] == 0
+    assert call(portal, "GET", "/api/class", cookie=first)[0] == 401, "one member number, one place"
+    acct = call(portal, "GET", "/api/account", cookie=second)[2]
+    assert [e["what"] for e in acct["recent"]] == ["Signed in", "Signed in", "Wrong PIN tried"]
+    assert acct["idle_minutes"] == 15 and acct["lock_failures"] == 5
+    log = (config.LOGS / "audit.jsonl").read_text()
+    assert "nope-1" not in log and "nope-2" not in log and PIN not in log, "no PIN is ever written to the log"
+    assert '"actor": "unknown"' in log and "M-0000" not in log, "a made-up member number is not kept"
+
+
+def test_portal_one_time_pin_must_be_changed_before_anything_opens(portal):
+    cookie, csrf, body = sign_in(portal, "M-5001")
+    assert body["must_change"] is True and "me" not in body
+    for path in ["/api/class", "/api/me", "/api/notices", "/api/drive", "/api/learner/HT-0501", "/api/account"]:
+        assert call(portal, "GET", path, cookie=cookie)[0] == 403, path
+    assert call(portal, "POST", "/api/assistant", {"question": "Who needs attention?"}, cookie=cookie, csrf=csrf)[0] == 403
+    assert call(portal, "POST", "/api/pin", {"current": PIN, "new": "739152"}, cookie=cookie)[0] == 403, "CSRF still needed"
+    st, _, out = call(portal, "POST", "/api/pin", {"current": PIN, "new": "111111"}, cookie=cookie, csrf=csrf)
+    assert st == 400 and "repeat" in out["error"]
+    st, _, out = call(portal, "POST", "/api/pin", {"current": PIN, "new": "739152"}, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["me"]["teacher_id"] == "M-5001"
+    assert call(portal, "GET", "/api/class", cookie=cookie)[0] == 200
+    assert call(portal, "POST", "/api/login", {"teacher_id": "M-5001", "pin": PIN})[0] == 401
+
+
+def test_portal_shows_a_deleted_sheet_the_next_time_the_teacher_looks(portal):
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    d = call(portal, "GET", "/api/drive", cookie=cookie)[2]
+    assert [t["state"] for t in d["terms"]] == ["in_hatua", "in_hatua", "waiting"] and d["on_this_computer"].endswith("school_drive")
+    (drive.root() / G6_T1).unlink()
+    notices = call(portal, "GET", "/api/notices", cookie=cookie)[2]["notices"]
+    assert [n["kind"] for n in notices if n["term"] == 1] == ["file_removed"]
+    assert call(portal, "GET", "/api/drive", cookie=cookie)[2]["terms"][0]["state"] == "file_removed"
+    other, _, _ = sign_in(portal, "M-8001")
+    assert "file_removed" not in {n["kind"] for n in call(portal, "GET", "/api/notices", cookie=other)[2]["notices"]}
+
+
 # ---------------------------------------------------------------- the Hatua assistant
-from hatua import assistant  # noqa: E402
+def test_assistant_always_asks_one_question_first(school_home):
+    for q in ["hello", "When does Term 1 open?", "How is Kamau doing?", "How do I approve a file?",
+              "Give me ideas to teach fractions", "Who needs my attention?", "What is 2 + 2?"]:
+        first = assistant.ask("M-6001", q)
+        assert first["kind"] == "follow_up" and "answer" not in first, q
+        assert first["question"].endswith(("?", ".")) and 2 <= len(first["options"]) <= 4, q
+    kamau = assistant.ask("M-6001", "How is Kamau doing?")
+    assert kamau["question"] == "What do you want to know about Kamau?" and "Pathway ideas" not in kamau["options"]
+    assert "Pathway ideas" in assistant.ask("M-9001", "How is Kiprono doing?")["options"]
+    with pytest.raises(ValueError):
+        assistant.ask("M-8001", "x", ask_id=kamau["ask_id"], reply="Everything")  # another teacher's question
+    with pytest.raises(ValueError):
+        assistant.ask("M-6001", "x", ask_id=kamau["ask_id"], reply="   ")  # no reply
+    out = assistant.ask("M-6001", "ignored", ask_id=kamau["ask_id"], reply="Everything the records show")
+    assert out["kind"] == "answer" and "Kamau" in out["answer"]
+    with pytest.raises(ValueError):
+        assistant.ask("M-6001", "x", ask_id=kamau["ask_id"], reply="Everything")  # each follow-up works once
+
+
+def test_the_reply_shapes_the_answer(school_home):
+    drive.decide(G6, login("M-6001"), "approve")
+    everything = ask2("M-6001", "How is Kamau doing?")["answer"]
+    down = ask2("M-6001", "How is Kamau doing?", "Only what is going down")["answer"]
+    parent = ask2("M-6001", "How is Kamau doing?", "What to tell the parent")["answer"]
+    assert "what is going down" in down and "Mathematics" in down and down != everything
+    assert "I would like to talk with you about Kamau" in parent
+    files = ask2("M-7001", "Who needs my attention?", "Results files that are missing or waiting")["answer"]
+    assert "Term 3 results file for 7A is missing" in files
+    assert "KJSEA" in ask2("M-6001", "When are exams?", "KPSEA and KJSEA dates")["answer"]
 
 
 def test_assistant_refuses_rankings_without_the_model(school_home):
     for q in ["Who is the best in Maths?", "Rank my class in English", "Compare Kamau with the class",
               "Nani ni mwanafunzi bora?"]:
         out = assistant.ask("M-6001", q)
-        assert out.get("refused") and "does not rank" in out["answer"], q
-    assert not assistant.ask("M-6001", "What is the best way to teach fractions?").get("refused")
-    out = assistant.ask("M-6001", "Which pathway should Atieno take?")
+        assert out["kind"] == "answer" and out.get("refused") and "does not rank" in out["answer"], q
+    assert ask2("M-6001", "How is Kamau doing?", "Is he the best in the class?").get("refused"), "a reply cannot sneak a ranking in"
+    assert not ask2("M-6001", "What is the best way to teach fractions?", "A full lesson").get("refused")
+    out = ask2("M-6001", "Which pathway should Atieno take?", "Only to understand the strengths")
     assert not out.get("refused") and "chosen in Grade 9" in out["answer"], "Grade 6: too early for pathways"
 
 
@@ -281,11 +538,11 @@ def test_assistant_knows_only_my_class(school_home):
     others = [l for l in store.load("learners") if l["learner_id"] not in six]
     assert all(l["first_name"] not in ctx["data"] and l["learner_id"] not in ctx["data"] for l in others)
     assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= six
-    out = assistant.ask("M-6001", "How is Kamau doing?")
+    out = ask2("M-6001", "How is Kamau doing?")
     assert out["writer"] == "hatua" and out["citations"]
     assert {store.get_record(c)["learner_id"] for c in out["citations"]} == {"HT-0603"}
-    assert "can't find Amani" in assistant.ask("M-6001", "Tell me about Amani")["answer"]
-    att = assistant.ask("M-6001", "Who needs my attention?")["answer"]
+    assert "can't find Amani" in ask2("M-6001", "Tell me about Amani", "A learner in my class")["answer"]
+    att = ask2("M-6001", "Who needs my attention?", "Learners with an alert")["answer"]
     assert "Kamau" in att and "Atieno" in att
 
 
@@ -298,24 +555,32 @@ def test_assistant_with_qwen_checks_every_answer(school_home, fake_qwen, monkeyp
                     f"Kamau is weaker than his classmates [{good_id}].",
                     f"Kamau is doing fine [{other_class}].",
                     f"Kamau's Mathematics fell this term [{good_id}]."])
-    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies))
-    out = assistant.ask("M-6001", "How is Kamau doing?")
+    seen = []
+    monkeypatch.setattr(assistant, "_chat", lambda model, system, history, question, extra="": (seen.append(question), next(replies))[1])
+    out = ask2("M-6001", "How is Kamau doing?", "Only what is going down")
     assert out["writer"] == "qwen2.5:7b" and out["citations"] == [good_id]
-    out = assistant.ask("M-6001", "How is Kamau doing?")  # a label, then another class's record: both refused
+    assert "Hatua asked: What do you want to know about Kamau?" in seen[0] and "The teacher answered: Only what is going down" in seen[0]
+    out = ask2("M-6001", "How is Kamau doing?")  # a label, then another class's record: both refused
     assert out["writer"] == "hatua", "neither bad answer is shown; the built-in answer is used instead"
-    out = assistant.ask("M-6001", "How is Kamau doing?")
+    out = ask2("M-6001", "How is Kamau doing?")
     assert out["writer"] == "qwen2.5:7b"
-    events = [e for e in __import__("hatua.audit", fromlist=["x"]).read_events() if e["tool"] == "assistant.ask"]
-    assert events and all("How is" not in json.dumps(e) for e in events), "questions are not written to the log"
+    events = [e for e in audit.read_events() if e["tool"] == "assistant.ask"]
+    assert {e["output"]["step"] for e in events} == {"follow_up", "answer"}
+    assert all("How is" not in json.dumps(e) and "going down" not in json.dumps(e) for e in events), "questions and replies are not logged"
 
 
 def test_assistant_and_evidence_endpoints(portal):
-    st, headers, body = call(portal, "POST", "/api/login", {"teacher_id": "M-6001", "pin": PIN})
-    cookie, csrf = headers["Set-Cookie"].split(";")[0], body["csrf"]
+    cookie, csrf, _ = sign_in(portal, "M-6001")
     assert call(portal, "POST", "/api/assistant", {"question": "Who needs my attention?"}, cookie=cookie)[0] == 403
-    st, _, out = call(portal, "POST", "/api/assistant", {"question": "When were Term 3 results due?"},
+    st, _, first = call(portal, "POST", "/api/assistant", {"question": "When were Term 3 results due?"},
+                        cookie=cookie, csrf=csrf)
+    assert st == 200 and first["kind"] == "follow_up" and "answer" not in first
+    assert call(portal, "POST", "/api/assistant", {"ask_id": "made-up", "reply": "Term dates"}, cookie=cookie, csrf=csrf)[0] == 400
+    st, _, out = call(portal, "POST", "/api/assistant", {"ask_id": first["ask_id"], "reply": "When results are due"},
                       cookie=cookie, csrf=csrf)
-    assert st == 200 and "2026-10-30" in out["answer"]
+    assert st == 200 and out["kind"] == "answer" and "2026-10-30" in out["answer"]
+    st, _, out = call(portal, "POST", "/api/assistant", {"question": "Rank my class"}, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["refused"]
     mine = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0603")
     theirs = next(r["record_id"] for r in store.load("records") if r["learner_id"] == "HT-0401")
     assert call(portal, "GET", f"/api/evidence/{mine}", cookie=cookie)[2]["learner_id"] == "HT-0603"
@@ -323,9 +588,6 @@ def test_assistant_and_evidence_endpoints(portal):
 
 
 # ---------------------------------------------------------------- pathways
-from hatua import pathways  # noqa: E402
-
-
 def test_pathway_ideas_by_grade_and_never_a_pick(school_home):
     assert pathways.for_learner("HT-0603")["stage"] == "too_early"
     assert pathways.for_learner("HT-0805")["stage"] == "explore"
@@ -337,35 +599,66 @@ def test_pathway_ideas_by_grade_and_never_a_pick(school_home):
     arts = nine["pathways"][2]
     assert arts["strengths"] >= 1 and any("Creative Arts" in x["text"] for x in arts["lines"])
     text = pathways.text("HT-0007")
-    assert not assistant.problems(text, {"allowed": set(assistant.guard.citations(text))})
+    assert not assistant.problems(text, {"allowed": set(assistant.guard.citations(text)), "learners": []})
     assert "learner chooses" in text
 
 
+def test_pathway_ideas_stay_closed_until_the_named_teacher_opens_them(portal):
+    cookie, csrf, _ = sign_in(portal, "M-9001")
+    closed = call(portal, "GET", "/api/learner/HT-0007", cookie=cookie)[2]["pathways"]
+    assert closed == {"stage": "suggest", "grade": 9, "locked": True, "pathways": []}
+    assert "Pathway ideas: NOT OPENED" in assistant.prepare("M-9001", "Kiprono")["data"]
+    assert "STEM:" not in assistant.prepare("M-9001", "Kiprono")["data"]
+    gated = ask2("M-9001", "What pathways could Kiprono explore?", "My talk with Kiprono and the guardian")
+    assert gated.get("gated") and "Open pathway ideas" in gated["answer"] and "STEM" not in gated["answer"]
+    assert call(portal, "POST", "/api/learner/HT-0007/pathways/open", {}, cookie=cookie)[0] == 403, "CSRF needed"
+    st, _, out = call(portal, "POST", "/api/learner/HT-0007/pathways/open", {}, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["pathways"]["opened"]["by"] == "Daniel Mutiso" and len(out["pathways"]["pathways"]) == 3
+    event = [e for e in audit.read_events() if e["tool"] == "pathways.open"][-1]
+    assert event["actor"] == "M-9001" and event["output"]["approved_by"] == "Daniel Mutiso"
+    assert event["inputs"]["kwargs"]["learner_id"] == "HT-0007"
+    assert call(portal, "GET", "/api/learner/HT-0008", cookie=cookie)[2]["pathways"]["locked"], "one learner at a time"
+    other, other_csrf, _ = sign_in(portal, "M-9002")
+    assert call(portal, "POST", "/api/learner/HT-0007/pathways/open", {}, cookie=other, csrf=other_csrf)[0] == 403
+    six, six_csrf, _ = sign_in(portal, "M-6001")
+    assert call(portal, "POST", "/api/learner/HT-0603/pathways/open", {}, cookie=six, csrf=six_csrf)[0] == 403
+    with pytest.raises(GateBlocked):
+        pathways.open_ideas(auth.mint_agent_token(login("M-9001")), "HT-0008")  # an agent cannot open them
+
+
 def test_assistant_suggests_pathways_but_never_prescribes(school_home, monkeypatch):
-    out = assistant.ask("M-9001", "What pathways could Kiprono explore?")
+    pathways.open_ideas(login("M-9001"), "HT-0007")
+    out = ask2("M-9001", "What pathways could Kiprono explore?", "My talk with Kiprono and the guardian")
     assert not out.get("refused") and "STEM" in out["answer"] and "Arts and Sports Science" in out["answer"]
     assert {store.get_record(c)["learner_id"] for c in out["citations"]} == {"HT-0007"}
+    none = {"allowed": set(), "learners": []}
     ok = "Kiprono could explore STEM, for example Technical and Engineering, and Arts and Sports Science."
-    assert assistant.problems(ok, {"allowed": set()}) == []
+    assert assistant.problems(ok, none) == []
     for bad in ["Kiprono should take STEM.", "Kiprono is a STEM learner.", "The best pathway for him is STEM.",
                 "Arts and Sports Science is the right choice for her.", "He is destined for engineering."]:
-        assert assistant.problems(bad, {"allowed": set()}), bad
+        assert assistant.problems(bad, none), bad
     ctx = assistant.prepare("M-9001", "What pathways could Kiprono explore?")
     good_id = sorted(ctx["allowed"] & set(pathways.for_learner("HT-0007")["pathways"][2]["evidence"]))[0]
     replies = iter([f"Kiprono should take the Arts and Sports Science pathway [{good_id}].",
                     f"Kiprono could explore Arts and Sports Science: Creative Arts has held at EE [{good_id}]. "
-                    "Ask what he enjoys; he and his family choose."])
-    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies))
+                    "Ask what he enjoys; he and his family choose.",
+                    "Kiprono and Brian could both explore STEM."])
+    monkeypatch.setattr(assistant, "_chat", lambda *a, **k: next(replies, None))
     monkeypatch.setattr(assistant.comments, "model_name", lambda: "qwen2.5:7b")
-    out = assistant.ask("M-9001", "What pathways could Kiprono explore?")
+    out = ask2("M-9001", "What pathways could Kiprono explore?", "Only to understand the strengths")
     assert out["writer"] == "qwen2.5:7b" and "could explore" in out["answer"], "the prescriptive answer was not shown"
+    out = ask2("M-9001", "Tell me about Kiprono", "Everything the records show")
+    assert out["writer"] == "hatua", "pathway ideas for Brian, whose ideas are still closed, are not shown"
 
 
 def test_assistant_knows_every_pupil_in_the_class(school_home):
-    ctx = assistant.prepare("M-9002", "Which of my learners have a held strength in Science?")
+    session = login("M-9002")
     mine = school.learners_of("M-9002")
+    pathways.open_ideas(session, mine[0]["learner_id"])
+    ctx = assistant.prepare("M-9002", "Which of my learners have a held strength in Science?")
     assert len(mine) == 20 and all(l["learner_id"] in ctx["data"] for l in mine)
-    assert "Pathway evidence (Grade 9 pathway ideas)" in ctx["data"]
+    assert ctx["data"].count("Pathway evidence (Grade 9 pathway ideas)") == 1
+    assert ctx["data"].count("Pathway ideas: NOT OPENED") == 19
     nine_a = {l["learner_id"] for l in school.learners_of("M-9001")}
     assert not any(lid in ctx["data"] for lid in nine_a), "the other Grade 9 stream stays private"
     assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= {l["learner_id"] for l in mine}

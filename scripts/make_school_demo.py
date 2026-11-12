@@ -11,12 +11,15 @@ evaluations is not changed. It holds:
   class was in Grade 4 up to 2026.
 * Grade 9: the existing class (streams 9A and 9B), copied from data/raw unchanged.
 * One class teacher per stream, each with a member number (M-4001 ... M-9002).
-* A school drive: school_drive/Grade N/2026 Term T/*.csv, the way a school's shared
-  drive is divided into folders. Files there are NOT in Hatua until the class teacher
-  approves them in the portal.
+* A school drive: school_drive/Grade N/2026 Term T/*.xlsx, the way a school's shared
+  drive is divided into folders, with one Excel results sheet per class per term.
+  Files there are NOT in Hatua until the class teacher approves them in the portal.
+  Term 1 and Term 2 are approved at setup, through the real approval gate.
 
 Planted situations, so every feature has something to show:
 
+    Any grade  Delete a Term 1 or Term 2 Excel file from the drive: that class's
+             teacher is told the file is gone.
     Grade 4  Term 3 already approved. Wanjiku (HT-0405) dropped in Kiswahili in Term 3.
     Grade 5  Term 3 file waiting for the teacher's approval.
     Grade 6  Term 3 file waiting. Inside it: Kamau (HT-0603) falls two levels in
@@ -37,6 +40,10 @@ from datetime import date, timedelta
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+from hatua import xlsx  # noqa: E402 - standard library only
+
 SEED = 4026
 SCHOOL = "Mwangaza Comprehensive School (fictional)"
 YEAR = 2026
@@ -86,6 +93,12 @@ TEACHERS = [  # member number, invented name, stream
 ]
 # Which grades have a Term 3 file on the drive, and which are already approved.
 TERM3_ON_DRIVE = {4: "approved", 5: "waiting", 6: "waiting", 8: "waiting", 9: "waiting"}  # 7: missing
+# This practice teacher signs in with a one-time PIN and must choose their own PIN first.
+FIRST_SIGN_IN = ["M-5001"]
+
+
+def results_name(grade: int, term: int) -> str:
+    return f"Grade {grade} Term {term} {YEAR} results.xlsx"
 
 
 def tindex(grade: int, term: int) -> int:
@@ -116,7 +129,7 @@ def make_cohort(rng: random.Random, grade_now: int, rid: int, nid: int):
                 for i, name in enumerate(NAMES[grade_now], start=1)]
     families = sorted({FAMILY.get(a, a) for a in PRIMARY_AREAS + JUNIOR_AREAS})
     usual = {(l["learner_id"], f): rng.gauss(2.7, 0.5) for l in learners for f in families}
-    history, term3, attendance, notes = [], [], [], []
+    history, this_year, attendance, notes = [], {1: [], 2: [], 3: []}, [], []
     for grade in range(4, grade_now + 1):
         year = YEAR - (grade_now - grade)
         areas = PRIMARY_AREAS if grade <= 6 else JUNIOR_AREAS
@@ -143,8 +156,8 @@ def make_cohort(rng: random.Random, grade_now: int, rid: int, nid: int):
                            "task_date": task_d.isoformat(), "logged_date": logged.isoformat(),
                            "teacher": f"T-{fam[:3].upper()}{grade}",
                            "source": "rubric_sheet_transcribed" if grade <= 6 else "cba_portal_export"}
-                    if year == YEAR and term == 3:
-                        term3.append(row)
+                    if year == YEAR:
+                        this_year[term].append(row)  # arrives as an Excel sheet on the school drive
                     else:
                         history.append(row)
             if year == YEAR and term == 3:
@@ -156,13 +169,14 @@ def make_cohort(rng: random.Random, grade_now: int, rid: int, nid: int):
                                    "days_present": int(round(opened * rate)), "days_open": opened})
     bank = {"EE": "Explains reasoning clearly to the group.", "ME": "Completes work on time.",
             "AE": "Needs support with multi-step questions.", "BE": "Needs one-to-one support."}
-    for r in rng.sample(history, k=min(len(history), len(learners) * 3)):
+    noted = history + this_year[1] + this_year[2]
+    for r in rng.sample(noted, k=min(len(noted), len(learners) * 3)):
         nid += 1
         notes.append({"note_id": f"N-{nid:04d}", "learner_id": r["learner_id"], "grade": r["grade"],
                       "year": r["year"], "term": r["term"], "learning_area": r["learning_area"],
                       "date": r["task_date"], "teacher": r["teacher"],
                       "text": bank[r["level"] if r["level"] in bank else "ME"]})
-    return learners, history, term3, attendance, notes, rid, nid
+    return learners, history, this_year, attendance, notes, rid, nid
 
 
 def write(path: Path, rows: list[dict]) -> None:
@@ -192,15 +206,18 @@ def main(home: Path) -> None:
     notes = read(REPO / "data" / "raw" / "teacher_notes.csv")
     rid = max(int(r["record_id"][2:]) for r in records if r["record_id"][2:].isdigit()) + 1000
     nid = max(int(n["note_id"][2:]) for n in notes) + 100
-    term3 = {9: read(REPO / "data" / "inbox" / "2026_T3_new_records.csv")}
+    is_now = lambda r, term: str(r["year"]) == str(YEAR) and str(r["term"]) == str(term)  # noqa: E731
+    sheets = {9: {1: [r for r in records if is_now(r, 1)], 2: [r for r in records if is_now(r, 2)],
+                  3: read(REPO / "data" / "inbox" / "2026_T3_new_records.csv")}}
+    records = [r for r in records if str(r["year"]) != str(YEAR)]
 
     for g in (4, 5, 6, 7, 8):
-        l, hist, t3, att, nts, rid, nid = make_cohort(rng, g, rid, nid)
+        l, hist, now, att, nts, rid, nid = make_cohort(rng, g, rid, nid)
         learners += l
         records += hist
         attendance += att
         notes += nts
-        term3[g] = t3
+        sheets[g] = now
 
     write(raw / "learners.csv", learners)
     write(raw / "records_2021_2026.csv", records)
@@ -209,20 +226,27 @@ def main(home: Path) -> None:
     write(raw / "teacher_assignments.csv",
           [{"teacher_id": t, "role": "class_teacher", "streams": s, "subjects": ""} for t, _, s in TEACHERS])
 
-    # The school drive: one folder per grade, one sub-folder per term.
+    # The school drive: one folder per grade, one sub-folder per term, one Excel sheet per term.
     for g in range(4, 10):
         for term in (1, 2, 3):
-            (drive / f"Grade {g}" / f"{YEAR} Term {term}").mkdir(parents=True, exist_ok=True)
-    for g in TERM3_ON_DRIVE:
-        write(drive / f"Grade {g}" / f"{YEAR} Term 3" / f"grade{g}_{YEAR}_term3_results.csv", term3[g])
-    write(home / "samples" / f"grade7_{YEAR}_term3_results.csv", term3[7])
+            folder = drive / f"Grade {g}" / f"{YEAR} Term {term}"
+            folder.mkdir(parents=True, exist_ok=True)
+            if term < 3 or g in TERM3_ON_DRIVE:
+                xlsx.write(folder / results_name(g, term), sheets[g][term], sheet_name=f"Grade {g} Term {term}")
+    xlsx.write(home / "samples" / results_name(7, 3), sheets[7][3], sheet_name="Grade 7 Term 3")
 
+    def teachers_of(g: int) -> list[str]:
+        return [t for t, _, s in TEACHERS if s.startswith(str(g))]
+
+    # Setup approves these through the real drive gate, signed in as each class teacher.
+    # "earlier": approved earlier in the year, so its learner alerts are old news in November.
+    approved = [{"teacher_id": t, "file": f"Grade {g}/{YEAR} Term {term}/{results_name(g, term)}", "earlier": True}
+                for term in (1, 2) for g in range(4, 10) for t in teachers_of(g)]
+    approved += [{"teacher_id": t, "file": f"Grade {g}/{YEAR} Term 3/{results_name(g, 3)}"}
+                 for g, st in TERM3_ON_DRIVE.items() if st == "approved" for t in teachers_of(g)]
     demo = {"today": DEMO_TODAY, "pin": DEMO_PIN, "school": SCHOOL,
             "teachers": [{"teacher_id": t, "name": n, "stream": s} for t, n, s in TEACHERS],
-            # Setup approves these through the real drive gate, signed in as the class teacher.
-            "already_approved": [{"teacher_id": next(t for t, _, s in TEACHERS if s == f"{g}A"),
-                                  "file": f"Grade {g}/{YEAR} Term 3/grade{g}_{YEAR}_term3_results.csv"}
-                                 for g, st in TERM3_ON_DRIVE.items() if st == "approved"]}
+            "first_sign_in": FIRST_SIGN_IN, "already_approved": approved}
     (home / "demo.json").write_text(json.dumps(demo, indent=2), encoding="utf-8")
     shutil.copytree(REPO / "data" / "calendar", home / "data" / "calendar")
     print(f"school demo: {len(learners)} learners in Grades 4-9, {len(records)} history records, "

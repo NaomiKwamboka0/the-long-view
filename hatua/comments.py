@@ -20,7 +20,7 @@ import os
 import re
 from datetime import datetime, timezone
 
-from . import auth, guard, patterns, scope, store
+from . import audit, auth, guard, patterns, scope, store
 from .config import LEVEL_NAMES
 from .local_model import local_host, open_local
 from .summary import GateBlocked
@@ -229,6 +229,10 @@ def rate(comment_id: str, session: str, rating: str, reasons: list[str] | None =
         c["teacher_edit"] = edited_text.strip()
     c.update(rating=rating, reasons=reasons, note=note.strip()[:200], rated_by=who["name"], rated_at=_now())
     store.save("comments", items)
+    audit.write_event({"tool": "comment.rate", "actor": who["teacher_id"], "ok": True,
+                       "inputs": {"kwargs": {"comment_id": comment_id, "learner_id": c["learner_id"]}},
+                       "output": {"rating": rating, "approved_by": who["name"] if rating == "up" else None,
+                                  "edited": bool(c.get("teacher_edit"))}})
     out = {"comment": c}
     if rating == "down":
         out["next"] = write(c["learner_id"], who["teacher_id"], feedback=reasons, replaces=comment_id)

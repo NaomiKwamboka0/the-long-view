@@ -64,8 +64,11 @@ def cmd_teacher_add(args) -> None:
     pin = getpass.getpass("Choose a PIN (at least 6 characters, input is hidden): ")
     if pin != getpass.getpass("Type the PIN again: "):
         raise ValueError("The two PINs do not match.")
-    entry = auth.register(args.id, args.name, pin)
+    one_time = bool(getattr(args, "one_time", False))
+    entry = auth.register(args.id, args.name, pin, must_change=one_time)
     print(f"Registered {entry['name']} ({entry['teacher_id']}) on this computer.")
+    if one_time:
+        print("This is a one-time PIN. In the portal the teacher must choose their own PIN before anything opens.")
     print("Sign-in is asked for only when HATUA_REQUIRE_AUTH=1.")
 
 
@@ -218,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("teacher-add", help="Register a teacher (ID, name, PIN) on this computer")
     s.add_argument("--id", required=True, help="3 to 24 letters, digits, '-' or '_'")
     s.add_argument("--name", required=True, help="The teacher's full name")
+    s.add_argument("--one-time", action="store_true",
+                   help="The PIN works once: the teacher must choose their own at the first portal sign-in")
     s.set_defaults(fn=cmd_teacher_add)
     s = sub.add_parser("teacher-list", help="List the teachers registered on this computer")
     s.set_defaults(fn=cmd_teacher_list)

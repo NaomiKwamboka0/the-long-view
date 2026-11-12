@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hatua portal</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Ccircle cx=%226%22 cy=%2222%22 r=%224%22 fill=%22%23cdbfe4%22/%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%224.5%22 fill=%22%234b91a5%22/%3E%3Ccircle cx=%2224%22 cy=%227%22 r=%225%22 fill=%22%236a4c9c%22/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
 /* Hatua teacher portal. Same language as the teacher page: soft sage paper, white
    surfaces with no borders, jacaranda for actions, amber (never red) for attention. */
@@ -16,7 +15,7 @@
   --l4: #1f5d72; --l3: #4b91a5; --l2: #a6cfd9; --l1: #dcedf2;
   --l4-ink: #fff; --l3-ink: #fff; --l2-ink: #123947; --l1-ink: #123947;
   --path: #cdbfe4; --focus: #6a4c9c; --shadow: 0 18px 48px -12px rgba(33, 48, 41, .28);
-  --font: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;  /* no web font: nothing is fetched from the internet */
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --ink-soft: #a3b1ab;
@@ -71,6 +70,19 @@ input[type=text], input[type=password], input[type=search], select, textarea { b
 .practice table { border-collapse: separate; border-spacing: 0 4px; width: 100%; font-size: .92rem; }
 .practice td { padding: 2px 6px; }
 .practice td:last-child { text-align: right; }
+
+.pin-row { display: flex; gap: 8px; }
+.pin-row input { flex: 1 1 auto; }
+.rules { margin: 0; padding-left: 18px; }
+details.practice summary { cursor: pointer; }
+details.practice[open] summary { margin-bottom: 8px; }
+.signs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 190px; overflow-y: auto; }
+.signs li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; border-radius: 12px; background: var(--tint); font-size: .92rem; }
+.signs li.bad { background: var(--sun-soft); color: var(--sun); }
+.pin-form { display: grid; gap: 10px; }
+.pin-form label { display: grid; gap: 4px; font-size: .9rem; color: var(--ink-soft); }
+.lock { border-radius: 18px; background: var(--tint); padding: 16px 18px; display: grid; gap: 10px; justify-items: start; }
+.path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .82rem; overflow-wrap: anywhere; background: var(--tint); border-radius: 10px; padding: 6px 10px; display: block; }
 
 /* app top */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 20px 0 6px; }
@@ -181,11 +193,14 @@ table.long .none { display: inline-block; width: 2.15em; height: 1.75em; border-
 /* calendar */
 .terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .terms .card.now { background: var(--lake-soft); }
+.terms .card.bad { background: var(--sun-soft); }
+.terms .card.good { background: var(--leaf-soft); }
 
 dialog { border: 0; border-radius: 24px; padding: 0; width: min(560px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 dialog::backdrop { background: rgba(33, 48, 41, .35); }
 .dlg { padding: 22px; display: grid; gap: 14px; }
 .dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.dlg h3 { font-size: 1.05rem; }
 .dlg dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; margin: 0; }
 .dlg dt { color: var(--ink-soft); }
 .dlg dd { margin: 0; overflow-wrap: anywhere; }
@@ -245,20 +260,32 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   <div class="signin-card">
     <div class="panel" style="display:grid;gap:16px">
       <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
-      <div><h1 style="font-size:1.5rem">Sign in to your class</h1><p class="soft" id="si-school"></p></div>
+      <div><h1 style="font-size:1.5rem" id="si-title">Sign in to your class</h1><p class="soft" id="si-school"></p></div>
       <form id="si-form" autocomplete="on">
-        <label>Member number<input type="text" id="si-id" autocomplete="username" placeholder="For example M-6001" required></label>
-        <label>PIN<input type="password" id="si-pin" autocomplete="current-password" inputmode="numeric" required></label>
+        <label>Member number<input type="text" id="si-id" autocomplete="username" autocapitalize="characters" placeholder="For example M-6001" required></label>
+        <label>PIN<span class="pin-row"><input type="password" id="si-pin" autocomplete="current-password" required><button class="btn quiet small" type="button" id="si-show" aria-pressed="false">Show</button></span></label>
         <p class="error small" id="si-error" role="alert" hidden></p>
         <button class="btn" type="submit" id="si-go">Sign in</button>
       </form>
-      <p class="small soft">Hatua runs on this computer. Your PIN never leaves it. After 5 wrong PINs, sign-in pauses for 15 minutes.</p>
+      <form id="np-form" hidden>
+        <p id="np-hello"></p>
+        <label>New PIN<input type="password" id="np-new" autocomplete="new-password" required></label>
+        <label>New PIN again<input type="password" id="np-again" autocomplete="new-password" required></label>
+        <ul class="rules small soft"><li>6 or more numbers or letters</li><li>Not numbers in order, like 123456</li><li>Not the same number again and again</li><li>Not your member number</li></ul>
+        <p class="error small" id="np-error" role="alert" hidden></p>
+        <button class="btn" type="submit" id="np-go">Save my PIN and open my class</button>
+      </form>
+      <ul class="rules small soft" id="si-facts">
+        <li>Hatua runs on this computer. Your PIN never leaves it.</li>
+        <li>After 5 wrong PINs, sign-in stops for 15 minutes.</li>
+        <li>You are signed out after 15 minutes without use.</li>
+      </ul>
     </div>
-    <div class="practice" id="practice" hidden>
-      <p><b>Practice accounts</b> <span class="soft small">(made-up teachers and learners)</span></p>
-      <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a teacher to fill in the member number.</p>
+    <details class="practice" id="practice" hidden>
+      <summary><b>Practice accounts</b> <span class="soft small">(demo only: made-up teachers and learners)</span></summary>
+      <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a member number to fill it in.</p>
       <table><tbody id="pr-rows"></tbody></table>
-    </div>
+    </details>
   </div>
 </main>
 
@@ -268,9 +295,10 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
     <p class="who" id="who"></p>
     <span class="cal" id="cal-chip"></span>
+    <button class="btn quiet small" type="button" id="account">My account</button>
     <button class="btn quiet small" type="button" id="signout">Sign out</button>
   </header>
-  <section class="hello"><h1 id="hello"></h1></section>
+  <section class="hello"><h1 id="hello"></h1><p class="small soft" id="last-in" style="flex:1 1 100%"></p></section>
   <nav class="tabs" role="tablist" aria-label="Parts of the portal">
     <button role="tab" data-tab="today" aria-selected="true">Today<span class="n" id="n-today"></span></button>
     <button role="tab" data-tab="drive" aria-selected="false">School drive<span class="n" id="n-drive"></span></button>
@@ -283,7 +311,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   <section id="tab-today" role="tabpanel" class="panel">
     <form class="search" id="f-today" role="search"><input type="search" id="q-today" placeholder="Learner name or subject" aria-label="Search notices"><button class="btn" type="submit">Search</button></form>
     <div class="filters">
-      <label>Show<select id="ft-kind"><option value="">Everything</option><option value="learners">Learners to watch</option><option value="uploads">Results and uploads</option></select></label>
+      <label>Show<select id="ft-kind"><option value="">Everything</option><option value="learners">Learners to watch</option><option value="uploads">Results files</option></select></label>
       <label>Parent<select id="ft-told"><option value="">Any</option><option value="no">Not told yet</option><option value="yes">Already told</option></select></label>
     </div>
     <div class="count-line"><span id="r-today"></span><button class="link" type="button" id="clear-today">Clear</button></div>
@@ -292,21 +320,23 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
 
   <!-- DRIVE -->
   <section id="tab-drive" role="tabpanel" class="panel" hidden>
-    <p class="soft" style="max-width:68ch;margin-bottom:14px">These are your class's folders on the school drive. A file here is <b>not</b> in Hatua until you approve it. Approving adds only the rows for your own learners.</p>
+    <p class="soft" style="max-width:68ch;margin-bottom:14px">Your class has one folder for each term on the school drive. Each folder holds one Excel results file. A file is <b>not</b> in Hatua until you approve it. If a file is deleted, Hatua tells you.</p>
+    <div class="terms" id="term-strip" style="margin-bottom:14px"></div>
     <div class="card task" style="margin-bottom:14px">
-      <h3>Upload term results</h3>
-      <p class="small soft">A CSV with the columns learner_id, grade, year, term, learning_area, level (score and task are optional).</p>
+      <h3>Upload a results file</h3>
+      <p class="small soft">An Excel file (.xlsx). Row 1 holds the column names: learner_id, grade, year, term, learning_area, level. Score and task are optional.</p>
       <form class="upload" id="up-form">
         <select id="up-term" aria-label="Term"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select>
-        <input type="file" id="up-file" accept=".csv,text/csv" aria-label="CSV file" required>
+        <input type="file" id="up-file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" aria-label="Excel file" required>
         <button class="btn" type="submit">Upload to the drive</button>
       </form>
       <p class="small" id="up-msg" role="status"></p>
     </div>
     <form class="search" id="f-drive" role="search"><input type="search" id="q-drive" placeholder="File name" aria-label="Search files"><button class="btn" type="submit">Search</button></form>
-    <div class="filters"><label>Status<select id="fd-status"><option value="">Any</option><option value="waiting">Waiting for me</option><option value="approve">Approved</option><option value="reject">Rejected</option></select></label></div>
+    <div class="filters"><label>Status<select id="fd-status"><option value="">Any</option><option value="waiting">Waiting for me</option><option value="approve">In Hatua</option><option value="reject">Rejected</option></select></label></div>
     <div class="count-line"><span id="r-drive"></span><button class="link" type="button" id="clear-drive">Clear</button></div>
     <div id="drive"></div>
+    <p class="small soft" style="margin-top:14px">On this computer, the school drive is this folder:<span class="path" id="drive-path"></span></p>
   </section>
 
   <!-- CLASS -->
@@ -343,7 +373,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <button class="win-btn" type="button" id="ask-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18h14"/></svg></button>
     <button class="win-btn" type="button" id="ask-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
   </div>
-  <p class="ask-note">I know every pupil in your class, and only your class. I never rank learners. Pathway ideas are for you to discuss; the learner and family choose. This chat is not saved.</p>
+  <p class="ask-note">I ask one short question first, so my answer fits what you need. I know only your class. I never rank learners. This chat is not saved.</p>
   <div class="ask-log" id="ask-log" aria-live="polite"></div>
   <form class="ask-form" id="ask-form">
     <textarea id="ask-q" rows="1" placeholder="Ask a question" aria-label="Your question"></textarea>
@@ -352,7 +382,8 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   <div class="ask-grip" id="ask-grip" title="Drag to resize" aria-hidden="true"></div>
 </section>
 <dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
-<div class="toast" id="toast" role="status" hidden><p id="toast-text"></p><button class="btn small" type="button" id="toast-btn">Show me</button></div>
+<div class="toast" id="idle" role="alert" hidden style="bottom:auto;top:18px"><p>You have not used Hatua for a while. You will be signed out in 1 minute. Tap anywhere to stay signed in.</p></div>
+<div class="toast" id="toast" role="status" hidden><p id="toast-text"></p><button class="btn small" type="button" id="toast-btn">Show me</button><button class="link small" type="button" id="toast-x" style="color:inherit">Close</button></div>
 
 <script>
 "use strict";
@@ -363,8 +394,10 @@ const KIND = { sustained_strength: ["held", "A held strength"], improvement: ["u
   sustained_struggle: ["down", "Needs support"], attendance_drop: ["down", "Missing school"] };
 const REASONS = [["harsh", "Too harsh"], ["vague", "Too vague"], ["inaccurate", "Not accurate"], ["long", "Too long"], ["formal", "Too formal"]];
 const lv = l => `<span class="lv ${l}" title="${LEVEL[l] || l}">${l}</span>`;
-const fmt = d => new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-let CSRF = null, ME = null, NOTICES = [], CLASS = [], DRIVE = [], CAL = null, selected = null, MODEL = null;
+const fmt = d => new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+let CSRF = null, ME = null, NOTICES = [], CLASS = [], DRIVE = [], TERMS = [], CAL = null, selected = null, MODEL = null;
+let IDLE_MIN = 15, lastActive = Date.now(), ONE_TIME = null, SIGNIN_NOTE = null;
+const when = iso => iso ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
 async function api(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
@@ -373,56 +406,153 @@ async function api(path, opts = {}) {
     body: opts.json !== undefined ? JSON.stringify(opts.json) : opts.body });
   const data = await res.json().catch(() => ({ error: "The portal did not answer. Is it still running?" }));
   if (res.status === 401 && path !== "login") { showSignin("Your sign-in ended. Please sign in again."); throw new Error("signed out"); }
+  if (res.ok) lastActive = Date.now();
   if (!res.ok) throw new Error(data.error || "Something went wrong.");
   return data;
 }
 
 /* ---------- sign in ---------- */
 async function showSignin(message) {
-  $("app").hidden = true; $("signin").hidden = false; CSRF = null;
-  $("ask").hidden = true; $("ask-launch").hidden = true;
+  $("app").hidden = true; $("signin").hidden = false; CSRF = null; ONE_TIME = null;
+  ME = null; NOTICES = []; CLASS = []; DRIVE = []; TERMS = []; selected = null; L = null; knownFiles = null;
+  $("ask").hidden = true; $("ask-launch").hidden = true; if ($("dlg").open) $("dlg").close();
+  for (const id of ["today", "drive", "people", "learner", "calendar", "ask-log"]) $(id).innerHTML = "";  // leave nothing on screen
+  $("si-form").hidden = false; $("np-form").hidden = true; $("si-facts").hidden = false;
+  $("si-title").textContent = "Sign in to your class";
   $("si-error").hidden = !message; $("si-error").textContent = message || "";
   try {
     const pub = await api("public");
     $("si-school").textContent = pub.school;
     if (pub.practice) {
       $("practice").hidden = false; $("pr-pin").textContent = pub.practice.pin;
-      $("pr-rows").innerHTML = pub.practice.teachers.map(t => `<tr><td>Grade ${esc(t.stream)}</td><td>${esc(t.name)}</td><td><button class="link" type="button" data-fill="${esc(t.teacher_id)}">${esc(t.teacher_id)}</button></td></tr>`).join("");
+      $("pr-rows").innerHTML = pub.practice.teachers.map(t => `<tr><td>Grade ${esc(t.stream)}</td><td>${esc(t.name)}${(pub.practice.one_time || []).includes(t.teacher_id) ? ` <span class="pill">one-time PIN</span>` : ""}</td><td><button class="link" type="button" data-fill="${esc(t.teacher_id)}">${esc(t.teacher_id)}</button></td></tr>`).join("");
       $("pr-rows").querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => { $("si-id").value = b.dataset.fill; $("si-pin").focus(); }));
     }
   } catch (e) {}
   $("si-id").focus();
 }
+$("si-show").addEventListener("click", () => {
+  const show = $("si-pin").type === "password";
+  $("si-pin").type = show ? "text" : "password"; $("si-show").textContent = show ? "Hide" : "Show"; $("si-show").setAttribute("aria-pressed", String(show));
+});
 $("si-form").addEventListener("submit", async e => {
   e.preventDefault();
   $("si-go").disabled = true; $("si-error").hidden = true;
   try {
     const out = await api("login", { method: "POST", json: { teacher_id: $("si-id").value, pin: $("si-pin").value } });
-    CSRF = out.csrf; $("si-pin").value = "";
+    CSRF = out.csrf;
+    if (out.must_change) {
+      ONE_TIME = $("si-pin").value; $("si-pin").value = "";
+      $("si-form").hidden = true; $("si-facts").hidden = true; $("practice").hidden = true; $("np-form").hidden = false; $("np-error").hidden = true;
+      $("si-title").textContent = "Choose your own PIN";
+      $("np-hello").textContent = `Hello ${out.name}. The PIN from the school works one time only. Choose a PIN that only you know. Nothing opens until you do.`;
+      $("np-new").value = $("np-again").value = ""; $("np-new").focus();
+      return;
+    }
+    $("si-pin").value = ""; $("si-pin").type = "password"; $("si-show").textContent = "Show";
+    SIGNIN_NOTE = out;
     await start();
   } catch (err) { $("si-error").hidden = false; $("si-error").textContent = err.message; }
   finally { $("si-go").disabled = false; }
 });
+$("np-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const show = m => { $("np-error").hidden = false; $("np-error").textContent = m; };
+  if ($("np-new").value !== $("np-again").value) return show("The two PINs are not the same. Type them again.");
+  $("np-go").disabled = true; $("np-error").hidden = true;
+  try {
+    await api("pin", { method: "POST", json: { current: ONE_TIME, new: $("np-new").value } });
+    ONE_TIME = null; $("np-new").value = $("np-again").value = "";
+    SIGNIN_NOTE = { first: true };
+    await start();
+    toast("Your new PIN is saved. Use it the next time you sign in.");
+  } catch (err) { show(err.message); }
+  finally { $("np-go").disabled = false; }
+});
 $("signout").addEventListener("click", async () => { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(); });
+
+/* signed out after 15 minutes without use: this page checks, and so does the server */
+["pointerdown", "keydown"].forEach(ev => addEventListener(ev, () => { lastActive = Date.now(); if (!$("idle").hidden) $("idle").hidden = true; }, true));
+setInterval(async () => {
+  if ($("app").hidden) return;
+  const idle = (Date.now() - lastActive) / 60000;
+  if (idle >= IDLE_MIN) { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(`You were signed out after ${IDLE_MIN} minutes without use.`); }
+  else $("idle").hidden = idle < IDLE_MIN - 1;
+}, 10000);
+
+/* ---------- my account ---------- */
+$("account").addEventListener("click", accountDialog);
+async function accountDialog() {
+  const a = await api("account");
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">My account</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p><b>${esc(ME.name)}</b><br><span class="soft">Member number ${esc(ME.teacher_id)}, ${esc(ME.class_label)}</span></p>
+    <div class="section"><h3>Sign-ins on this computer</h3>
+      <p class="small soft">If you see a sign-in or a wrong PIN that was not you, change your PIN now and tell the school.</p>
+      <ul class="signs">${a.recent.map(r => `<li class="${r.ok ? "" : "bad"}"><span>${esc(r.what)}</span><span>${esc(when(r.when))}</span></li>`).join("") || `<li>Nothing yet.</li>`}</ul></div>
+    <div class="section"><h3>What you did in Hatua</h3>
+      <p class="small soft">From Hatua's activity log on this computer. Every approval carries your name.</p>
+      <ul class="signs">${a.did.map(r => `<li><span>${esc(r.what)}</span><span style="white-space:nowrap">${esc(when(r.when))}</span></li>`).join("") || `<li>Nothing yet.</li>`}</ul></div>
+    <form class="pin-form" id="cp-form"><h3>Change my PIN</h3>
+      <label>The PIN you use now<input type="password" id="cp-now" autocomplete="current-password" required></label>
+      <label>New PIN<input type="password" id="cp-new" autocomplete="new-password" required></label>
+      <label>New PIN again<input type="password" id="cp-again" autocomplete="new-password" required></label>
+      <p class="small soft">6 or more numbers or letters. Not in order, not repeated, not your member number.${a.pin_changed ? ` Last changed ${esc(when(a.pin_changed))}.` : ""}</p>
+      <p class="error small" id="cp-error" role="alert" hidden></p>
+      <div><button class="btn" type="submit" id="cp-go">Save my new PIN</button></div></form>
+    <div class="section"><h3>How Hatua keeps your class safe</h3>
+      <ul class="rules small"><li>You see only your own class. No other teacher sees it.</li><li>After ${a.lock_failures} wrong PINs, sign-in stops for ${a.lock_minutes} minutes.</li>
+        <li>You are signed out after ${a.idle_minutes} minutes without use.</li><li>Your member number works in one place at a time. A new sign-in ends the old one.</li>
+        <li>Everything stays on this computer. Nothing is sent over the internet.</li></ul></div>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  $("cp-form").onsubmit = async e => {
+    e.preventDefault();
+    const show = m => { $("cp-error").hidden = false; $("cp-error").textContent = m; };
+    if ($("cp-new").value !== $("cp-again").value) return show("The two new PINs are not the same. Type them again.");
+    $("cp-go").disabled = true;
+    try { await api("pin", { method: "POST", json: { current: $("cp-now").value, new: $("cp-new").value } }); $("dlg").close(); toast("Your new PIN is saved. Any other sign-in with your number has ended."); }
+    catch (err) { show(err.message); $("cp-go").disabled = false; }
+  };
+  $("dlg").showModal();
+}
 
 /* ---------- start ---------- */
 async function start() {
   const me = await api("me");
-  CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model;
+  CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model; IDLE_MIN = me.idle_minutes || 15; lastActive = Date.now();
   $("signin").hidden = true; $("app").hidden = false;
   setTab("today");  // before loading, so a tab the teacher picks while it loads is kept
   $("who").innerHTML = `<b>${esc(ME.name)}</b><br>${esc(ME.class_label)} class teacher, ${ME.learners} learners, member number ${esc(ME.teacher_id)}`;
   $("cal-chip").textContent = CAL.now;
   const h = new Date().getHours();
   $("hello").textContent = `${h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"}, ${ME.name.split(" ")[0]}.`;
+  const note = SIGNIN_NOTE || {}; SIGNIN_NOTE = null;
+  $("last-in").textContent = note.first ? "This is your first sign-in." : note.previous_login ? `You last signed in on ${when(note.previous_login)}.` : "";
+  if (note.failed_since) toast(`${note.failed_since} wrong PIN${note.failed_since === 1 ? " was" : "s were"} tried on your member number since you last signed in. If that was not you, change your PIN.`, null, "My account", accountDialog);
+  else if (note.ended_other) toast("You were signed in somewhere else. That sign-in has ended.");
   const last = CAL.terms.filter(t => t.results_due <= CAL.today).pop() || CAL.terms[0];
   if (last) $("up-term").value = String(last.term);
   await Promise.all([loadNotices(), loadDrive(), loadClass()]);
   renderCalendar();
   askStart();
 }
-async function loadNotices() { NOTICES = (await api("notices?all=1")).notices; renderToday(); }
-async function loadDrive() { DRIVE = (await api("drive")).folders; renderDrive(); }
+let knownFiles = null;
+async function loadNotices() {
+  NOTICES = (await api("notices?all=1")).notices; renderToday();
+  const files = NOTICES.filter(n => !n.learner_id && !n.resolved && n.kind !== "waiting_approval");
+  const fresh = knownFiles && files.find(n => !knownFiles.has(n.notice_id + n.created));
+  if (fresh) toast(fresh.title + ".", "today");
+  knownFiles = new Set(files.map(n => n.notice_id + n.created));
+}
+async function loadDrive() { const d = await api("drive"); DRIVE = d.folders; TERMS = d.terms; $("drive-path").textContent = d.on_this_computer; renderDrive(); }
+/* Look again when the teacher comes back to this window, for example after working in the drive folder. */
+let lastLook = 0;
+async function lookAgain() {
+  if ($("app").hidden || document.hidden || Date.now() - lastLook < 3000) return;
+  lastLook = Date.now();
+  try { await loadDrive(); await loadNotices(); } catch (e) {}
+}
+addEventListener("focus", lookAgain);
+document.addEventListener("visibilitychange", lookAgain);
 async function loadClass() {
   CLASS = (await api("class")).learners; renderClass(); renderToday();
   if (typeof ASK !== "undefined" && !ASK.history.length && $("ask-log").childElementCount) askReset();  // fresh suggestions
@@ -431,6 +561,7 @@ async function loadClass() {
 document.querySelectorAll(".tabs button[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
 $("ask-tab").addEventListener("click", () => askSet(ASK.state === "min" ? "open" : ASK.state));
 function setTab(t) {
+  if ((t === "today" || t === "drive") && ME) lookAgain();
   document.querySelectorAll(".tabs button[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
   for (const p of ["today", "drive", "class", "calendar"]) $("tab-" + p).hidden = p !== t;
 }
@@ -452,12 +583,12 @@ function renderToday() {
   const groups = {};
   for (const n of L) (groups[n.learner_id] ||= []).push(n);
   const people = Object.entries(groups);
-  $("r-today").textContent = `${people.length} learner${people.length === 1 ? "" : "s"} to watch, ${U.length} about results`;
+  $("r-today").textContent = `${people.length} learner${people.length === 1 ? "" : "s"} to watch, ${U.length} about results files`;
   const learnerName = id => (CLASS.find(c => c.id === id) || NOTICES.find(n => n.learner_id === id && n.name) || {}).name || id;
   $("today").innerHTML = `
-    ${U.length ? `<div class="section"><h3>Results and uploads</h3><div class="cards">${U.map(n => `
-      <article class="card task"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p>
-        <div class="row"><button class="btn small" type="button" data-go-drive>${n.kind === "waiting_approval" ? "Review the file" : "Upload the results"}</button></div></article>`).join("")}</div></div>` : ""}
+    ${U.length ? `<div class="section"><h3>Results files</h3><div class="cards">${U.map(n => `
+      <article class="card ${n.kind === "waiting_approval" ? "task" : "watch"}"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p>
+        <div class="row"><button class="btn small" type="button" data-go-drive>${n.kind === "waiting_approval" ? "Check the file" : "Go to the school drive"}</button></div></article>`).join("")}</div></div>` : ""}
     <div class="section"><h3>Learners to watch</h3>
       ${people.length ? `<div class="cards">${people.map(([lid, ns]) => `
         <article class="card ${ns.every(n => n.told_parent) ? "ok" : "watch"}">
@@ -509,19 +640,29 @@ let driveQuery = "";
 $("f-drive").addEventListener("submit", e => { e.preventDefault(); driveQuery = $("q-drive").value.trim().toLowerCase(); renderDrive(); });
 $("fd-status").addEventListener("change", renderDrive);
 $("clear-drive").addEventListener("click", () => { $("q-drive").value = ""; driveQuery = ""; $("fd-status").value = ""; renderDrive(); });
-const STATUS = { waiting: "Waiting for you", approve: "Approved", reject: "Rejected" };
+const STATUS = { waiting: "Waiting for you", approve: "In Hatua", reject: "Rejected" };
+const TERM_STATE = { in_hatua: ["good", "approve", "In Hatua", () => "The results are in Hatua and the file is in its folder."],
+  waiting: ["", "waiting", "Waiting for you", () => "Check the file below, then approve it."],
+  missing: ["bad", "watch", "File missing", t => `No file is in this folder. Results were due on ${fmt(t.due)}.`],
+  file_removed: ["bad", "watch", "File gone", () => "The file was deleted or moved. The results are still in Hatua. Put the file back."],
+  not_due: ["", "", "Not due yet", t => `Results are due by ${fmt(t.due)}.`] };
 function renderDrive() {
   const st = $("fd-status").value;
   let total = 0, shown = 0;
   const waiting = DRIVE.flatMap(f => f.terms.flatMap(t => t.files)).filter(f => f.status === "waiting").length;
-  $("n-drive").textContent = waiting ? " " + waiting : "";
-  $("drive").innerHTML = DRIVE.map(f => `<div class="folder"><h3 style="margin:6px 2px">${esc(f.folder)}</h3>${f.terms.map(t => {
+  const gone = TERMS.filter(t => t.state === "missing" || t.state === "file_removed").length;
+  $("n-drive").textContent = waiting + gone ? " " + (waiting + gone) : "";
+  $("term-strip").innerHTML = TERMS.map(t => { const [tone, pill, label, text] = TERM_STATE[t.state];
+    return `<div class="card ${tone}"><div class="row" style="justify-content:space-between"><h3>Term ${t.term}</h3><span class="pill ${pill}">${label}</span></div><p class="small">${esc(text(t))}</p></div>`; }).join("");
+  const stateOf = label => TERMS.find(t => t.label === label);
+  $("drive").innerHTML = DRIVE.map(f => `<div class="folder">${f.terms.map(t => {
     const files = t.files.filter(x => { total++; return (!st || x.status === st) && (!driveQuery || x.name.toLowerCase().includes(driveQuery)); });
     shown += files.length;
-    return `<div class="term"><div class="term-head"><h3>${esc(t.label)}</h3><span class="small soft">${t.files.length ? t.files.length + " file" + (t.files.length === 1 ? "" : "s") : "Empty"}</span></div>
+    const ts = stateOf(t.label), gone = ts && (ts.state === "missing" || ts.state === "file_removed");
+    return `<div class="term"><div class="term-head"><h3>${esc(f.folder)} / ${esc(t.label)}</h3><span class="small ${gone ? "error" : "soft"}">${t.files.length ? t.files.length + " file" + (t.files.length === 1 ? "" : "s") : gone ? "No file in this folder" : "Empty"}</span></div>
       ${files.map(x => `<div class="file"><span class="pill ${x.status}">${STATUS[x.status]}</span>
-        <div><p class="nm">${esc(x.name)}</p><p class="small soft">${x.status === "waiting" ? "Uploaded " + fmt(x.modified.slice(0, 10)) : `${STATUS[x.status]} by ${esc(x.decided_by)} on ${fmt(x.decided_at.slice(0, 10))}${x.rows_added != null && x.status === "approve" ? `, ${x.rows_added} records added` : ""}`}</p></div>
-        ${x.status === "waiting" ? `<button class="btn small" type="button" data-preview="${esc(x.path)}">Review</button>` : `<span></span>`}</div>
+        <div><p class="nm">${esc(x.name)}</p><p class="small soft">${esc(x.kind)} file. ${x.status === "waiting" ? "Put on the drive " + fmt(x.modified.slice(0, 10)) : `${STATUS[x.status]} by ${esc(x.decided_by)} on ${fmt(x.decided_at.slice(0, 10))}${x.rows_added != null && x.status === "approve" ? `, ${x.rows_added} records added` : ""}`}</p></div>
+        ${x.status === "waiting" ? `<button class="btn small" type="button" data-preview="${esc(x.path)}">Check the file</button>` : `<span></span>`}</div>
         <div id="pv-${esc(x.path).replace(/[^a-z0-9]/gi, "_")}" hidden></div>`).join("")}</div>`;
   }).join("")}</div>`).join("") || `<p class="empty">No folder for your class on the drive.</p>`;
   $("r-drive").textContent = `Showing ${shown} of ${total} files`;
@@ -562,7 +703,7 @@ $("up-form").addEventListener("submit", async e => {
   try {
     const year = (CAL.today || "").slice(0, 4);
     const r = await api(`drive/upload?term=${$("up-term").value}&year=${year}&name=${encodeURIComponent(f.name)}`, { method: "POST", body: await f.arrayBuffer() });
-    $("up-msg").textContent = `Saved to ${r.path}. Review it below, then approve it.`;
+    $("up-msg").textContent = r.status === "approve" ? `Saved to ${r.path}. It is the same file you approved before, so it is already in Hatua.` : `Saved to ${r.path}. Check it below, then approve it.`;
     $("up-file").value = "";
     await loadDrive(); await loadNotices();
   } catch (err) { $("up-msg").textContent = err.message; }
@@ -618,20 +759,31 @@ function renderLearner() {
   </div>`;
   wireCommon(el);
   wireComment(latest);
+  $("pw-open")?.addEventListener("click", async e => {
+    e.target.disabled = true;
+    try { L.pathways = (await api(`learner/${L.id}/pathways/open`, { method: "POST", json: {} })).pathways; renderLearner(); }
+    catch (err) { toast(err.message); e.target.disabled = false; }
+  });
 }
 let el = null;
 function pathwaysBox(l) {
   const info = l.pathways || {};
   if (info.stage === "too_early") return `<div class="section"><h3>Senior school pathways</h3><p class="soft small">${esc(info.intro)}</p></div>`;
+  const title = `Senior school pathway ideas${info.stage === "explore" ? " (early ideas)" : ""}`;
+  if (info.locked) return `<div class="section"><h3>${title}</h3><div class="lock">
+    <p><b>Closed.</b> Hatua can show which strengths in ${esc(l.name)}'s records relate to each senior school pathway. These are ideas for <b>you</b> to raise with ${esc(l.name)} and the guardian. Hatua never picks a pathway, and never shows these to the learner or the parent.</p>
+    <p class="small soft">When you open them, Hatua records your name and the time.</p>
+    <button class="btn" type="button" id="pw-open">Open pathway ideas as ${esc(ME.name)}</button>
+    <p class="small soft">By opening, you agree: "I will raise these with ${esc(l.name)} and the guardian myself."</p></div></div>`;
   if (!info.pathways || !info.pathways.length) return "";
   const cite = ids => ids.map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ");
-  return `<div class="section"><h3>Senior school pathway ideas${info.stage === "explore" ? " (early ideas)" : ""}</h3>
+  return `<div class="section"><h3>${title}</h3>
     <p class="small soft">${esc(info.intro)}</p>
     <div class="pw">${info.pathways.map(pw => `<div class="pw-card"><h4>${esc(pw.name)}</h4>
       <p class="small soft">${esc(pw.tracks)}</p><p class="small">${esc(pw.summary)}</p>
       ${pw.lines.length ? `<ul>${pw.lines.map(x => `<li class="${x.kind === "to_build" ? "build" : ""}">${esc(x.text)}${x.kind === "to_build" ? " (to keep building)" : ""} ${cite(x.evidence.slice(0, 3))}</li>`).join("")}</ul>` : ""}
     </div>`).join("")}</div>
-    <p class="small soft">Raise these with ${esc(l.name)} and the family yourself. They are never added to parent messages or report comments.</p></div>`;
+    <p class="small soft">Opened by ${esc(info.opened ? info.opened.by : "")}${info.opened ? " on " + esc(when(info.opened.at)) : ""}. Raise these with ${esc(l.name)} and the guardian yourself. They are never added to parent messages or report comments.</p></div>`;
 }
 const THUMB_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H4V10h3z"/><path d="M7 10l4-7c1.5 0 2.5 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.3 7.5a2 2 0 0 1-2 1.7H7"/></svg>`;
 const THUMB_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3h3v11h-3z"/><path d="M17 14l-4 7c-1.5 0-2.5-1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3L4.6 5.2a2 2 0 0 1 2-1.7H17"/></svg>`;
@@ -741,9 +893,9 @@ function askSuggestions() {
   return qs;
 }
 function askReset() {
-  ASK.history = [];
+  ASK.history = []; ASK.pending = null; $("ask-q").placeholder = "Ask a question";
   $("ask-log").innerHTML = `<div class="msg bot"><p>Hello ${esc((ME && ME.name || "").split(" ")[0])}. I can answer questions about ${esc(ME ? ME.class_label : "your class")}, a learner's records, the school calendar, or how to use Hatua.</p>
-    <div class="chips" style="margin-top:10px">${askSuggestions().map(q => `<button class="chip" type="button">${esc(q)}</button>`).join("")}</div></div>`;
+    <div class="chips live" style="margin-top:10px">${askSuggestions().map(q => `<button class="chip" type="button">${esc(q)}</button>`).join("")}</div></div>`;
   $("ask-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => askSend(c.textContent)));
 }
 function askStatus() {
@@ -770,23 +922,34 @@ function askAdd(role, html, by) {
   $("ask-log").scrollTop = $("ask-log").scrollHeight;
   return div;
 }
-async function askSend(question) {
-  question = (question || "").trim();
-  if (!question || ASK.busy) return;
+async function askSend(text) {
+  text = (text || "").trim();
+  if (!text || ASK.busy) return;
+  const step2 = ASK.pending;  // the teacher is answering Hatua's follow-up question
   ASK.busy = true; $("ask-send").disabled = true; $("ask-q").value = ""; askGrow();
-  askAdd("teacher", `<p>${esc(question)}</p>`);
-  const wait = askAdd("bot", `<p>${MODEL ? "Thinking... Qwen on this laptop can take up to a minute." : "Looking in your class's records..."}</p>`);
+  $("ask-log").querySelectorAll(".chips.live").forEach(c => c.remove());
+  askAdd("teacher", `<p>${esc(text)}</p>`);
+  const wait = askAdd("bot", `<p>${!step2 ? "One moment..." : MODEL ? "Thinking... Qwen on this laptop can take up to a minute." : "Looking in your class's records..."}</p>`);
   wait.classList.add("thinking");
   try {
-    const out = await api("assistant", { method: "POST", json: { question, history: ASK.history } });
+    const out = await api("assistant", { method: "POST", json: step2 ? { ask_id: step2.ask_id, reply: text, history: ASK.history } : { question: text, history: ASK.history } });
     wait.remove();
-    const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or comparisons" : "Built-in answer from Hatua's records")
-      : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
-    askAdd("bot", renderAnswer(out.answer), by);
-    ASK.history.push({ role: "teacher", text: question }, { role: "assistant", text: out.answer });
-    ASK.history = ASK.history.slice(-6);
+    if (out.kind === "follow_up") {
+      ASK.pending = { ask_id: out.ask_id, question: text };
+      const div = askAdd("bot", `<p><b>${esc(out.question)}</b></p><div class="chips live" style="margin-top:8px">${out.options.map(o => `<button class="chip" type="button">${esc(o)}</button>`).join("")}</div>`, "Hatua asks one question first. Tap an answer or type your own.");
+      div.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => askSend(c.textContent)));
+      $("ask-q").placeholder = "Or type your answer";
+    } else {
+      ASK.pending = null; $("ask-q").placeholder = "Ask a question";
+      const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or comparisons" : out.gated ? "Hatua's rule: the teacher opens pathway ideas first" : "Built-in answer from Hatua's records")
+        : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
+      askAdd("bot", renderAnswer(out.answer), by);
+      ASK.history.push({ role: "teacher", text: step2 ? `${step2.question} (${text})` : text }, { role: "assistant", text: out.answer });
+      ASK.history = ASK.history.slice(-6);
+    }
     if (ASK.state === "min") $("ask-dot").hidden = false;
   } catch (err) {
+    if (step2) { ASK.pending = null; $("ask-q").placeholder = "Ask a question"; }
     wait.classList.remove("thinking"); wait.innerHTML = `<p class="error">${esc(err.message)}</p>`;
   } finally { ASK.busy = false; $("ask-send").disabled = false; if (ASK.state !== "min") $("ask-q").focus(); }
 }
@@ -867,15 +1030,17 @@ function askStart() {
 
 /* ---------- toast ---------- */
 let toastTimer = null;
-function toast(text, goTab) {
-  $("toast-text").textContent = text; $("toast").hidden = false; $("toast-btn").hidden = !goTab;
-  $("toast-btn").onclick = () => { setTab(goTab); $("toast").hidden = true; };
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 7000);
+function toast(text, goTab, actionLabel, action) {
+  $("toast-text").textContent = text; $("toast").hidden = false; $("toast-btn").hidden = !goTab && !action;
+  $("toast-btn").textContent = actionLabel || "Show me";
+  $("toast-btn").onclick = () => { if (action) action(); else setTab(goTab); $("toast").hidden = true; };
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, action ? 15000 : 8000);
 }
+
+$("toast-x").addEventListener("click", () => { $("toast").hidden = true; });
 
 /* ---------- go ---------- */
 start().catch(() => showSignin());
-setInterval(() => { if (!$("app").hidden) loadNotices().catch(() => {}); }, 60000);
 </script>
 </body>
 </html>

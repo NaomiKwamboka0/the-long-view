@@ -18,13 +18,23 @@ their guardian". It disqualifies "an agent that assigns a track or label". So Ha
 * keeps pathway ideas out of parent messages and report comments: the teacher raises
   them with the learner and family first.
 
+The gate. The brief asks for a named human to approve "pathway suggestions before they
+reach a teacher". So pathway ideas are CLOSED for every learner until the signed-in
+class teacher opens them for that learner (`open_ideas`). Opening is a promise, shown
+on the button: "I will raise these with the learner and guardian myself." The name and
+time go in the audit log. Until then the portal sends no pathway ideas for that
+learner and the assistant is not given them. An agent token cannot open them.
+
 The mapping from junior school learning areas to pathways is Hatua's own assumption,
 documented in docs/PORTAL.md, and a school can change PATHWAYS below.
 """
 from __future__ import annotations
 
-from . import notify, patterns, store
+from datetime import datetime, timezone
+
+from . import audit, auth, notify, patterns, scope, store
 from .config import LEVEL_NAMES, LEVELS
+from .summary import GateBlocked
 
 PATHWAYS = [
     {"name": "STEM", "full": "Science, Technology, Engineering and Mathematics (STEM)",
@@ -127,3 +137,47 @@ def text(learner_id: str) -> str:
                 for x in pw["lines"]]
         parts.append(f"- {pw['name']} ({pw['tracks']}): {pw['summary']}" + (" " + "; ".join(bits) + "." if bits else ""))
     return "\n".join(parts)
+
+
+# ---------------------------------------------------------------- the named-teacher gate
+def opened(teacher_id: str, learner_id: str) -> dict | None:
+    """{"by": name, "at": time} if this teacher has opened this learner's pathway ideas."""
+    gate = store.load("pathway_gate")
+    return (gate.get(teacher_id) or {}).get(learner_id) if isinstance(gate, dict) else None
+
+
+def opened_ids(teacher_id: str) -> set[str]:
+    gate = store.load("pathway_gate")
+    return set(gate.get(teacher_id) or {}) if isinstance(gate, dict) else set()
+
+
+def open_ideas(session: str | None, learner_id: str) -> dict:
+    """The signed-in class teacher opens one learner's pathway ideas. Logged with their name."""
+    who = auth.resolve(session, kind="human", action="open pathway ideas")
+    if not scope.can_view(who["teacher_id"], learner_id):
+        raise GateBlocked("This learner is not in your class.")
+    l = store.learner(learner_id)
+    if stage(int(l["current_grade"])) == "too_early":
+        raise GateBlocked("Pathway ideas start in Grade 7. There is nothing to open for this learner.")
+    gate = store.load("pathway_gate")
+    gate = gate if isinstance(gate, dict) else {}
+    mine = gate.setdefault(who["teacher_id"], {})
+    if learner_id not in mine:
+        mine[learner_id] = {"by": who["name"], "at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+        store.save("pathway_gate", gate)
+        audit.write_event({"tool": "pathways.open", "actor": who["teacher_id"], "ok": True,
+                           "inputs": {"kwargs": {"learner_id": learner_id}},
+                           "output": {"approved_by": who["name"],
+                                      "promise": "will raise these with the learner and guardian first"}})
+    return mine[learner_id]
+
+
+def for_teacher(teacher_id: str, learner_id: str) -> dict:
+    """What the portal may show this teacher: the ideas if opened, else only that they are closed."""
+    info = for_learner(learner_id)
+    if info["stage"] in ("too_early", "unknown"):
+        return info
+    seen = opened(teacher_id, learner_id)
+    if seen:
+        return {**info, "opened": seen}
+    return {"stage": info["stage"], "grade": info["grade"], "locked": True, "pathways": []}

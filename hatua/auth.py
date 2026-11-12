@@ -21,6 +21,16 @@ job rather than treating them as equal:
   8-hour limit, or `logout`), and can read and draft but never approve, save or mint
   another token.
 
+Sign-in rules for the teacher portal:
+
+* A PIN that the school handed out (`register(..., must_change=True)`) is a one-time
+  PIN. It opens a limited session that can do one thing: choose a new PIN. Nothing
+  about a learner is readable until the teacher has a PIN only they know.
+* A new PIN must pass `pin_problem`: long enough, not a run or a repeat, not the
+  member number, not a PIN everyone tries first.
+* Each sign-in tells the teacher when they last signed in and how many wrong PINs were
+  tried since, so a teacher can see if someone else has been trying their account.
+
 Only the SHA-256 of a token - or of a session's CSRF value - is stored, never the value
 itself.
 
@@ -98,13 +108,46 @@ def _burn_time(pin: str) -> None:
     hmac.compare_digest(_hash(pin, _DUMMY_SALT), "0" * (2 * SCRYPT["dklen"]))
 
 
+COMMON_PINS = {"123456", "1234567", "12345678", "123456789", "654321", "000000", "111111", "121212", "112233",
+               "123123", "101010", "246810", "135790", "696969", "159753", "147258", "password", "qwerty"}
+
+
+def pin_problem(pin: str, teacher_id: str = "") -> str | None:
+    """Why a PIN is too easy to guess, in words a teacher can act on. None means it is fine."""
+    pin = pin or ""
+    if len(pin) < MIN_PIN:
+        return f"Use at least {MIN_PIN} numbers or letters."
+    if len(pin) > 64:
+        return "That PIN is too long."
+    low = pin.lower()
+    if len(set(low)) <= 2:
+        return "Do not repeat the same one or two characters."
+    if low in COMMON_PINS:
+        return "That PIN is one of the first that people try. Choose another."
+    if low.isdigit():
+        steps = {(int(b) - int(a)) % 10 for a, b in zip(low, low[1:])}
+        if len(steps) == 1:
+            return "Do not use numbers that go up or down in order, like 123456."
+    for size in (2, 3):
+        if len(low) % size == 0 and low == low[:size] * (len(low) // size):
+            return "Do not repeat the same short pattern."
+    digits = "".join(ch for ch in (teacher_id or "") if ch.isdigit())
+    if len(digits) >= 3 and digits in low:
+        return "Do not put your member number inside your PIN."
+    return None
+
+
 def _fail_message() -> str:
-    return "Sign-in failed. Check the teacher ID and the PIN."
+    return "Sign-in failed. Check the member number and the PIN."
 
 
 # ---------------------------------------------------------------- registry
-def register(teacher_id: str, name: str, pin: str) -> dict:
-    """Add or update one teacher on this computer. Returns {teacher_id, name}."""
+def register(teacher_id: str, name: str, pin: str, must_change: bool = False) -> dict:
+    """Add or update one teacher on this computer. Returns {teacher_id, name}.
+
+    must_change=True makes `pin` a one-time PIN: the teacher must choose their own at
+    the first sign-in, before they can open anything.
+    """
     teacher_id = (teacher_id or "").strip()
     name = (name or "").strip()
     if not TEACHER_ID.match(teacher_id):
@@ -117,6 +160,8 @@ def register(teacher_id: str, name: str, pin: str) -> dict:
     teachers = _read(_path("teachers"), {})
     teachers[teacher_id] = {"name": name, "salt": salt.hex(), "hash": _hash(pin, salt),
                             "registered": _now().isoformat(timespec="seconds")}
+    if must_change:
+        teachers[teacher_id]["must_change"] = True
     _write(_path("teachers"), teachers)
     return {"teacher_id": teacher_id, "name": name}
 
@@ -181,10 +226,17 @@ def login(teacher_id: str, pin: str) -> dict:
     if not hmac.compare_digest(_hash(pin, salt), expected):
         _record_failure(state, teacher_id)
         _write(_path("auth_state"), state)
+        entry["failed_since"] = int(entry.get("failed_since", 0)) + 1
+        _write(_path("teachers"), registry)
         raise GateBlocked(_fail_message())
 
     state.pop(teacher_id, None)  # a good sign-in clears the failure count
     _write(_path("auth_state"), state)
+    limited = bool(entry.get("must_change"))
+    previous, failed = entry.get("last_login"), int(entry.get("failed_since", 0))
+    if not limited:  # a one-time PIN is not yet "the teacher signed in"
+        entry.update(last_login=_iso(_now()), failed_since=0)
+        _write(_path("teachers"), registry)
     sessions = _pruned_sessions()
     token, csrf = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
     now = _now()
@@ -195,10 +247,13 @@ def login(teacher_id: str, pin: str) -> dict:
                                 "expires": _iso(_clamped(now, SESSION_MINUTES, absolute)),
                                 "absolute": _iso(absolute),
                                 "csrf": _digest(csrf)}
+    if limited:
+        sessions[_digest(token)]["limited"] = True
     _write(_path("sessions"), sessions)
     # The CSRF value reaches the caller once and is kept only as its digest.
     return {"session": token, "teacher_id": teacher_id, "name": entry.get("name", ""),
-            "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60}
+            "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60,
+            "must_change": limited, "previous_login": previous, "failed_since": failed}
 
 
 def _digest(token: str) -> str:
@@ -289,7 +344,8 @@ def _slide(digest: str) -> None:
     _write(_path("sessions"), sessions)
 
 
-def resolve(session: str | None, kind: str = "human", action: str = "continue") -> dict:
+def resolve(session: str | None, kind: str = "human", action: str = "continue",
+            allow_limited: bool = False) -> dict:
     """Return {teacher_id, name, kind} for a valid session, or raise GateBlocked.
 
     `kind` says what the caller is about to do. A token of the wrong kind is refused
@@ -297,13 +353,81 @@ def resolve(session: str | None, kind: str = "human", action: str = "continue") 
     approval gate, and a teacher session is not an agent token.
     """
     digest, stored = _valid(session, kind, action)
+    if stored.get("limited") and not allow_limited:
+        raise GateBlocked("Choose your own PIN first. A one-time PIN cannot open anything else.")
     teacher_id = stored.get("teacher_id", "")
     name = (_read(_path("teachers"), {}).get(teacher_id) or {}).get("name")
     if not name:
         raise GateBlocked("Sign-in required. That teacher is no longer registered on this computer.")
     if kind == "human":
         _slide(digest)  # each authenticated request buys 15 more minutes
-    return {"teacher_id": teacher_id, "name": name, "kind": kind}
+    who = {"teacher_id": teacher_id, "name": name, "kind": kind}
+    if stored.get("limited"):
+        who["limited"] = True  # a one-time-PIN session: it may only choose a new PIN
+    return who
+
+
+def change_pin(session: str | None, current_pin: str, new_pin: str) -> dict:
+    """A signed-in teacher replaces their PIN. Returns {teacher_id, name}.
+
+    The current PIN is asked again, so a laptop left open is not enough to take over an
+    account, and a wrong one counts towards the lock like a failed sign-in. Every other
+    session of this teacher ends, and a one-time-PIN session becomes a full one.
+    """
+    digest, stored = _valid(session, "human", "change your PIN")
+    teacher_id = stored.get("teacher_id", "")
+    registry = _read(_path("teachers"), {})
+    entry = registry.get(teacher_id)
+    state = _read(_path("auth_state"), {})
+    if entry is None:
+        raise GateBlocked("Sign-in required. That teacher is no longer registered on this computer.")
+    if _lock_until(state, teacher_id) is not None:
+        raise GateBlocked(f"Too many wrong PINs. Try again in {LOCK_MINUTES} minutes.")
+    if not hmac.compare_digest(_hash(current_pin or "", bytes.fromhex(entry["salt"])), entry["hash"]):
+        _record_failure(state, teacher_id)
+        _write(_path("auth_state"), state)
+        raise GateBlocked("The current PIN is not right.")
+    problem = pin_problem(new_pin, teacher_id)
+    if problem:
+        raise ValueError(problem)
+    if new_pin == current_pin:
+        raise ValueError("The new PIN must be different from the current one.")
+    salt = secrets.token_bytes(16)
+    entry.update(salt=salt.hex(), hash=_hash(new_pin, salt), pin_changed=_iso(_now()))
+    if entry.pop("must_change", None):
+        entry.update(last_login=_iso(_now()), failed_since=0)
+    _write(_path("teachers"), registry)
+    sessions = _pruned_sessions()
+    for key in [k for k, s in sessions.items()
+                if k != digest and (s.get("teacher_id") == teacher_id) and s.get("parent") != digest]:
+        del sessions[key]
+    if digest in sessions:
+        sessions[digest].pop("limited", None)
+    _write(_path("sessions"), sessions)
+    return {"teacher_id": teacher_id, "name": entry.get("name", "")}
+
+
+def end_other_sessions(session: str | None) -> int:
+    """Sign this teacher out everywhere else. Returns how many other sign-ins ended.
+
+    The portal calls this at sign-in, so one member number is in use in one place only.
+    """
+    digest, stored = _valid(session, "human")
+    sessions = _pruned_sessions()
+    others = [k for k, s in sessions.items() if k != digest and s.get("teacher_id") == stored.get("teacher_id")
+              and s.get("parent") != digest]
+    for key in others:
+        del sessions[key]
+    _write(_path("sessions"), sessions)
+    return len(others)
+
+
+def account(teacher_id: str) -> dict:
+    """What the teacher may see about their own account. No PIN material."""
+    entry = _read(_path("teachers"), {}).get(teacher_id) or {}
+    return {"registered": entry.get("registered"), "pin_changed": entry.get("pin_changed"),
+            "last_login": entry.get("last_login"), "idle_minutes": SESSION_MINUTES,
+            "max_hours": SESSION_MAX_HOURS, "lock_failures": LOCK_FAILURES, "lock_minutes": LOCK_MINUTES}
 
 
 def mint_agent_token(session: str | None) -> str:
@@ -314,6 +438,8 @@ def mint_agent_token(session: str | None) -> str:
     dies with that session, so signing out is enough to stop a run.
     """
     digest, stored = _valid(session, "human", "start an agent run")
+    if stored.get("limited"):
+        raise GateBlocked("Choose your own PIN first. A one-time PIN cannot start an agent run.")
     now = _now()
     absolute = _parse(stored.get("absolute"))
     expires = _clamped(now, AGENT_MINUTES, absolute)

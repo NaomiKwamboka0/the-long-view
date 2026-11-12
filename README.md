@@ -28,170 +28,22 @@ For a public test link, enable GitHub Actions as the Pages source and manually r
 python -m hatua school-demo        # then open http://127.0.0.1:8765
 ```
 
-A demo school with Grades 4 to 9 and one class teacher per class, each signing in with their own **member number** and PIN. Each teacher:
+A demo school with Grades 4 to 9 and one class teacher per class. Each teacher:
 
+- **signs in** with their own member number and PIN. A PIN handed out by the school works once: the teacher must choose their own before anything opens. Easy PINs are refused, 5 wrong PINs lock sign-in for 15 minutes, the page signs out after 15 minutes without use, and **My account** shows the teacher their own sign-ins and wrong PINs;
 - sees only their own class, with the full Grade 4 to 9 history of every learner (earlier grades are read-only);
-- **approves term results** from the school drive before Hatua analyses them (`school_drive/Grade N/2026 Term T/`); approval adds only their own learners' rows;
-- is told when a term's results are **overdue**, using Kenya's 2026 school calendar;
+- has a **folder for each term on the school drive**, with one **Excel** results file in it (`school_drive/Grade 6/2026 Term 1/...xlsx`). The teacher **approves** a file before Hatua uses it, and approval adds only their own learners' rows;
+- is told when a term's file is **missing**, and when a file they approved is **deleted from the drive**. Only that class's teacher is told. Due dates come from Kenya's 2026 school calendar;
 - is told **as soon as** an approved file shows a learner falling in a subject, with a ready message for the parent in English or Kiswahili, and can record that the parent was told;
-- gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones.
-- can ask the **Hatua assistant**, a floating chat window run by Qwen on the laptop. It answers questions about their own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It can be minimized, maximized, moved and resized, and it never ranks learners. It knows every pupil in the teacher's own class, and for Grades 7 to 9 it can suggest senior school pathways to explore, from the records, without ever choosing one.
-- sees **senior school pathway ideas** for Grade 9 learners (early ideas in Grades 7 and 8): the cited strengths for each of STEM, Social Sciences, and Arts and Sports Science, side by side. Hatua never picks one; the teacher raises them with the learner and family.
+- gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones;
+- can ask the **Hatua assistant**, a chat window run by Qwen on the laptop. It **asks one short question first**, then answers about the teacher's own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It never ranks learners;
+- can open **senior school pathway ideas** for a Grade 9 learner (early ideas in Grades 7 and 8). They stay **closed until the named teacher opens them**, which is logged. Then they show the cited strengths for each of STEM, Social Sciences, and Arts and Sports Science, side by side. Hatua never picks one; the teacher raises them with the learner and guardian.
 
-Everything runs on the laptop: no outside service, no API. See [docs/PORTAL.md](docs/PORTAL.md).
+Everything runs on the laptop: no outside service, no API, not even a web font. See [docs/PORTAL.md](docs/PORTAL.md).
 
-![The portal's Today tab](docs/portal.png)
+**To show every challenge requirement, step by step with screenshots, follow [docs/SHOW_THE_REQUIREMENTS.md](docs/SHOW_THE_REQUIREMENTS.md).**
 
-## Problem statement
-
-Under Kenya's Competency-Based Curriculum (CBC), teachers record many marks and notes for each learner every term. These records sit in different places. Some are in a national portal that only the head teacher can open. Some are on paper with teachers who have moved school.
-
-A class teacher with 40 to 70 learners cannot see one child's story over many years. This matters because school-based marks now count towards a learner's Grade 9 result and senior school placement. Junior schools are short of about 72,000 teachers, so teachers change often and have little time. A slow decline in Maths, or a steady strength in making things, can go unseen until it is too late to talk with the family.
-
-## Solution overview
-
-The teacher puts a new export of marks in a folder. The agent:
-
-1. looks in the folder and cleans the new records (spellings, missing terms, duplicates, late uploads)
-2. finds patterns across many terms, for example "Maths went down over six terms"
-3. writes a short draft for the teacher, where every statement cites the exact record behind it
-4. checks its own draft, then stops and waits for the teacher
-
-Only a named teacher can approve a draft. After approval, Hatua can write a short message for the guardian in English or Kiswahili. Hatua never assigns a pathway or career to a child, never gives a label, and never compares a child with classmates. From Grade 7 it can show which strengths in the records relate to each senior school pathway, for the teacher to raise with the learner and family. These ideas never go into family messages on their own.
-
-## Target users
-
-- **Class teachers** of Grades 7 to 9 in Kenyan public schools. They use Hatua to prepare for talks with families.
-- **Learners and guardians** benefit. They get clear, sourced information, and the decision stays with them and the teacher.
-- **Head teachers** can check the audit log to see what was done and who approved it.
-
-## Architecture
-
-```
-new CSV export ─► agent (LangGraph): plan ─► tools ─► self-check ─► teacher gate ─► save
-                      │                        │
-        local model (Qwen via Ollama)    MCP client ─► hatua-mcp (ours, 7 tools)
-        or fixed rules if none running              └► filesystem server (borrowed)
-```
-
-Everything runs on the teacher's laptop. See [ARCHITECTURE.md](ARCHITECTURE.md) and the diagram above.
-
-## Agent architecture
-
-- **Orchestration:** a LangGraph loop with four steps: `plan`, `tools`, `self_check`, `teacher_gate`.
-- **Model:** an open-weights model (Qwen 2.5 7B) runs locally through Ollama and chooses the next tool call. If Ollama is not running, a fixed rules planner makes the same calls, so the demo always works.
-- **Supervisor:** a small model can stop early or repeat itself. Hatua fixes or drops such calls and, if needed, finishes the agreed steps with fixed rules. Every correction is logged.
-- **Self-check:** every draft is re-checked for missing or false citations and for labelling words. A failed draft goes back to the planner once.
-- **Memory and data:** local JSON files for records, notes, attendance, flags and drafts. The standard local workflow does not send learner records to a hosted AI service. Generated HTML and exported files contain data; sharing those files discloses their contents.
-- **Pause:** the graph uses a LangGraph interrupt and waits for the teacher.
-
-Patterns and drafts come from fixed rules, not from the model. The model decides which tools to call. So a claim about a learner never depends on what the model happened to write.
-
-## MCP implementation
-
-An MCP client (`langchain-mcp-adapters`) starts two MCP servers over stdio on the same machine and gives their tools to the agent.
-
-## MCP tools and servers
-
-**`hatua-mcp`: our own server** (`python -m hatua.mcp_server`). Seven tools:
-
-| Tool | What it does |
-|---|---|
-| `list_learners` | Class list, with search and stream filter. Never sorted by results. |
-| `ingest_record` | Cleans and adds a CSV export. Returns data-quality flags. |
-| `review_queue` | Learners with new records and a pattern still going on. |
-| `find_patterns` | Cited patterns across terms for one learner. |
-| `get_evidence` | Opens any cited record, note or attendance entry. |
-| `draft_summary` | Creates a draft for teacher review. |
-| `update_profile` | Saves an approved draft. **Blocked** without a matching teacher approval. |
-
-There is **no approve tool**. The agent cannot approve its own work. Every call is logged to `logs/audit.jsonl`.
-
-**Filesystem MCP server: borrowed.** This is the official `@modelcontextprotocol/server-filesystem`, limited to `data/inbox`. The agent uses `list_directory` to see which new exports have arrived. We use it because it is a reviewed reference server that already enforces the folder limit. Its write tools are not given to the agent.
-
-## Human-in-the-loop workflow
-
-1. The agent drafts and checks. Then the graph pauses.
-2. The teacher reads each draft and opens the cited records.
-3. The teacher edits if needed, then approves or rejects. Approval needs a full name and is stored with a hash of the exact approved text.
-4. Only then can `update_profile` save to the learner's profile.
-5. A guardian message can only be drafted after the teacher approves, and it needs a second "share" approval.
-
-A phrase-and-citation guard blocks pathway instructions in drafts and family messages, labels, rankings and comparisons. The portal's assistant may suggest pathways to explore, but a separate check blocks telling ("should take STEM") or labelling ("a STEM learner"). It also checks teacher edits, but does not prove semantic accuracy. Edited teacher drafts lock the prepared family message to avoid silently restoring removed or changed text. A typed teacher name is an acknowledgement, not authenticated identity.
-
-## Technology stack
-
-Python, LangGraph, `langchain-mcp-adapters`, the MCP Python SDK, Ollama with Qwen 2.5 7B, Node.js (for the borrowed server), and plain HTML and JavaScript for the teacher page. No external APIs. No database server: data is stored in local files.
-
-## Setup and installation
-
-**Quick look (needs only Python 3.9+, nothing to install):**
-
-```bash
-git clone https://github.com/NaomiKwamboka0/the-long-view.git
-cd the-long-view
-python3 -m hatua demo
-open ui/hatua.html        # on Windows or Linux, open the file in a browser
-```
-
-**Run the agent (Python 3.10+, Node.js and Ollama). On a Mac:**
-
-```bash
-brew install python@3.12 node ollama
-brew services start ollama
-ollama pull qwen2.5:7b            # one-time download, about 4.7 GB
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python -m hatua setup
-python -m hatua agent
-```
-
-## Usage
-
-| Command | What it does |
-|---|---|
-| `python -m hatua demo` | Load the synthetic class, take in this term's export, build the teacher page |
-| `python -m hatua agent` | Run the agent. It pauses and asks for the teacher's name and decisions. |
-| `python -m hatua agent --rules` | Same, but plan with fixed rules instead of the model |
-| `python -m hatua agent --max 5` | Draft for up to 5 learners (default 3) |
-| `python -m hatua patterns HT-0003` | Show cited patterns for one learner |
-| `python -m hatua draft HT-0003` | Draft a summary for the class teacher |
-| `python -m hatua approve D-xxxx --teacher "Full Name"` | Teacher approves (add `--reject`, `--edited file.txt`, `--share`) |
-| `python -m hatua build-ui` | Rebuild the teacher page `ui/hatua.html` |
-| `python -m hatua import-approvals approvals.json` | Apply approvals made on the teacher page |
-| `python -m hatua verify-log` | Check the audit and approval logs for edited or missing lines |
-| `python scripts/run_evals.py` | Run the evaluation tasks |
-| `python -m hatua school-demo` | Make the whole-school demo (Grades 4–9) and open the teacher portal |
-| `python -m hatua portal` | Start the teacher portal for the data in `HATUA_HOME` |
-
-![The teacher page](docs/teacher-page.png)
-
-**The teacher page** (`ui/hatua.html`) works offline and is made for a busy class teacher:
-
-- The top line says how many drafts are waiting, with a **Start with the next learner** button.
-- **My class:** search by name or admission number, and filter by stream, review status, learning area and what the records show.
-- Each learner's page is a short path of four steps: **read what the records show**, **see the long view** from Grade 4 to Grade 9, **decide on the draft**, then **write a message for the family** in English or Kiswahili. The last step opens only after approval.
-- Tap any record number or any mark on the long view to see the record behind it.
-- **Records to check** lists what Hatua fixed or wants a teacher to check. **History** shows who did what.
-- Plain words, large touch targets, soft colours with no harsh lines, and a dark mode. It works on a phone.
-
-## Real exports and teacher sign-in
-
-A school's spreadsheet will not use Hatua's headings, and it usually carries names and phone numbers Hatua should never hold. Map it once, copying only the columns you name:
-
-```bash
-python -m hatua map-export my_sheet.csv --mapping data/mappings/school.json
-python -m hatua ingest my_sheet_hatua.csv
-```
-
-The mapping file says which of your headings mean what; start from `data/mappings/example_school_export.json` and `docs/templates/records_template.csv`. Unmapped columns are dropped and listed in the report, and headings that look like names, phones, guardians, health or birth details are named separately. If the mapping points at an `id_map`, real admission numbers become `HT-xxxx`; a real ID missing from the map is skipped, never passed through. See [docs/INGESTION.md](docs/INGESTION.md) and the draft [docs/DPIA.md](docs/DPIA.md).
-
-Sign-in for the approval gate is off by default, so a typed name is still all that is recorded. To require it on a computer:
-
-```bash
-python -m hatua teacher-add --id mary --name "Mary Wambui"     # asks for a PIN twice
-HATUA_REQUIRE_AUTH=1 python -m hatua approve D-xxxx --teacher-id mary
-```
+![The portal's Today tab](docs/guide/11-today-alerts.png)
 
 A signed-in approval records the registered name and teacher ID, not the typed name, and a draft approved while sign-in was off cannot be saved once it is on. Sign-in identifies a teacher among those registered on that one computer. It is not TSC or KEMIS sign-on, and anyone who can edit the files in `logs/` can still forge an entry.
 
@@ -212,6 +64,8 @@ npm run test:ui
 Node and npm are needed only for developer UI checks and the optional agent, not for the teacher's standalone demo. UI integration checks use a simulated DOM; they do not replace a real browser accessibility or layout review.
 
 **Real model run:** on 20 October 2026 the agent ran end to end on a MacBook Air with Qwen 2.5 7B. It reached the teacher gate, and the profile was saved only after approval. Qwen stopped after 1 of 3 learners, so we added the supervisor described above, and test A05 now replays that run.
+
+**Cost per run:** KSh 0 in fees. Nothing is sent to a paid service: the model runs on the teacher's laptop. What a run costs is time and battery. The time for one run is written by `scripts/measure_agent.py`; that batch has not been run yet, so no figure is claimed here.
 
 ## Limitations
 

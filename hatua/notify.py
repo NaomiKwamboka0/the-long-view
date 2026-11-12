@@ -1,10 +1,12 @@
-"""Notices for the class teacher: results that are overdue, and learners to watch.
+"""Notices for the class teacher: results files that are missing, and learners to watch.
 
-Three kinds, each sent only to the teacher who can act on it:
+Each kind goes only to the teacher who can act on it:
 
 * missing_upload - a term's results are past due (Kenya's calendar: closing date plus
-  the grace days in data/calendar) and nothing for this class is on the drive.
-* waiting_approval - the file is on the drive but the class teacher has not approved it.
+  the grace days in data/calendar) and no file for this class is in the term folder.
+* waiting_approval - the file is in the folder but the class teacher has not approved it.
+* file_removed - the results are in Hatua, but the file the teacher approved is no
+  longer in the term folder (deleted or moved). The school has lost its copy.
 * sharp_drop - in the newest term a learner fell two rubric levels or more in a learning
   area compared with the term before. ONE term is an early sign, not a pattern, and the
   notice says so. Sent at once, when the teacher approves the file.
@@ -17,10 +19,10 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from . import config, drive, patterns, school, school_calendar, store
+from . import audit, config, drive, patterns, school, school_calendar, store
 from .config import FAMILY_SW, LEVEL_NAMES, LEVEL_NAMES_SW
 
-KIND_ORDER = {"sharp_drop": 0, "decline": 1, "missing_upload": 2, "waiting_approval": 3}
+KIND_ORDER = {"sharp_drop": 0, "decline": 1, "missing_upload": 2, "file_removed": 3, "waiting_approval": 4}
 
 
 def _now() -> str:
@@ -36,7 +38,8 @@ def _add(items: list[dict], notice: dict) -> dict | None:
     """Add a notice unless one with the same key exists. Returns the new notice or None."""
     if any(n["key"] == notice["key"] for n in items):
         return None
-    notice.update(notice_id=f"NT-{len(items) + 1:05d}", created=_now(), read=False,
+    last = max((int(n["notice_id"][3:]) for n in items), default=0)
+    notice.update(notice_id=f"NT-{last + 1:05d}", created=_now(), read=False,
                   resolved=False, told_parent=None)
     items.append(notice)
     return notice
@@ -120,55 +123,125 @@ def after_ingest(inbox_file: str) -> list[dict]:
     return new
 
 
-def check_missing(today=None) -> list[dict]:
-    """Tell each class teacher about term results that are due but not in Hatua.
+def term_states(teacher_id: str, today=None, records: list | None = None) -> list[dict]:
+    """Where each term of this year stands for one class teacher.
 
-    Also marks old missing/waiting notices resolved once the results are in.
+    state is one of:
+      in_hatua      the results are in Hatua and the file is in the term folder
+      file_removed  the results are in Hatua, but the file is no longer in the folder
+      waiting       a file is in the folder and waits for this teacher's approval
+      missing       results are due and no file is in the folder
+      not_due       the term's results are not due yet
+    """
+    today = today or config.today()
+    cal = school_calendar.load(today.year)
+    learners = school.learners_of(teacher_id)
+    if cal is None or not learners:
+        return []
+    mine = {l["learner_id"] for l in learners}
+    records = store.load("records") if records is None else records
+    have = {(r["year"], r["term"]) for r in records if r["learner_id"] in mine}
+    by_label = {t["label"]: (f["grade"], t) for f in drive.folders(teacher_id, today.year) for t in f["terms"]}
+    out = []
+    for t in cal["terms"]:
+        label = f"{cal['year']} Term {t['term']}"
+        grade, folder = by_label.get(label, (None, {"files": [], "folder": label}))
+        files = folder["files"]
+        waiting = [f for f in files if f["status"] == "waiting"]
+        usable = [f for f in files if f["status"] != "reject"]
+        if (cal["year"], t["term"]) in have:
+            state = "in_hatua" if usable else "file_removed"
+        elif waiting:
+            state = "waiting"
+        else:
+            state = "missing" if t["results_due"] <= today else "not_due"
+        out.append({"year": cal["year"], "term": t["term"], "label": label, "state": state, "grade": grade,
+                    "folder": folder["folder"], "closes": t["closes"], "due": t["results_due"],
+                    "waiting": waiting, "files": len(files),
+                    "approved": drive.approved_before(teacher_id, grade, label) if grade else None})
+    return out
+
+
+def _file_notice(teacher_id: str, st: dict) -> dict | None:
+    """The notice a term's state calls for, or None when nothing is wrong."""
+    stream = ", ".join(school.streams_of(teacher_id))
+    term, label = st["term"], st["label"]
+    when, closed = st["due"].strftime("%d %b %Y"), st["closes"].strftime("%d %b")
+    base = {"teacher_id": teacher_id, "year": st["year"], "term": term, "evidence": [], "parent": None,
+            "folder": st["folder"]}
+    # In Kenya, school-based results from Grade 7 and Grade 8 go towards the Grade 9 result.
+    counts = (" Grade 7 and Grade 8 school results count towards the Grade 9 result, so this file matters."
+              if st.get("grade") in (7, 8) else "")
+    if st["state"] == "waiting":
+        return {**base, "kind": "waiting_approval", "key": f"waiting_approval:{teacher_id}:{label}",
+                "title": f"Term {term} results are waiting for you to approve",
+                "text": ((f"A results file for {stream} is in the folder '{st['folder']}'. It is not in Hatua until "
+                          "you approve it." if len(st["waiting"]) == 1 else
+                          f"{len(st['waiting'])} results files for {stream} are in the folder '{st['folder']}'. "
+                          "They are not in Hatua until you approve them.")
+                         + (f" Results were due on {when}." if st["due"] <= config.today() else "")),
+                "path": st["waiting"][0]["path"]}
+    if st["state"] == "missing":
+        return {**base, "kind": "missing_upload", "key": f"missing_upload:{teacher_id}:{label}",
+                "title": f"Term {term} results file for {stream} is missing",
+                "text": (f"There is no results file for {stream} in the folder '{st['folder']}'. "
+                         f"Term {term} closed on {closed} and results were due on {when}. "
+                         "Upload the Excel file on the School drive tab, then approve it." + counts)}
+    if st["state"] == "file_removed":
+        was = st.get("approved")
+        seen = (f" You approved '{was['file']}' on {datetime.fromisoformat(was['at']).strftime('%d %b %Y')}." if was else "")
+        return {**base, "kind": "file_removed", "key": f"file_removed:{teacher_id}:{label}",
+                "title": f"Term {term} results file for {stream} is gone from the school drive",
+                "text": (f"The folder '{st['folder']}' has no results file now.{seen} "
+                         f"The Term {term} results are still safe in Hatua, but the school has lost its copy. "
+                         "Put the file back in the folder, or upload it again on the School drive tab.")}
+    return None
+
+
+FILE_KINDS = ("missing_upload", "waiting_approval", "file_removed")
+
+
+def check_missing(today=None) -> list[dict]:
+    """Tell each class teacher about a term whose results file is missing, waiting or gone.
+
+    Runs when a teacher signs in, opens Today or the School drive, and after every
+    approval, so a file deleted from the drive is noticed the next time the teacher
+    looks. A notice closes by itself once its problem is fixed, and opens again if the
+    problem comes back. Returns the notices that are new or re-opened.
     """
     today = today or config.today()
     items, new = _all(), []
     records = store.load("records")
-    have = {(r["learner_id"], r["year"], r["term"]) for r in records}
     assignments = store.load("assignments")
+    changed = False
     for teacher_id in sorted(assignments if isinstance(assignments, dict) else {}):
-        learners = school.learners_of(teacher_id)
-        if not learners:
-            continue
-        files = {(t["label"]): t["files"] for f in drive.folders(teacher_id) for t in f["terms"]}
-        for due in school_calendar.due_terms(today):
-            label = f"{due['year']} Term {due['term']}"
-            done = any((l["learner_id"], due["year"], due["term"]) in have for l in learners)
-            key_m = f"missing_upload:{teacher_id}:{label}"
-            key_w = f"waiting_approval:{teacher_id}:{label}"
-            if done:
-                for n in items:
-                    if n["key"] in (key_m, key_w) and not n["resolved"]:
-                        n["resolved"] = True
+        for st in term_states(teacher_id, today, records):
+            want = _file_notice(teacher_id, st)
+            keys = {f"{k}:{teacher_id}:{st['label']}" for k in FILE_KINDS}
+            for n in items:
+                if n["key"] in keys and not n["resolved"] and (want is None or n["key"] != want["key"]):
+                    n["resolved"] = True
+                    changed = True
+            if want is None:
                 continue
-            waiting = [f for f in files.get(label, []) if f["status"] == "waiting"]
-            stream = ", ".join(school.streams_of(teacher_id))
-            when = due["due"].strftime("%d %b %Y")
-            closed = due["closes"].strftime("%d %b")
-            if waiting:
-                notice = {"kind": "waiting_approval", "teacher_id": teacher_id, "key": key_w,
-                          "year": due["year"], "term": due["term"],
-                          "title": f"Term {due['term']} results are waiting for your approval",
-                          "text": (f"{len(waiting)} file(s) for {stream} are on the school drive in "
-                                   f"'{label}'. They are not in Hatua until you approve them. "
-                                   f"Results were due on {when}."),
-                          "evidence": [], "parent": None, "path": waiting[0]["path"]}
-            else:
-                notice = {"kind": "missing_upload", "teacher_id": teacher_id, "key": key_m,
-                          "year": due["year"], "term": due["term"],
-                          "title": f"Term {due['term']} results for {stream} have not been uploaded",
-                          "text": (f"Term {due['term']} closed on {closed}, and results were due on {when}. "
-                                   f"Nothing for {stream} is in the '{label}' folder yet. Upload the CSV "
-                                   "on the School drive tab, then approve it."),
-                          "evidence": [], "parent": None}
-            added = _add(items, notice)
-            if added:
+            old = next((n for n in items if n["key"] == want["key"]), None)
+            if old is None:
+                added = _add(items, want)
                 new.append(added)
-    store.save("notices", items)
+            elif old["resolved"]:  # the same problem came back
+                old.update(resolved=False, read=False, created=_now(), title=want["title"], text=want["text"])
+                new.append(old)
+            else:
+                if old["text"] != want["text"]:
+                    old.update(title=want["title"], text=want["text"])
+                    changed = True
+                continue
+            changed = True
+            audit.write_event({"tool": "notice.raise", "actor": "hatua", "ok": True,
+                               "inputs": {"kwargs": {"teacher": teacher_id, "folder": st["folder"]}},
+                               "output": {"kind": want["kind"], "term": st["term"]}})
+    if changed:
+        store.save("notices", items)
     return new
 
 
