@@ -14,3 +14,5 @@ node_modules/
 .coverage
 htmlcov/
 demo_school/
+site_out/
+build/

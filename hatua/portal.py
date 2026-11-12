@@ -18,6 +18,10 @@ session, never an agent token).
 Sign-in: a one-time PIN opens nothing but the "choose your own PIN" step; signing in
 ends the same member number's sign-in anywhere else; and every sign-in, failed PIN,
 sign-out and PIN change is written to the audit log, where the teacher can see their own.
+
+Parents sign in on the same page with a parent number (P-123456) that the class teacher
+gave them. A parent session reaches only `_family`: their own children's pages, their
+account, and the parent assistant (hatua.family). Every teacher route refuses it.
 """
 from __future__ import annotations
 
@@ -30,12 +34,14 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from . import (
+    ai_setup,
     assistant,
     audit,
     auth,
     comments,
     config,
     drive,
+    family,
     notify,
     pathways,
     patterns,
@@ -47,6 +53,8 @@ from . import (
 from .summary import GateBlocked
 
 PAGE = Path(__file__).resolve().parent.parent / "ui" / "portal.html"
+GUIDE = Path(__file__).resolve().parent.parent / "docs" / "USER_GUIDE.html"
+GUIDE_IMAGES = Path(__file__).resolve().parent.parent / "docs" / "guide"
 COOKIE = "hatua_session"
 LOCK = threading.Lock()  # one request at a time touches the JSON store
 MAX_BODY = 6 * 1024 * 1024
@@ -98,6 +106,14 @@ def _did(e: dict) -> str | None:
         return f"Recorded that the parent of {child} was told ({str(out.get('how', '')).lower()})"
     if tool == "comment.rate":
         return f"Gave a report comment a thumbs {out.get('rating', '')}"
+    if tool == "parent.add":
+        return f"Gave a parent ({kwargs.get('parent_id', '')}) access to {child}"
+    if tool == "parent.remove":
+        return f"Removed a parent's ({kwargs.get('parent_id', '')}) access to {child}"
+    if tool == "parent.new_pin":
+        return f"Gave a parent ({kwargs.get('parent_id', '')}) a new one-time PIN for {child}"
+    if tool == "family.view":
+        return f"Opened {learner.get('first_name', '')}'s page"
     if tool == "assistant.ask" and out.get("step") == "answer":
         return "Asked the assistant a question" + (" (refused: no rankings)" if out.get("refused") else "")
     return None
@@ -159,6 +175,8 @@ def _learner_detail(teacher_id: str, learner_id: str) -> dict:
                     if n.get("learner_id") == learner_id],
         "comments": comments.for_learner(learner_id, teacher_id),
         "pathways": pathways.for_teacher(teacher_id, learner_id),
+        "parents": family.parents_of(learner_id),
+        "relations": list(family.RELATIONS),
         "model": comments.model_name(),
     }
 
@@ -226,6 +244,12 @@ class Handler(BaseHTTPRequestHandler):
         path, q = url.path, {k: v[0] for k, v in parse_qs(url.query).items()}
         if method == "GET" and path in ("/", "/index.html"):
             return self._send(200, PAGE.read_bytes(), "text/html; charset=utf-8")
+        if method == "GET" and path == "/guide" and GUIDE.exists():
+            return self._send(200, GUIDE.read_bytes(), "text/html; charset=utf-8")
+        m = re.fullmatch(r"/guide/([a-z0-9-]{1,60}\.png)", path)
+        if method == "GET" and m and (GUIDE_IMAGES / m.group(1)).is_file():
+            return self._send(200, (GUIDE_IMAGES / m.group(1)).read_bytes(), "image/png",
+                              extra={"Cache-Control": "max-age=3600"})
         if not path.startswith("/api/"):
             raise Refused(404, "Not found.")
         if method == "POST" and path == "/api/assistant":
@@ -241,6 +265,8 @@ class Handler(BaseHTTPRequestHandler):
             self._check_post()
             body = self._json()
             tid, history = who["teacher_id"], body.get("history") or []
+            if who.get("role") == "parent":
+                return self._family_assistant(tid, body, history)
             if body.get("ask_id"):
                 # Step 2: the teacher answered Hatua's follow-up question. Now it may answer.
                 try:
@@ -262,6 +288,52 @@ class Handler(BaseHTTPRequestHandler):
             assistant.log(who["teacher_id"], out)
         return self._send(200, out)
 
+    def _family_assistant(self, pid: str, body: dict, history: list):
+        """The same two steps for a parent. Called with the store lock held; the model runs without it."""
+        if body.get("ask_id"):
+            try:
+                item = assistant.take_follow_up(pid, str(body["ask_id"]), str(body.get("reply", "")))
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+            ctx = family.prepare(pid, item["question"], history, {"asked": item["asked"], "reply": item["reply"]})
+        else:
+            ctx = family.prepare(pid, str(body.get("question", "")), history)
+            if ctx["question"] and not family.refusal(ctx["question"], ctx):
+                out = family.open_follow_up(pid, ctx)
+                assistant.log(pid, out)
+                return self._send(200, out)
+        LOCK.release()  # let the rest of the portal work while Qwen thinks
+        try:
+            out = family.answer(ctx)
+        finally:
+            LOCK.acquire()
+        out["kind"] = "answer"
+        assistant.log(pid, out)
+        return self._send(200, out)
+
+    def _family(self, method: str, path: str, who: dict):
+        """Every route a parent may use. Nothing else accepts a parent session."""
+        pid = who["teacher_id"]
+        if method == "GET" and path == "me":
+            return self._send(200, {"role": "parent", "family": family.profile(pid), "csrf": auth.new_csrf(self._session()),
+                                    "calendar": school_calendar.summary(config.today()), "model": comments.model_name(),
+                                    "idle_minutes": auth.SESSION_MINUTES})
+        if method == "GET" and path == "account":
+            return self._send(200, _account(pid))
+        m = re.fullmatch(r"family/child/(HT-\d{4})", path)
+        if method == "GET" and m:
+            try:
+                return self._send(200, family.child_view(pid, m.group(1)))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+        m = re.fullmatch(r"evidence/([RA]-[A-Za-z0-9-]{1,40})", path)
+        if method == "GET" and m:
+            try:
+                return self._send(200, family.evidence(pid, m.group(1)))
+            except GateBlocked as exc:
+                raise Refused(404, str(exc)) from None
+        raise Refused(403, "This page is for teachers. Parents see their own child's page only.")
+
     # ---------------------------------------------------------------- API
     def _api(self, method: str, path: str, q: dict):  # noqa: C901 - one flat table of routes
         today = config.today()
@@ -271,7 +343,18 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"school": (learners[0]["school"] if learners else ""),
                                     "calendar": school_calendar.term_on(today)["text"], "today": today.isoformat(),
                                     "practice": ({"pin": demo["pin"], "teachers": demo["teachers"],
+                                                  "parents": demo.get("parents", []),
                                                   "one_time": demo.get("first_sign_in", [])} if demo else None)})
+        if method == "GET" and path == "ai":
+            return self._send(200, ai_setup.status())
+        if method == "POST" and path in ("ai/start", "ai/qwen"):
+            self._check_post(need_csrf=False)
+            try:
+                if path == "ai/start":
+                    return self._send(200, {"started": ai_setup.start_ollama()})
+                return self._send(200, {"pull": ai_setup.get_qwen()})
+            except RuntimeError as exc:
+                raise Refused(409, str(exc)) from None
         if method == "POST" and path == "login":
             self._check_post(need_csrf=False)
             body = self._json()
@@ -279,11 +362,15 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 out = auth.login(typed, str(body.get("pin", "")))
             except GateBlocked as exc:
-                known = any(t["teacher_id"] == typed for t in auth.teachers())
+                known = auth.role_of(typed) is not None
                 _auth_event("sign_in", typed if known else "unknown", False,
                             reason="locked" if "locked" in str(exc) else "wrong PIN or member number")
                 raise Refused(401, str(exc)) from None
-            if not school.streams_of(out["teacher_id"]):
+            parent = out["role"] == "parent"
+            if parent and not family.children_of(out["teacher_id"]):
+                auth.logout(out["session"])
+                raise Refused(403, "This parent number is not linked to a child any more. Ask the class teacher.")
+            if not parent and not school.streams_of(out["teacher_id"]):
                 auth.logout(out["session"])
                 raise Refused(403, "You are registered, but no class is assigned to you yet. Ask the school's Hatua admin.")
             ended = auth.end_other_sessions(out["session"])
@@ -291,9 +378,14 @@ class Handler(BaseHTTPRequestHandler):
             cookie = f"{COOKIE}={out['session']}; HttpOnly; SameSite=Strict; Path=/; Max-Age={8 * 3600}"
             if out["must_change"]:
                 return self._send(200, {"csrf": out["csrf"], "must_change": True, "name": out["name"],
-                                        "teacher_id": out["teacher_id"]}, extra={"Set-Cookie": cookie})
+                                        "teacher_id": out["teacher_id"], "role": out["role"]},
+                                  extra={"Set-Cookie": cookie})
+            if parent:
+                return self._send(200, {"csrf": out["csrf"], "role": "parent", "previous_login": out["previous_login"],
+                                        "failed_since": out["failed_since"], "ended_other": ended},
+                                  extra={"Set-Cookie": cookie})
             notify.check_missing(today)
-            return self._send(200, {"csrf": out["csrf"], "me": school.profile(out["teacher_id"]),
+            return self._send(200, {"csrf": out["csrf"], "role": "teacher", "me": school.profile(out["teacher_id"]),
                                     "previous_login": out["previous_login"], "failed_since": out["failed_since"],
                                     "ended_other": ended}, extra={"Set-Cookie": cookie})
         if method == "POST" and path == "logout":
@@ -317,13 +409,17 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError as exc:
                 raise Refused(400, str(exc)) from None
             _auth_event("pin_change", who["teacher_id"], True)
+            if who.get("role") == "parent":
+                return self._send(200, {"ok": True, "role": "parent"})
             notify.check_missing(today)
-            return self._send(200, {"ok": True, "me": school.profile(who["teacher_id"])})
+            return self._send(200, {"ok": True, "role": "teacher", "me": school.profile(who["teacher_id"])})
 
         who = self._who()
+        if who.get("role") == "parent":
+            return self._family(method, path, who)
         tid = who["teacher_id"]
         if method == "GET" and path == "me":
-            return self._send(200, {"me": school.profile(tid), "csrf": auth.new_csrf(self._session()),
+            return self._send(200, {"role": "teacher", "me": school.profile(tid), "csrf": auth.new_csrf(self._session()),
                                     "calendar": school_calendar.summary(today), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
         if method == "GET" and path == "account":
@@ -364,6 +460,23 @@ class Handler(BaseHTTPRequestHandler):
             except GateBlocked as exc:
                 raise Refused(403, str(exc)) from None
             return self._send(200, {"pathways": pathways.for_teacher(tid, m.group(1))})
+        m = re.fullmatch(r"learner/(HT-\d{4})/parents(?:/(P-\d{6})/(remove|new-pin))?", path)
+        if method == "POST" and m:
+            self._check_post()
+            body = self._json()
+            try:
+                if m.group(3) == "remove":
+                    out = family.remove(self._session(), m.group(1), m.group(2))
+                elif m.group(3) == "new-pin":
+                    out = family.new_pin(self._session(), m.group(1), m.group(2))
+                else:
+                    out = family.add(self._session(), m.group(1), str(body.get("name", "")),
+                                     str(body.get("relation", "")), str(body.get("existing_id", "")))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+            return self._send(200, {**out, "parents": family.parents_of(m.group(1))})
         m = re.fullmatch(r"learner/(HT-\d{4})/comment", path)
         if method == "POST" and m:
             self._check_post()

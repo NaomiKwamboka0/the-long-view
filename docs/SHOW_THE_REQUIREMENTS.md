@@ -27,6 +27,13 @@ python -m hatua school-demo
 
 Wait about 20 seconds. When you see `Hatua portal: open http://127.0.0.1:8765`, open that address in your browser.
 
+The demo also prints where the class folders are: `the-long-view/demo_school/school_drive`. One folder per grade, and inside each one a folder per term, with the Excel file.
+
+**No Terminal?** Two other ways, good for judges:
+
+- **The website:** <https://naomikwamboka0.github.io/the-long-view/try/>. The same portal runs in the browser. No install. No Qwen.
+- **The app:** download it for Mac or Windows from <https://github.com/NaomiKwamboka0/the-long-view/releases/latest>. Double-click to start. The user guide shows each step: <https://naomikwamboka0.github.io/the-long-view/guide/>.
+
 Leave this Terminal open. Hatua stops when you close it.
 
 **To use Qwen:** Ollama must be running before you start (`ollama list` should show `qwen2.5:7b`). If Ollama is off, Hatua still works and uses its built-in answers. The page always tells you which one answered.
@@ -41,6 +48,14 @@ Leave this Terminal open. Hatua stops when you close it.
 | M-6001 | Mary Njeri | Grade 6A | The deleted file, approving a file, alerts, the parent message |
 | M-7001 | John Kiprop | Grade 7A | A file that was never uploaded |
 | M-9001 | Daniel Mutiso | Grade 9A | Pathway ideas |
+
+**The practice parents.** Same PIN.
+
+| Parent number | Parent | Child | Use this account to show |
+|---|---|---|---|
+| P-100001 | Rose Akinyi | Achieng, Grade 9A | A parent's page, the parent assistant, pathway ideas the teacher shared |
+| P-100002 | Lucy Wanjiru | Wanjiku (Grade 4) and Nyokabi (Grade 8) | One parent number, two children |
+| P-100003 | Samuel Mwangi | Kamau, Grade 6A | A parent's one-time PIN |
 
 ---
 
@@ -251,7 +266,28 @@ The line under the comment says who wrote it: Qwen on this laptop, or Hatua's te
 
 **What to say:** "The challenge says a named person must approve a pathway idea before it reaches a teacher. So they are closed. The teacher opens them with their name and promises to talk to the learner and the guardian first. Hatua shows all three pathways and never picks one. A parent message can never contain a pathway."
 
-### Step 10. Kenya's school calendar
+### Step 10. Parents sign in and see only their own child
+
+**Where it is:** the same sign-in page, **I am a parent**. The code is in `hatua/family.py`.
+
+**What to do**
+
+1. Sign in as `M-6001`. Open **My class**, tap **Kamau**, scroll to **Parents who can see Kamau**.
+2. Press **Give a parent access**. Type a name. Press **Make the parent number and PIN**. A slip shows the parent number and a one-time PIN.
+3. Sign out. Press **I am a parent**. Type the number and PIN from the slip. Hatua asks the parent to choose their own PIN.
+4. The parent sees only Kamau: results, days in school, the comment and messages the teacher shared.
+5. Sign in as `P-100001`. Press **Hatua assistant**. Ask `How is Achieng doing?`. It asks one question first, then answers.
+6. Ask `How is Brian doing?`. It says it can only see your own child.
+
+**What you will see**
+
+![The slip for the parent](guide/u09-slip.png)
+
+![A parent's page](guide/u12-parent-achieng.png)
+
+![The parent assistant will not talk about another child](guide/u15-parent-refuse.png)
+
+### Step 11. Kenya's school calendar
 
 Open the **School calendar** tab. It shows the 2026 term dates from the Ministry of Education and the day each term's results are due.
 

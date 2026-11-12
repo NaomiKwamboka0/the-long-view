@@ -53,3 +53,12 @@ Hatua supports teacher review. It does not select careers or pathways (from Grad
 Kenyan privacy guidance: ODPC Education Sector Guidance (https://www.odpc.go.ke/wp-content/uploads/2024/02/ODPC-Guidance-Note-for-the-Education-Sector.pdf) and ODPC Children’s Data Guidance (https://www.odpc.go.ke/wp-content/uploads/2025/11/ODPC-%E2%80%93-Guidance-Note-for-Processing-Childrens-Data.pdf). Questions or complaints about data protection can be raised with the Office of the Data Protection Commissioner (https://www.odpc.go.ke/).
 
 This notice describes the current prototype. Review and update it when data collection, hosting, integrations or retention change. The version and date above identify the notice included in this file.
+
+## Parents in the portal
+
+A class teacher can give a parent access to one learner. The parent gets a parent number and a one-time PIN, and must choose their own PIN. A parent sees only the learners linked to their number: results a teacher approved, days in school, the report comment the teacher approved, messages the teacher marked as told, and pathway ideas the class teacher opened. A parent never sees teacher notes, other children, alerts the teacher has not raised, or any ranking. Hatua stores the parent's name and relationship (for example Mother), never a phone number. The teacher can remove access at any time; a parent with no child left is deleted. The school must check who a parent is before giving access, the way it does today.
+
+## The practice website
+
+The practice website runs Hatua inside the visitor's browser with made-up people only. It sends nothing anywhere and saves nothing.
+

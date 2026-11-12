@@ -12,8 +12,8 @@ from .normalize import clean_record, flag, parse_date
 from .normalize import learner_id as clean_id
 
 FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments",
-         "drive", "notices", "comments", "pathway_gate")
-DICT_FILES = {"ingested", "assignments", "drive", "pathway_gate"}  # stored as one JSON object, not a list
+         "drive", "notices", "comments", "pathway_gate", "guardians")
+DICT_FILES = {"ingested", "assignments", "drive", "pathway_gate", "guardians"}  # stored as one JSON object, not a list
 
 
 def _path(name: str) -> Path:

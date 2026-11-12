@@ -6,6 +6,18 @@ Built for the **Education: The Long View** track of the African Agentic AI Desig
 
 > All data in this repository is **synthetic**. No real learner is represented.
 
+## Try it, download it, read the guide
+
+| | |
+|---|---|
+| **Try it in your browser** (practice school, no install) | https://naomikwamboka0.github.io/the-long-view/try/ |
+| **Download the app** for Mac or Windows | [Releases](https://github.com/NaomiKwamboka0/the-long-view/releases/latest) |
+| **User guide**, with pictures, for teachers, parents and the school admin | [docs/USER_GUIDE.html](https://naomikwamboka0.github.io/the-long-view/guide/) |
+
+The app opens a practice school the first time. Its sign-in page helps you install Ollama and then downloads Qwen for you (about 4.7 GB, once). Practice accounts: teacher `M-6001`, parent `P-100001`, PIN `246810`.
+
+The website runs the real portal code inside the browser with [Pyodide](https://pyodide.org) (`site_src/bridge.py`, built by `scripts/build_site.py`). The app is built with PyInstaller (`packaging/hatua.spec`, `.github/workflows/release.yml`).
+
 ![Architecture](docs/architecture.png)
 
 ## Send it to a teacher
@@ -37,6 +49,7 @@ A demo school with Grades 4 to 9 and one class teacher per class. Each teacher:
 - is told **as soon as** an approved file shows a learner falling in a subject, with a ready message for the parent in English or Kiswahili, and can record that the parent was told;
 - gets a **report comment** written by Qwen on the laptop, and gives it a thumbs up (use it) or a thumbs down (why, then a new version). Comments the teacher liked shape the next ones;
 - can ask the **Hatua assistant**, a chat window run by Qwen on the laptop. It **asks one short question first**, then answers about the teacher's own class, a learner, the school calendar or how to use Hatua, and cites the records it relies on. It never ranks learners;
+- can **give a parent access** to one learner: Hatua makes a parent number and a one-time PIN to print. The parent signs in on the same page, chooses their own PIN, and sees **only their own child**: approved results, days in school, the report comment the teacher approved, messages the teacher marked as told, and pathway ideas the teacher opened. Never teacher notes, other children or rankings. Parents have their own assistant, with the same ask-first and no-ranking rules ([hatua/family.py](hatua/family.py));
 - can open **senior school pathway ideas** for a Grade 9 learner (early ideas in Grades 7 and 8). They stay **closed until the named teacher opens them**, which is logged. Then they show the cited strengths for each of STEM, Social Sciences, and Arts and Sports Science, side by side. Hatua never picks one; the teacher raises them with the learner and guardian.
 
 Everything runs on the laptop: no outside service, no API, not even a web font. See [docs/PORTAL.md](docs/PORTAL.md).

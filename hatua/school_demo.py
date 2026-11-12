@@ -15,9 +15,10 @@ import runpy
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
-from . import auth, config, drive, notify, store
+from . import auth, config, drive, notify, pathways, store
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -55,6 +56,19 @@ def setup() -> dict:
         auth.logout(session)
     if items and items[-1].get("earlier"):
         _forget_old_alerts()
+    for tid, lid in info.get("open_pathways", []):  # the class teacher opens, through the real gate
+        session = auth.login(tid, info["pin"])["session"]
+        pathways.open_ideas(session, lid)
+        auth.logout(session)
+    links = {}
+    for p in info.get("parents", []):
+        auth.register(p["parent_id"], p["name"], info["pin"], must_change=bool(p.get("one_time")), role="parent")
+        teacher = next(t["name"] for t in info["teachers"] if t["teacher_id"] == p["teacher_id"])
+        at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        links[p["parent_id"]] = {"children": list(p["children"]), "relation": p["relation"],
+                                 "added": {lid: {"by": teacher, "at": at} for lid in p["children"]}}
+    store.save("guardians", links)
+    counts["parents"] = len(links)
     counts["files_approved_at_setup"] = len(info.get("already_approved", []))
     counts["records_from_the_drive"] = approved
     for t in info["teachers"]:  # start clean: nobody has signed in yet, and some hold a one-time PIN
@@ -93,6 +107,9 @@ def main(argv: list[str]) -> None:
     print("\nPractice accounts (PIN for all: " + info["pin"] + "):")
     for t in info["teachers"]:
         print(f"  {t['teacher_id']}  Grade {t['stream']:<3}  {t['name']}")
+    for p in info.get("parents", []):
+        print(f"  {p['parent_id']}  Parent     {p['name']}")
+    print(f"\nThe school drive (the Excel folders for each class and term) is here:\n  {home / 'school_drive'}")
     if args.no_serve:
         print(f"\nStart the portal later with:  HATUA_HOME={home} HATUA_TODAY={env['HATUA_TODAY']} "
               f"python -m hatua portal")

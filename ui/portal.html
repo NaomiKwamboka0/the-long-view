@@ -250,6 +250,56 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   background: linear-gradient(135deg, transparent 55%, var(--path) 55%, var(--path) 62%, transparent 62%, transparent 72%, var(--path) 72%, var(--path) 79%, transparent 79%); }
 .ask.max .ask-grip, .ask.sheet .ask-grip { display: none; }
 .ask.sheet { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100dvh !important; border-radius: 0; }
+/* sign-in: who is signing in */
+.role { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--tint); padding: 4px; border-radius: 999px; }
+.role button { border: 0; background: transparent; border-radius: 999px; padding: 9px 12px; color: var(--ink-soft); }
+.role button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px rgba(33, 48, 41, .08); }
+.ai { border-radius: 18px; padding: 14px 16px; display: grid; gap: 8px; background: var(--tint); }
+.ai.ok { background: var(--leaf-soft); }
+.ai h3 { font-size: 1rem; display: flex; gap: 8px; align-items: center; }
+.ai .bar { height: 10px; border-radius: 999px; background: var(--surface); overflow: hidden; }
+.ai .bar span { display: block; height: 100%; background: var(--jacaranda); border-radius: 999px; transition: width .4s; }
+.ai .acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+a.btn { text-decoration: none; display: inline-block; }
+.practice h4 { margin: 6px 0 0; font-size: .82rem; color: var(--ink-soft); font-weight: 400; text-transform: uppercase; letter-spacing: .06em; }
+
+/* parents: on the teacher's learner page, and the slip to give the parent */
+.access { display: grid; gap: 8px; }
+.access li { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; background: var(--tint); border-radius: 14px; padding: 10px 12px; }
+.access ul { margin: 0; padding: 0; display: grid; gap: 6px; }
+.access .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.slip { border-radius: 18px; background: var(--jacaranda-soft); padding: 16px 18px; display: grid; gap: 10px; }
+.slip .big { font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.slip dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; }
+.slip dt { color: var(--ink-soft); }
+.slip dd { margin: 0; }
+.form-grid { display: grid; gap: 10px; }
+.form-grid label { display: grid; gap: 4px; font-size: .9rem; color: var(--ink-soft); }
+
+/* the parent's page */
+.kids { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.kids button { border: 0; border-radius: 999px; padding: 8px 16px 8px 8px; background: var(--surface); display: inline-flex; gap: 10px; align-items: center; color: var(--ink-soft); }
+.kids button .face { width: 32px; height: 32px; font-size: .9rem; }
+.kids button[aria-pressed="true"] { background: var(--jacaranda-soft); color: var(--jacaranda); font-weight: 700; }
+.child { display: grid; gap: 18px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; align-items: start; }
+.areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.area { border-radius: 16px; background: var(--tint); padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.area .nm { font-weight: 700; }
+.area .row { display: flex; gap: 8px; align-items: center; }
+.area .chg { font-size: .85rem; color: var(--ink-soft); }
+.area.up .chg { color: var(--leaf); } .area.down .chg { color: var(--sun); }
+.days { display: flex; align-items: baseline; gap: 10px; }
+.days b { font-size: 2rem; font-variant-numeric: tabular-nums; }
+.msg-card { border-radius: 16px; background: var(--tint); padding: 12px 14px; display: grid; gap: 6px; }
+.promise { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--ink-soft); }
+.promise svg { flex: none; margin-top: 3px; }
+@media print {
+  body > *:not(dialog) { display: none !important; }
+  dialog { position: static; box-shadow: none; width: 100%; }
+  dialog .no-print { display: none !important; }
+  .slip { background: none; border: 2px solid #000; }
+}
 @media (max-width: 520px) { body { font-size: 16px; } .panel { padding: 16px; border-radius: 20px; } .file { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
@@ -260,9 +310,13 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
   <div class="signin-card">
     <div class="panel" style="display:grid;gap:16px">
       <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
-      <div><h1 style="font-size:1.5rem" id="si-title">Sign in to your class</h1><p class="soft" id="si-school"></p></div>
+      <div><h1 style="font-size:1.5rem" id="si-title">Sign in to Hatua</h1><p class="soft" id="si-school"></p></div>
+      <div class="role" role="group" aria-label="Who is signing in" id="si-role">
+        <button type="button" data-role="teacher" aria-pressed="true">I am a teacher</button>
+        <button type="button" data-role="parent" aria-pressed="false">I am a parent</button>
+      </div>
       <form id="si-form" autocomplete="on">
-        <label>Member number<input type="text" id="si-id" autocomplete="username" autocapitalize="characters" placeholder="For example M-6001" required></label>
+        <label><span id="si-id-label">Member number</span><input type="text" id="si-id" autocomplete="username" autocapitalize="characters" placeholder="For example M-6001" required></label>
         <label>PIN<span class="pin-row"><input type="password" id="si-pin" autocomplete="current-password" required><button class="btn quiet small" type="button" id="si-show" aria-pressed="false">Show</button></span></label>
         <p class="error small" id="si-error" role="alert" hidden></p>
         <button class="btn" type="submit" id="si-go">Sign in</button>
@@ -271,20 +325,24 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
         <p id="np-hello"></p>
         <label>New PIN<input type="password" id="np-new" autocomplete="new-password" required></label>
         <label>New PIN again<input type="password" id="np-again" autocomplete="new-password" required></label>
-        <ul class="rules small soft"><li>6 or more numbers or letters</li><li>Not numbers in order, like 123456</li><li>Not the same number again and again</li><li>Not your member number</li></ul>
+        <ul class="rules small soft"><li>6 or more numbers or letters</li><li>Not numbers in order, like 123456</li><li>Not the same number again and again</li><li>Not your member number or parent number</li></ul>
         <p class="error small" id="np-error" role="alert" hidden></p>
-        <button class="btn" type="submit" id="np-go">Save my PIN and open my class</button>
+        <button class="btn" type="submit" id="np-go">Save my PIN and continue</button>
       </form>
       <ul class="rules small soft" id="si-facts">
+        <li id="si-fact-who">Teachers: use your TSC member number. Parents: use the parent number the class teacher gave you.</li>
         <li>Hatua runs on this computer. Your PIN never leaves it.</li>
         <li>After 5 wrong PINs, sign-in stops for 15 minutes.</li>
         <li>You are signed out after 15 minutes without use.</li>
       </ul>
     </div>
+    <section class="ai" id="ai-box" aria-live="polite" hidden></section>
+    <p class="small soft" style="text-align:center"><a href="/guide" target="_blank" rel="noopener" style="color:var(--jacaranda)">Open the user guide</a></p>
     <details class="practice" id="practice" hidden>
-      <summary><b>Practice accounts</b> <span class="soft small">(demo only: made-up teachers and learners)</span></summary>
-      <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a member number to fill it in.</p>
-      <table><tbody id="pr-rows"></tbody></table>
+      <summary><b>Practice accounts</b> <span class="soft small">(demo only: made-up people)</span></summary>
+      <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a number to fill it in.</p>
+      <h4>Teachers</h4><table><tbody id="pr-rows"></tbody></table>
+      <h4>Parents</h4><table><tbody id="pr-parents"></tbody></table>
     </details>
   </div>
 </main>
@@ -295,6 +353,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
     <p class="who" id="who"></p>
     <span class="cal" id="cal-chip"></span>
+    <a class="btn quiet small" href="/guide" target="_blank" rel="noopener">Help</a>
     <button class="btn quiet small" type="button" id="account">My account</button>
     <button class="btn quiet small" type="button" id="signout">Sign out</button>
   </header>
@@ -361,6 +420,21 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
 </div>
 
 
+<!-- PARENT'S PAGE -->
+<div class="wrap" id="family" hidden>
+  <header class="top">
+    <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
+    <p class="who" id="f-who"></p>
+    <span class="cal" id="f-cal"></span>
+    <a class="btn quiet small" href="/guide" target="_blank" rel="noopener">Help</a>
+    <button class="btn quiet small" type="button" id="f-account">My account</button>
+    <button class="btn quiet small" type="button" id="f-signout">Sign out</button>
+  </header>
+  <section class="hello"><h1 id="f-hello"></h1><p class="small soft" id="f-last" style="flex:1 1 100%"></p></section>
+  <div class="kids" id="kids" role="group" aria-label="Your children"></div>
+  <main id="child" aria-live="polite"></main>
+</div>
+
 <!-- HATUA ASSISTANT -->
 <button class="ask-launch" type="button" id="ask-launch" hidden aria-controls="ask" aria-expanded="false">
   <svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l2)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda-ink)"/></svg>
@@ -373,7 +447,7 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
     <button class="win-btn" type="button" id="ask-min" title="Minimize" aria-label="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 18h14"/></svg></button>
     <button class="win-btn" type="button" id="ask-max" title="Maximize" aria-label="Maximize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
   </div>
-  <p class="ask-note">I ask one short question first, so my answer fits what you need. I know only your class. I never rank learners. This chat is not saved.</p>
+  <p class="ask-note" id="ask-note">I ask one short question first, so my answer fits what you need. I know only your class. I never rank learners. This chat is not saved.</p>
   <div class="ask-log" id="ask-log" aria-live="polite"></div>
   <form class="ask-form" id="ask-form">
     <textarea id="ask-q" rows="1" placeholder="Ask a question" aria-label="Your question"></textarea>
@@ -397,6 +471,8 @@ const lv = l => `<span class="lv ${l}" title="${LEVEL[l] || l}">${l}</span>`;
 const fmt = d => new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 let CSRF = null, ME = null, NOTICES = [], CLASS = [], DRIVE = [], TERMS = [], CAL = null, selected = null, MODEL = null;
 let IDLE_MIN = 15, lastActive = Date.now(), ONE_TIME = null, SIGNIN_NOTE = null;
+let ROLE = "teacher", FAM = null, CHILD = null, SIGNIN_AS = "teacher";
+const signedIn = () => !$("app").hidden || !$("family").hidden;
 const when = iso => iso ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
 async function api(path, opts = {}) {
@@ -413,12 +489,12 @@ async function api(path, opts = {}) {
 
 /* ---------- sign in ---------- */
 async function showSignin(message) {
-  $("app").hidden = true; $("signin").hidden = false; CSRF = null; ONE_TIME = null;
-  ME = null; NOTICES = []; CLASS = []; DRIVE = []; TERMS = []; selected = null; L = null; knownFiles = null;
+  $("app").hidden = true; $("family").hidden = true; $("signin").hidden = false; CSRF = null; ONE_TIME = null;
+  ME = null; FAM = null; CHILD = null; NOTICES = []; CLASS = []; DRIVE = []; TERMS = []; selected = null; L = null; knownFiles = null;
   $("ask").hidden = true; $("ask-launch").hidden = true; if ($("dlg").open) $("dlg").close();
-  for (const id of ["today", "drive", "people", "learner", "calendar", "ask-log"]) $(id).innerHTML = "";  // leave nothing on screen
-  $("si-form").hidden = false; $("np-form").hidden = true; $("si-facts").hidden = false;
-  $("si-title").textContent = "Sign in to your class";
+  for (const id of ["today", "drive", "people", "learner", "calendar", "ask-log", "kids", "child", "f-who"]) $(id).innerHTML = "";  // leave nothing on screen
+  $("si-form").hidden = false; $("np-form").hidden = true; $("si-facts").hidden = false; $("si-role").hidden = false;
+  $("si-title").textContent = "Sign in to Hatua"; setSigninRole(SIGNIN_AS);
   $("si-error").hidden = !message; $("si-error").textContent = message || "";
   try {
     const pub = await api("public");
@@ -426,11 +502,46 @@ async function showSignin(message) {
     if (pub.practice) {
       $("practice").hidden = false; $("pr-pin").textContent = pub.practice.pin;
       $("pr-rows").innerHTML = pub.practice.teachers.map(t => `<tr><td>Grade ${esc(t.stream)}</td><td>${esc(t.name)}${(pub.practice.one_time || []).includes(t.teacher_id) ? ` <span class="pill">one-time PIN</span>` : ""}</td><td><button class="link" type="button" data-fill="${esc(t.teacher_id)}">${esc(t.teacher_id)}</button></td></tr>`).join("");
-      $("pr-rows").querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => { $("si-id").value = b.dataset.fill; $("si-pin").focus(); }));
+      $("pr-parents").innerHTML = (pub.practice.parents || []).map(p => `<tr><td>${esc(p.relation)}</td><td>${esc(p.name)}${p.one_time ? ` <span class="pill">one-time PIN</span>` : ""}</td><td><button class="link" type="button" data-fill="${esc(p.parent_id)}" data-as="parent">${esc(p.parent_id)}</button></td></tr>`).join("");
+      $("practice").querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => { setSigninRole(b.dataset.as || "teacher"); $("si-id").value = b.dataset.fill; $("si-pin").focus(); }));
     }
   } catch (e) {}
+  aiRefresh();
   $("si-id").focus();
 }
+/* ---------- Qwen on this computer: install help and download, on the sign-in page ---------- */
+let aiTimer = null;
+async function aiRefresh() {
+  clearTimeout(aiTimer);
+  if ($("signin").hidden) return;
+  let a; try { a = await api("ai"); } catch (e) { return; }
+  const box = $("ai-box"); box.hidden = false; box.classList.toggle("ok", a.ready);
+  const head = t => `<h3>${t}</h3>`;
+  const note = `<p class="small soft">Without Qwen, Hatua still works and the assistant gives built-in answers.</p>`;
+  if (a.ready) box.innerHTML = head("Qwen is ready on this computer") + `<p class="small">The assistant writes its answers with ${esc(a.model)}, here on this computer. Nothing goes to the internet.</p>`;
+  else if (a.pull.state === "pulling") {
+    box.innerHTML = head("Downloading Qwen...") + `<div class="bar" role="progressbar" aria-valuenow="${a.pull.percent}" aria-valuemin="0" aria-valuemax="100"><span style="width:${a.pull.percent}%"></span></div>
+      <p class="small soft">${a.pull.percent}%. ${esc(a.pull.message)}. You can sign in and use Hatua while it downloads.</p>`;
+    aiTimer = setTimeout(aiRefresh, 2000);
+  } else if (a.ollama === "running") box.innerHTML = head("Get the AI helper (Qwen)") + `<p class="small">Qwen is not on this computer yet. It is ${esc(a.size)} and downloads once. After that it works without internet.</p>
+      ${a.pull.state === "error" ? `<p class="small error">${esc(a.pull.message)}</p>` : ""}<div class="acts"><button class="btn small" type="button" id="ai-get">Download Qwen</button></div>${note}`;
+  else if (a.ollama === "not_running") box.innerHTML = head("Start the AI helper") + `<p class="small">Ollama, the program that runs Qwen, is installed but not running.</p>
+      <div class="acts"><button class="btn small" type="button" id="ai-start">Start Ollama</button></div>${note}`;
+  else box.innerHTML = head("Add the AI helper (optional)") + `<p class="small">Hatua's assistant can use Qwen, a free AI that runs on this computer. First install Ollama, the free program that runs it. It takes two minutes, once.</p>
+      <ol class="rules small"><li>Press <b>Get Ollama</b> and download it for ${a.system === "windows" ? "Windows" : a.system === "mac" ? "Mac" : "your computer"}.</li><li>Open the file you downloaded and follow the steps.</li><li>Come back here and press <b>Check again</b>. Hatua then downloads Qwen for you.</li></ol>
+      <div class="acts"><a class="btn small" href="${esc(a.download_page)}" target="_blank" rel="noopener noreferrer">Get Ollama</a><button class="btn quiet small" type="button" id="ai-check">Check again</button></div>${note}`;
+  $("ai-get")?.addEventListener("click", async () => { try { await api("ai/qwen", { method: "POST", json: {} }); } catch (err) { toast(err.message); } aiRefresh(); });
+  $("ai-start")?.addEventListener("click", async () => { $("ai-start").disabled = true; $("ai-start").textContent = "Starting...";
+    try { await api("ai/start", { method: "POST", json: {} }); } catch (err) {} aiTimer = setTimeout(aiRefresh, 4000); });
+  $("ai-check")?.addEventListener("click", aiRefresh);
+}
+function setSigninRole(r) {
+  SIGNIN_AS = r;
+  $("si-role").querySelectorAll("[data-role]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.role === r)));
+  $("si-id-label").textContent = r === "parent" ? "Parent number" : "Member number";
+  $("si-id").placeholder = r === "parent" ? "For example P-100001" : "For example M-6001";
+}
+$("si-role").querySelectorAll("[data-role]").forEach(b => b.addEventListener("click", () => { setSigninRole(b.dataset.role); $("si-id").value = ""; $("si-id").focus(); }));
 $("si-show").addEventListener("click", () => {
   const show = $("si-pin").type === "password";
   $("si-pin").type = show ? "text" : "password"; $("si-show").textContent = show ? "Hide" : "Show"; $("si-show").setAttribute("aria-pressed", String(show));
@@ -443,9 +554,9 @@ $("si-form").addEventListener("submit", async e => {
     CSRF = out.csrf;
     if (out.must_change) {
       ONE_TIME = $("si-pin").value; $("si-pin").value = "";
-      $("si-form").hidden = true; $("si-facts").hidden = true; $("practice").hidden = true; $("np-form").hidden = false; $("np-error").hidden = true;
+      $("si-form").hidden = true; $("si-facts").hidden = true; $("practice").hidden = true; $("si-role").hidden = true; $("np-form").hidden = false; $("np-error").hidden = true;
       $("si-title").textContent = "Choose your own PIN";
-      $("np-hello").textContent = `Hello ${out.name}. The PIN from the school works one time only. Choose a PIN that only you know. Nothing opens until you do.`;
+      $("np-hello").textContent = `Hello ${out.name}. The PIN ${out.role === "parent" ? "the class teacher gave you" : "from the school"} works one time only. Choose a PIN that only you know. Nothing opens until you do.`;
       $("np-new").value = $("np-again").value = ""; $("np-new").focus();
       return;
     }
@@ -469,12 +580,14 @@ $("np-form").addEventListener("submit", async e => {
   } catch (err) { show(err.message); }
   finally { $("np-go").disabled = false; }
 });
-$("signout").addEventListener("click", async () => { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(); });
+async function signOut() { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(); }
+$("signout").addEventListener("click", signOut);
+$("f-signout").addEventListener("click", signOut);
 
 /* signed out after 15 minutes without use: this page checks, and so does the server */
 ["pointerdown", "keydown"].forEach(ev => addEventListener(ev, () => { lastActive = Date.now(); if (!$("idle").hidden) $("idle").hidden = true; }, true));
 setInterval(async () => {
-  if ($("app").hidden) return;
+  if (!signedIn()) return;
   const idle = (Date.now() - lastActive) / 60000;
   if (idle >= IDLE_MIN) { try { await api("logout", { method: "POST", json: {} }); } catch (e) {} showSignin(`You were signed out after ${IDLE_MIN} minutes without use.`); }
   else $("idle").hidden = idle < IDLE_MIN - 1;
@@ -482,26 +595,27 @@ setInterval(async () => {
 
 /* ---------- my account ---------- */
 $("account").addEventListener("click", accountDialog);
+$("f-account").addEventListener("click", accountDialog);
 async function accountDialog() {
   const a = await api("account");
   $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">My account</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
-    <p><b>${esc(ME.name)}</b><br><span class="soft">Member number ${esc(ME.teacher_id)}, ${esc(ME.class_label)}</span></p>
+    <p><b>${esc(ME.name)}</b><br><span class="soft">${ROLE === "parent" ? `Parent number ${esc(FAM.parent_id)}, parent of ${esc(FAM.children.map(c => c.name).join(" and "))}` : `Member number ${esc(ME.teacher_id)}, ${esc(ME.class_label)}`}</span></p>
     <div class="section"><h3>Sign-ins on this computer</h3>
       <p class="small soft">If you see a sign-in or a wrong PIN that was not you, change your PIN now and tell the school.</p>
       <ul class="signs">${a.recent.map(r => `<li class="${r.ok ? "" : "bad"}"><span>${esc(r.what)}</span><span>${esc(when(r.when))}</span></li>`).join("") || `<li>Nothing yet.</li>`}</ul></div>
     <div class="section"><h3>What you did in Hatua</h3>
-      <p class="small soft">From Hatua's activity log on this computer. Every approval carries your name.</p>
+      <p class="small soft">From Hatua's activity log on this computer.${ROLE === "parent" ? "" : " Every approval carries your name."}</p>
       <ul class="signs">${a.did.map(r => `<li><span>${esc(r.what)}</span><span style="white-space:nowrap">${esc(when(r.when))}</span></li>`).join("") || `<li>Nothing yet.</li>`}</ul></div>
     <form class="pin-form" id="cp-form"><h3>Change my PIN</h3>
       <label>The PIN you use now<input type="password" id="cp-now" autocomplete="current-password" required></label>
       <label>New PIN<input type="password" id="cp-new" autocomplete="new-password" required></label>
       <label>New PIN again<input type="password" id="cp-again" autocomplete="new-password" required></label>
-      <p class="small soft">6 or more numbers or letters. Not in order, not repeated, not your member number.${a.pin_changed ? ` Last changed ${esc(when(a.pin_changed))}.` : ""}</p>
+      <p class="small soft">6 or more numbers or letters. Not in order, not repeated, not your ${ROLE === "parent" ? "parent" : "member"} number.${a.pin_changed ? ` Last changed ${esc(when(a.pin_changed))}.` : ""}</p>
       <p class="error small" id="cp-error" role="alert" hidden></p>
       <div><button class="btn" type="submit" id="cp-go">Save my new PIN</button></div></form>
     <div class="section"><h3>How Hatua keeps your class safe</h3>
-      <ul class="rules small"><li>You see only your own class. No other teacher sees it.</li><li>After ${a.lock_failures} wrong PINs, sign-in stops for ${a.lock_minutes} minutes.</li>
-        <li>You are signed out after ${a.idle_minutes} minutes without use.</li><li>Your member number works in one place at a time. A new sign-in ends the old one.</li>
+      <ul class="rules small"><li>${ROLE === "parent" ? "You see only your own child. No other parent sees your child, and you never see other children." : "You see only your own class. No other teacher sees it."}</li><li>After ${a.lock_failures} wrong PINs, sign-in stops for ${a.lock_minutes} minutes.</li>
+        <li>You are signed out after ${a.idle_minutes} minutes without use.</li><li>Your number works in one place at a time. A new sign-in ends the old one.</li>
         <li>Everything stays on this computer. Nothing is sent over the internet.</li></ul></div>`;
   $("dlg-x").onclick = () => $("dlg").close();
   $("cp-form").onsubmit = async e => {
@@ -518,6 +632,9 @@ async function accountDialog() {
 /* ---------- start ---------- */
 async function start() {
   const me = await api("me");
+  ROLE = me.role || "teacher";
+  if (ROLE === "parent") return startFamily(me);
+  $("ask-note").textContent = "I ask one short question first, so my answer fits what you need. I know only your class. I never rank learners. This chat is not saved.";
   CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model; IDLE_MIN = me.idle_minutes || 15; lastActive = Date.now();
   $("signin").hidden = true; $("app").hidden = false;
   setTab("today");  // before loading, so a tab the teacher picks while it loads is kept
@@ -752,6 +869,7 @@ function renderLearner() {
     <div class="section"><h3>Comment for the report</h3>${commentBox(latest, used)}</div>
     <div class="section"><h3>What the records show</h3>${finds || `<p class="soft">No pattern has held across enough terms yet.</p>`}</div>
     ${pathwaysBox(l)}
+    ${parentsBox(l)}
     <div class="section"><h3>The long view, Grade 4 to Grade ${l.grade}</h3>
       <p class="small soft">You can see ${esc(l.name)}'s full history. Earlier grades were recorded by earlier teachers and are read only. Tap a mark to see the record.</p>
       <div class="key"><span>${lv("EE")} Exceeding</span><span>${lv("ME")} Meeting</span><span>${lv("AE")} Approaching</span><span>${lv("BE")} Below expectations</span></div>
@@ -759,6 +877,7 @@ function renderLearner() {
   </div>`;
   wireCommon(el);
   wireComment(latest);
+  wireParents();
   $("pw-open")?.addEventListener("click", async e => {
     e.target.disabled = true;
     try { L.pathways = (await api(`learner/${L.id}/pathways/open`, { method: "POST", json: {} })).pathways; renderLearner(); }
@@ -766,13 +885,78 @@ function renderLearner() {
   });
 }
 let el = null;
+/* ---------- parents: the class teacher gives and removes access ---------- */
+function parentsBox(l) {
+  const ps = l.parents || [];
+  return `<div class="section access"><h3>Parents who can see ${esc(l.name)}</h3>
+    <p class="small soft">A parent sees only ${esc(l.name)}: approved results, days in school, the comment you approve, messages you mark as told, and pathway ideas you open. Never your notes, alerts or other learners.</p>
+    ${ps.length ? `<ul>${ps.map(p => `<li><div><b>${esc(p.name)}</b> <span class="id">${esc(p.parent_id)}</span><p class="small soft">${esc(p.relation)}. ${p.waiting_first_sign_in ? "Has not signed in yet." : p.last_login ? "Last signed in " + esc(when(p.last_login)) + "." : ""} Added by ${esc(p.added_by)}.</p></div>
+      <div class="acts"><button class="btn quiet small" type="button" data-pin="${esc(p.parent_id)}">New PIN</button><button class="btn quiet small" type="button" data-unlink="${esc(p.parent_id)}">Remove</button></div></li>`).join("")}</ul>`
+      : `<p class="soft">No parent can see ${esc(l.name)}'s page yet.</p>`}
+    <div><button class="btn" type="button" id="pa-add">Give a parent access</button></div></div>`;
+}
+function slip(out, l) {
+  return `<div class="slip"><p><b>Give this to ${esc(out.name || "the parent")}.</b> Hatua shows the PIN only now. It works one time; the parent then chooses their own.</p>
+    <dl><dt>Child</dt><dd>${esc(l.name)} (${esc(l.id)})</dd><dt>Parent number</dt><dd class="big">${esc(out.parent_id)}</dd><dt>One-time PIN</dt><dd class="big">${esc(out.one_time_pin)}</dd><dt>Where</dt><dd>Open Hatua, choose "I am a parent", and sign in.</dd></dl></div>
+    <div class="row no-print" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="button" id="sl-print">Print this slip</button><button class="btn quiet" type="button" id="sl-done">Done</button></div>`;
+}
+function showSlip(out, l) {
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Parent access is ready</h2></div>${slip(out, l)}`;
+  $("sl-print").onclick = () => print();
+  $("sl-done").onclick = () => $("dlg").close();
+  if (!$("dlg").open) $("dlg").showModal();
+}
+function wireParents() {
+  const l = L;
+  $("pa-add")?.addEventListener("click", () => {
+    $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Give a parent access to ${esc(l.name)}</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+      <p class="small soft">Only give access to a parent or guardian you know. Check who they are first, the way the school always does.</p>
+      <form class="form-grid" id="pa-form">
+        <label>Parent's full name<input type="text" id="pa-name" autocomplete="off" required></label>
+        <label>They are ${esc(l.name)}'s<select id="pa-rel">${(l.relations || []).map(r => `<option>${esc(r)}</option>`).join("")}</select></label>
+        <details><summary class="small">This parent already has a parent number (a brother or sister is at this school)</summary>
+          <label style="margin-top:8px">Their parent number<input type="text" id="pa-existing" placeholder="For example P-100001" autocapitalize="characters"></label></details>
+        <p class="error small" id="pa-err" role="alert" hidden></p>
+        <div><button class="btn" type="submit" id="pa-go">Make the parent number and PIN</button></div></form>`;
+    $("dlg-x").onclick = () => $("dlg").close();
+    $("pa-existing").addEventListener("input", () => { $("pa-name").required = !$("pa-existing").value.trim(); });
+    $("pa-form").onsubmit = async e => {
+      e.preventDefault(); $("pa-go").disabled = true;
+      try {
+        const out = await api(`learner/${l.id}/parents`, { method: "POST", json: { name: $("pa-name").value, relation: $("pa-rel").value, existing_id: $("pa-existing").value } });
+        L.parents = out.parents; renderLearner();
+        if (out.one_time_pin) showSlip(out, l); else { $("dlg").close(); toast(`${out.name} can now see ${l.name} with the same parent number.`); }
+      } catch (err) { $("pa-err").hidden = false; $("pa-err").textContent = err.message; $("pa-go").disabled = false; }
+    };
+    $("dlg").showModal(); $("pa-name").focus();
+  });
+  document.querySelectorAll("[data-pin]").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { const out = await api(`learner/${l.id}/parents/${b.dataset.pin}/new-pin`, { method: "POST", json: {} });
+      const p = (out.parents || []).find(x => x.parent_id === out.parent_id) || {};
+      L.parents = out.parents; renderLearner(); showSlip({ ...out, name: p.name }, l); }
+    catch (err) { toast(err.message); b.disabled = false; }
+  }));
+  document.querySelectorAll("[data-unlink]").forEach(b => b.addEventListener("click", () => {
+    const p = (l.parents || []).find(x => x.parent_id === b.dataset.unlink) || {};
+    $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Remove ${esc(p.name)}?</h2></div>
+      <p>${esc(p.name)} will no longer see ${esc(l.name)}'s page, and any sign-in ends now. If ${esc(p.name)} has no other child in Hatua, the parent number is deleted.</p>
+      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="button" id="un-yes">Remove access</button><button class="btn quiet" type="button" id="un-no">Keep access</button></div>`;
+    $("un-no").onclick = () => $("dlg").close();
+    $("un-yes").onclick = async () => {
+      try { const out = await api(`learner/${l.id}/parents/${p.parent_id}/remove`, { method: "POST", json: {} }); L.parents = out.parents; renderLearner(); $("dlg").close(); toast(`${p.name} can no longer see ${l.name}.`); }
+      catch (err) { toast(err.message); }
+    };
+    $("dlg").showModal();
+  }));
+}
 function pathwaysBox(l) {
   const info = l.pathways || {};
   if (info.stage === "too_early") return `<div class="section"><h3>Senior school pathways</h3><p class="soft small">${esc(info.intro)}</p></div>`;
   const title = `Senior school pathway ideas${info.stage === "explore" ? " (early ideas)" : ""}`;
   if (info.locked) return `<div class="section"><h3>${title}</h3><div class="lock">
-    <p><b>Closed.</b> Hatua can show which strengths in ${esc(l.name)}'s records relate to each senior school pathway. These are ideas for <b>you</b> to raise with ${esc(l.name)} and the guardian. Hatua never picks a pathway, and never shows these to the learner or the parent.</p>
-    <p class="small soft">When you open them, Hatua records your name and the time.</p>
+    <p><b>Closed.</b> Hatua can show which strengths in ${esc(l.name)}'s records relate to each senior school pathway. These are ideas for <b>you</b> to raise with ${esc(l.name)} and the guardian. Hatua never picks a pathway.</p>
+    <p class="small soft">When you open them, Hatua records your name and the time, and ${esc(l.name)}'s parents can see them on their Hatua page.</p>
     <button class="btn" type="button" id="pw-open">Open pathway ideas as ${esc(ME.name)}</button>
     <p class="small soft">By opening, you agree: "I will raise these with ${esc(l.name)} and the guardian myself."</p></div></div>`;
   if (!info.pathways || !info.pathways.length) return "";
@@ -783,7 +967,7 @@ function pathwaysBox(l) {
       <p class="small soft">${esc(pw.tracks)}</p><p class="small">${esc(pw.summary)}</p>
       ${pw.lines.length ? `<ul>${pw.lines.map(x => `<li class="${x.kind === "to_build" ? "build" : ""}">${esc(x.text)}${x.kind === "to_build" ? " (to keep building)" : ""} ${cite(x.evidence.slice(0, 3))}</li>`).join("")}</ul>` : ""}
     </div>`).join("")}</div>
-    <p class="small soft">Opened by ${esc(info.opened ? info.opened.by : "")}${info.opened ? " on " + esc(when(info.opened.at)) : ""}. Raise these with ${esc(l.name)} and the guardian yourself. They are never added to parent messages or report comments.</p></div>`;
+    <p class="small soft">Opened by ${esc(info.opened ? info.opened.by : "")}${info.opened ? " on " + esc(when(info.opened.at)) : ""}. ${esc(l.name)}'s parents can see these on their Hatua page. Raise them with ${esc(l.name)} and the guardian yourself.</p></div>`;
 }
 const THUMB_UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H4V10h3z"/><path d="M7 10l4-7c1.5 0 2.5 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.3 7.5a2 2 0 0 1-2 1.7H7"/></svg>`;
 const THUMB_DOWN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3h3v11h-3z"/><path d="M17 14l-4 7c-1.5 0-2.5-1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3L4.6 5.2a2 2 0 0 1 2-1.7H17"/></svg>`;
@@ -884,6 +1068,12 @@ const store2 = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } ca
 const phone = () => matchMedia("(max-width: 600px)").matches;
 
 function askSuggestions() {
+  if (ROLE === "parent") {
+    const kid = (CHILD && FAM.children.find(c => c.id === CHILD.id)) || FAM.children[0], n = kid ? kid.name : "my child";
+    const qs = [`How is ${n} doing?`, `How can I help ${n} at home?`, "When does the next term open?"];
+    if (kid && kid.grade >= 7) qs.splice(2, 0, `What senior school pathways could ${n} explore?`);
+    return qs.concat(["Is my child the best in the class?"]);
+  }
   const watch = CLASS.find(l => l.alerts), any = CLASS[0];
   const qs = ["Who needs my attention this week?"];
   if (watch) qs.push(`How is ${watch.name} doing, and what should I tell the parent?`);
@@ -894,7 +1084,9 @@ function askSuggestions() {
 }
 function askReset() {
   ASK.history = []; ASK.pending = null; $("ask-q").placeholder = "Ask a question";
-  $("ask-log").innerHTML = `<div class="msg bot"><p>Hello ${esc((ME && ME.name || "").split(" ")[0])}. I can answer questions about ${esc(ME ? ME.class_label : "your class")}, a learner's records, the school calendar, or how to use Hatua.</p>
+  const hello = ROLE === "parent" ? `I can answer questions about ${esc(FAM.children.map(c => c.name).join(" and "))}'s results, school dates, and how to help at home.`
+    : `I can answer questions about ${esc(ME ? ME.class_label : "your class")}, a learner's records, the school calendar, or how to use Hatua.`;
+  $("ask-log").innerHTML = `<div class="msg bot"><p>Hello ${esc((ME && ME.name || "").split(" ")[0])}. ${hello}</p>
     <div class="chips live" style="margin-top:10px">${askSuggestions().map(q => `<button class="chip" type="button">${esc(q)}</button>`).join("")}</div></div>`;
   $("ask-log").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => askSend(c.textContent)));
 }
@@ -929,7 +1121,7 @@ async function askSend(text) {
   ASK.busy = true; $("ask-send").disabled = true; $("ask-q").value = ""; askGrow();
   $("ask-log").querySelectorAll(".chips.live").forEach(c => c.remove());
   askAdd("teacher", `<p>${esc(text)}</p>`);
-  const wait = askAdd("bot", `<p>${!step2 ? "One moment..." : MODEL ? "Thinking... Qwen on this laptop can take up to a minute." : "Looking in your class's records..."}</p>`);
+  const wait = askAdd("bot", `<p>${!step2 ? "One moment..." : MODEL ? "Thinking... Qwen on this laptop can take up to a minute." : "Looking in the records..."}</p>`);
   wait.classList.add("thinking");
   try {
     const out = await api("assistant", { method: "POST", json: step2 ? { ask_id: step2.ask_id, reply: text, history: ASK.history } : { question: text, history: ASK.history } });
@@ -941,7 +1133,7 @@ async function askSend(text) {
       $("ask-q").placeholder = "Or type your answer";
     } else {
       ASK.pending = null; $("ask-q").placeholder = "Ask a question";
-      const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings or comparisons" : out.gated ? "Hatua's rule: the teacher opens pathway ideas first" : "Built-in answer from Hatua's records")
+      const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings, comparisons or other children" : out.gated ? "Hatua's rule: the teacher opens pathway ideas first" : "Built-in answer from Hatua's records")
         : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
       askAdd("bot", renderAnswer(out.answer), by);
       ASK.history.push({ role: "teacher", text: step2 ? `${step2.question} (${text})` : text }, { role: "assistant", text: out.answer });
@@ -985,7 +1177,7 @@ function askClamp(b) {
 }
 function askApply() {
   const el = $("ask"), st = ASK.state;
-  el.hidden = st === "min"; $("ask-launch").hidden = st !== "min" || $("app").hidden;
+  el.hidden = st === "min"; $("ask-launch").hidden = st !== "min" || !signedIn();
   $("ask-launch").setAttribute("aria-expanded", String(st !== "min"));
   el.classList.toggle("max", st === "max"); el.classList.toggle("sheet", st !== "min" && phone());
   if (st === "open" && !phone()) {
@@ -1026,6 +1218,83 @@ function askStart() {
   ASK.box = saved && saved.box ? saved.box : null;
   ASK.state = saved && ["open", "max", "min"].includes(saved.state) ? saved.state : "min";
   askStatus(); askReset(); askApply();
+}
+
+/* ---------- the parent's page ---------- */
+async function startFamily(me) {
+  CSRF = me.csrf; FAM = me.family; CAL = me.calendar; MODEL = me.model; IDLE_MIN = me.idle_minutes || 15; lastActive = Date.now();
+  ME = { name: FAM.name };
+  $("signin").hidden = true; $("app").hidden = true; $("family").hidden = false;
+  $("f-who").innerHTML = `<b>${esc(FAM.name)}</b><br>Parent number ${esc(FAM.parent_id)}`;
+  $("f-cal").textContent = CAL.now;
+  const h = new Date().getHours();
+  $("f-hello").textContent = `${h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"}, ${FAM.name.split(" ")[0]}.`;
+  const note = SIGNIN_NOTE || {}; SIGNIN_NOTE = null;
+  $("f-last").textContent = note.first ? "This is your first sign-in." : note.previous_login ? `You last signed in on ${when(note.previous_login)}.` : "";
+  if (note.failed_since) toast(`${note.failed_since} wrong PIN${note.failed_since === 1 ? " was" : "s were"} tried on your parent number since you last signed in. If that was not you, change your PIN.`, null, "My account", accountDialog);
+  else if (note.ended_other) toast("You were signed in somewhere else. That sign-in has ended.");
+  $("ask-note").textContent = "I ask one short question first, so my answer fits what you need. I know only your own child. I never compare children. This chat is not saved.";
+  $("kids").hidden = FAM.children.length < 2;
+  $("kids").innerHTML = FAM.children.map(c => `<button type="button" data-kid="${esc(c.id)}" aria-pressed="false"><span class="face" aria-hidden="true">${esc(c.name[0])}</span>${esc(c.name)}, Grade ${c.grade}</button>`).join("");
+  $("kids").querySelectorAll("[data-kid]").forEach(b => b.addEventListener("click", () => openChild(b.dataset.kid)));
+  await openChild(FAM.children[0].id);
+  askStart();
+}
+async function openChild(id) {
+  $("kids").querySelectorAll("[data-kid]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.kid === id)));
+  try { CHILD = await api("family/child/" + id); L = CHILD; renderChild(); }
+  catch (err) { $("child").innerHTML = `<p class="panel empty">${esc(err.message)}</p>`; }
+  if (typeof ASK !== "undefined" && !ASK.history.length) askReset();
+}
+const CHANGE = { up: c => `Up from ${LEVEL[c.before]}`, down: c => `Down from ${LEVEL[c.before]}`, same: () => "Same as the term before" };
+function renderChild() {
+  const c = CHILD;
+  const newest = c.latest.reduce((m, r) => Math.max(m, (r.grade - 4) * 3 + r.term), 0);
+  const att = c.attendance.length ? c.attendance[c.attendance.length - 1] : null;
+  const attTerm = att ? `Grade ${4 + Math.floor(att[1] / 3)} Term ${att[1] % 3 + 1}` : "";
+  const pw = c.pathways || {};
+  const cite = ids => ids.map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ");
+  $("child").innerHTML = `<div class="child">
+    <div class="panel learner-head"><span class="face" aria-hidden="true" style="width:54px;height:54px;font-size:1.2rem">${esc(c.name[0])}</span>
+      <div style="flex:1 1 220px;min-width:0"><h2 style="font-size:1.6rem">${esc(c.name)}</h2><p class="soft">Grade ${esc(c.stream)}, ${esc(c.school)}. Class teacher: ${esc(c.teacher)}.</p></div></div>
+    <div class="grid2">
+      <section class="panel section"><h3>Newest results</h3>
+        <p class="small soft">Each learning area's newest term. Tap a level to see the record.</p>
+        <div class="areas">${c.latest.map(r => `<div class="area ${r.change || ""}"><span class="nm">${esc(r.family)}</span>
+          <div class="row"><button class="link" type="button" data-ev="${r.id}" style="text-decoration:none">${lv(r.level)}</button><span>${LEVEL[r.level]}</span></div>
+          <span class="chg">${r.change ? CHANGE[r.change](r) : "First result"}${(r.grade - 4) * 3 + r.term < newest ? ` (Grade ${r.grade} Term ${r.term})` : ""}</span></div>`).join("") || `<p class="soft">No results approved yet.</p>`}</div>
+        <div class="key">${["EE", "ME", "AE", "BE"].map(k => `<span>${lv(k)} ${LEVEL[k]}</span>`).join("")}</div>
+      </section>
+      <div style="display:grid;gap:18px">
+        <section class="panel section"><h3>Days in school</h3>
+          ${att ? `<div class="days"><b>${att[2]} of ${att[3]}</b><span class="soft">days in ${attTerm}</span></div>
+          <p class="small ${att[2] / att[3] < .75 ? "error" : "soft"}">${att[2] / att[3] < .75 ? "That is less than three days in four. Talk to the class teacher if something is keeping " + esc(c.name) + " at home." : "Every day in school counts."}</p>` : `<p class="soft">No record yet.</p>`}
+        </section>
+        <section class="panel section"><h3>From the class teacher</h3>
+          ${c.comment ? `<div class="msg-card"><p class="small soft">Report comment</p><blockquote style="margin:0">${esc(c.comment.text)}</blockquote><p class="small soft">${esc(c.comment.by)}, ${fmt(c.comment.at.slice(0, 10))}</p></div>` : ""}
+          ${c.messages.map((m, i) => `<div class="msg-card"><p class="small soft">Message sent ${esc(m.how.toLowerCase())}, ${fmt(m.at.slice(0, 10))}</p><p id="fm-${i}">${esc(m.en)}</p>
+            <div class="langs" role="group" aria-label="Language"><button type="button" data-fm="${i}" data-l="en" aria-pressed="true">English</button><button type="button" data-fm="${i}" data-l="sw" aria-pressed="false">Kiswahili</button></div></div>`).join("")}
+          ${!c.comment && !c.messages.length ? `<p class="soft">Nothing yet. When ${esc(c.teacher)} shares a report comment or a message, it appears here.</p>` : ""}
+        </section>
+      </div>
+    </div>
+    <section class="panel section"><h3>Senior school pathway ideas</h3>
+      <p class="small soft">${esc(pw.intro || "")}</p>
+      ${pw.pathways && pw.pathways.length ? `<div class="pw">${pw.pathways.map(x => `<div class="pw-card"><h4>${esc(x.name)}</h4><p class="small soft">${esc(x.tracks)}</p><p class="small">${esc(x.summary)}</p>
+        ${x.lines.length ? `<ul>${x.lines.map(y => `<li class="${y.kind === "to_build" ? "build" : ""}">${esc(y.text)}${y.kind === "to_build" ? " (to keep building)" : ""} ${cite(y.evidence.slice(0, 2))}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>
+        <p class="small soft">Shared by ${esc(pw.opened.by)} on ${fmt(pw.opened.at.slice(0, 10))}.</p>` : ""}
+    </section>
+    <section class="panel section"><h3>Every term since Grade 4</h3>
+      <p class="small soft">The long view: results the class teachers approved, term by term. Tap a level to see the record.</p>
+      ${longView(c)}</section>
+    <p class="promise small"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <span>You see only your own child, and only what the class teacher approved. Hatua never ranks children or shows other children's results. Teachers' private notes are never shown.</span></p>
+  </div>`;
+  wireCommon($("child"));
+  $("child").querySelectorAll("[data-fm]").forEach(b => b.addEventListener("click", () => {
+    const i = b.dataset.fm; $("fm-" + i).textContent = c.messages[i][b.dataset.l];
+    $("child").querySelectorAll(`[data-fm="${i}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  }));
 }
 
 /* ---------- toast ---------- */

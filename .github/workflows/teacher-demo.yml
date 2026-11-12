@@ -1,5 +1,9 @@
-name: Publish synthetic teacher demo
+name: Publish the Hatua website
+# The landing page, the practice school in the browser (/try/), the user guide (/guide/)
+# and the older single-file teacher page (/teacher-page/). Made-up data only.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,10 +18,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python scripts/package_teacher_demo.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: python scripts/build_site.py
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: site_out
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -28,6 +37,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy synthetic demo
+      - name: Deploy the website
         id: deployment
         uses: actions/deploy-pages@v4

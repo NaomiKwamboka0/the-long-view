@@ -608,7 +608,8 @@ def test_pathway_ideas_stay_closed_until_the_named_teacher_opens_them(portal):
     closed = call(portal, "GET", "/api/learner/HT-0007", cookie=cookie)[2]["pathways"]
     assert closed == {"stage": "suggest", "grade": 9, "locked": True, "pathways": []}
     assert "Pathway ideas: NOT OPENED" in assistant.prepare("M-9001", "Kiprono")["data"]
-    assert "STEM:" not in assistant.prepare("M-9001", "Kiprono")["data"]
+    kiprono = assistant.prepare("M-9001", "Kiprono")["data"].split("Kiprono (HT-0007)")[1].split("\n  - ")[0]
+    assert "STEM:" not in kiprono  # HT-0001's ideas were opened at setup; Kiprono's were not
     gated = ask2("M-9001", "What pathways could Kiprono explore?", "My talk with Kiprono and the guardian")
     assert gated.get("gated") and "Open pathway ideas" in gated["answer"] and "STEM" not in gated["answer"]
     assert call(portal, "POST", "/api/learner/HT-0007/pathways/open", {}, cookie=cookie)[0] == 403, "CSRF needed"
@@ -662,3 +663,157 @@ def test_assistant_knows_every_pupil_in_the_class(school_home):
     nine_a = {l["learner_id"] for l in school.learners_of("M-9001")}
     assert not any(lid in ctx["data"] for lid in nine_a), "the other Grade 9 stream stays private"
     assert {store.get_record(i)["learner_id"] for i in ctx["allowed"]} <= {l["learner_id"] for l in mine}
+
+
+# ---------------------------------------------------------------- parents
+def ask_parent(parent_id, question, reply_index=0):
+    from hatua import family
+    first = family.ask(parent_id, question)
+    if first["kind"] != "follow_up":
+        return first
+    return family.ask(parent_id, question, ask_id=first["ask_id"], reply=first["options"][reply_index])
+
+
+def test_a_parent_sees_only_their_own_child(portal):
+    cookie, csrf, out = sign_in(portal, "P-100001")
+    assert out["role"] == "parent" and "me" not in out
+    me = call(portal, "GET", "/api/me", cookie=cookie)[2]
+    assert me["role"] == "parent" and [c["id"] for c in me["family"]["children"]] == ["HT-0001"]
+    st, _, child = call(portal, "GET", "/api/family/child/HT-0001", cookie=cookie)
+    assert st == 200 and child["name"] == "Achieng" and child["teacher"] == "Daniel Mutiso"
+    assert {r[0] for r in child["records"]} == {r["record_id"] for r in store.records_for("HT-0001")}
+    assert "notes" not in child, "teacher notes never reach a parent"
+    assert call(portal, "GET", "/api/family/child/HT-0002", cookie=cookie)[0] == 403
+    for path in ("/api/class", "/api/learner/HT-0001", "/api/notices", "/api/drive", "/api/calendar"):
+        assert call(portal, "GET", path, cookie=cookie)[0] == 403, path
+    note = next(n["note_id"] for n in store.load("notes") if n["learner_id"] == "HT-0001")
+    assert call(portal, "GET", f"/api/evidence/{note}", cookie=cookie)[0] == 403
+    other = next(r["record_id"] for r in store.records_for("HT-0002"))
+    assert call(portal, "GET", f"/api/evidence/{other}", cookie=cookie)[0] == 404
+    mine = store.records_for("HT-0001")[0]["record_id"]
+    assert call(portal, "GET", f"/api/evidence/{mine}", cookie=cookie)[2]["learner_id"] == "HT-0001"
+    st, _, _ = call(portal, "POST", "/api/learner/HT-0001/pathways/open", {}, cookie=cookie, csrf=csrf)
+    assert st == 403, "a parent can never act as a teacher"
+    with pytest.raises(GateBlocked):
+        auth.mint_agent_token(auth.login("P-100001", PIN)["session"])
+
+
+def test_a_parent_with_two_children_and_a_one_time_pin(portal):
+    _, _, out = sign_in(portal, "P-100002")
+    from hatua import family
+    assert [c["id"] for c in family.profile("P-100002")["children"]] == ["HT-0405", "HT-0805"]
+    cookie, csrf, out = sign_in(portal, "P-100003")
+    assert out["must_change"] and out["role"] == "parent"
+    assert call(portal, "GET", "/api/family/child/HT-0603", cookie=cookie)[0] == 403, "nothing opens before a new PIN"
+    st, _, _ = call(portal, "POST", "/api/pin", {"current": PIN, "new": "kamau2468"}, cookie=cookie, csrf=csrf)
+    assert st == 200
+    assert call(portal, "GET", "/api/family/child/HT-0603", cookie=cookie)[0] == 200
+
+
+def test_pathway_ideas_reach_a_parent_only_after_the_teacher_opens_them(school_home):
+    from hatua import family
+    assert family.child_view("P-100001", "HT-0001")["pathways"]["opened"]["by"] == "Daniel Mutiso"
+    closed = family.child_view("P-100002", "HT-0805")["pathways"]
+    assert closed["locked"] and closed["pathways"] == [] and "has not shared" in closed["intro"]
+    assert family.child_view("P-100002", "HT-0405")["pathways"]["stage"] == "too_early"
+    gated = ask_parent("P-100002", "What pathways could Nyokabi explore?", 1)
+    assert gated.get("gated") and "STEM" not in gated["answer"]
+    shared = ask_parent("P-100001", "What pathways could Achieng explore?", 1)
+    assert "STEM" in shared["answer"] and {store.get_record(c)["learner_id"] for c in shared["citations"]} == {"HT-0001"}
+
+
+def test_the_teacher_gives_and_removes_parent_access(portal):
+    cookie, csrf, _ = sign_in(portal, "M-9001")
+    st, _, out = call(portal, "POST", "/api/learner/HT-0002/parents", {"name": "Mercy Atieno", "relation": "Mother"},
+                      cookie=cookie, csrf=csrf)
+    assert st == 200 and out["parent_id"].startswith("P-") and len(out["one_time_pin"]) == 8
+    assert out["parents"][0]["waiting_first_sign_in"]
+    stored = json.dumps(auth._read(auth._path("teachers"), {}))
+    assert out["one_time_pin"] not in stored and out["one_time_pin"] not in json.dumps(store.load("guardians"))
+    assert call(portal, "POST", "/api/learner/HT-0405/parents", {"name": "X Y Z"}, cookie=cookie, csrf=csrf)[0] == 403
+    assert call(portal, "POST", "/api/learner/HT-0002/parents", {"name": "Q"}, cookie=cookie)[0] == 403, "CSRF needed"
+    parent, pcsrf, first = sign_in(portal, out["parent_id"], out["one_time_pin"])
+    assert first["must_change"]
+    call(portal, "POST", "/api/pin", {"current": out["one_time_pin"], "new": "mercy2468"}, cookie=parent, csrf=pcsrf)
+    assert call(portal, "GET", "/api/family/child/HT-0002", cookie=parent)[0] == 200
+    # a brother or sister: the same parent number, linked by the other class teacher
+    other, ocsrf, _ = sign_in(portal, "M-9002")
+    nine_b = next(l["learner_id"] for l in school.learners_of("M-9002"))
+    st, _, linked = call(portal, "POST", f"/api/learner/{nine_b}/parents", {"existing_id": out["parent_id"]},
+                         cookie=other, csrf=ocsrf)
+    assert st == 200 and linked["one_time_pin"] is None
+    st, _, _ = call(portal, "POST", f"/api/learner/HT-0002/parents/{out['parent_id']}/remove", {}, cookie=cookie, csrf=csrf)
+    assert st == 200
+    assert call(portal, "GET", "/api/family/child/HT-0002", cookie=parent)[0] == 403
+    assert call(portal, "GET", f"/api/family/child/{nine_b}", cookie=parent)[0] == 200, "the other child stays"
+    call(portal, "POST", f"/api/learner/{nine_b}/parents/{out['parent_id']}/remove", {}, cookie=other, csrf=ocsrf)
+    assert auth.role_of(out["parent_id"]) is None and call(portal, "GET", "/api/me", cookie=parent)[0] == 401
+    tools = [e["tool"] for e in audit.read_events() if e["tool"].startswith("parent.")]
+    assert tools.count("parent.add") == 2 and tools.count("parent.remove") == 2
+
+
+def test_the_parent_assistant_asks_first_and_never_compares(school_home):
+    from hatua import family
+    first = family.ask("P-100001", "How is Achieng doing?")
+    assert first["kind"] == "follow_up" and len(first["options"]) >= 3
+    out = family.ask("P-100001", "How is Achieng doing?", ask_id=first["ask_id"], reply=first["options"][0])
+    assert out["kind"] == "answer" and out["citations"]
+    assert {store.get_record(c)["learner_id"] for c in out["citations"]} == {"HT-0001"}
+    with pytest.raises(ValueError):  # each follow-up is used once
+        family.ask("P-100001", "x", ask_id=first["ask_id"], reply="again")
+    with pytest.raises(ValueError):  # and only by the parent it was asked of
+        f2 = family.ask("P-100001", "How is Achieng doing?")
+        family.ask("P-100002", "x", ask_id=f2["ask_id"], reply="steal")
+    for q in ("Is Achieng the best in her class?", "Compare Achieng with the others", "How is Brian doing?"):
+        out = family.ask("P-100001", q)
+        assert out["kind"] == "answer" and out.get("refused"), q
+        assert "Brian" not in out["answer"] and not out.get("citations")
+    ctx = family.prepare("P-100001", "How is Achieng doing?")
+    assert all(store.get_record(i)["learner_id"] == "HT-0001" for i in ctx["allowed"])
+    assert "Teacher note" not in ctx["data"] and "Brian" not in ctx["data"]
+    two = family.ask("P-100002", "How can I help at home?")
+    assert two["question"] == "Which child do you mean?" and two["options"] == ["Wanjiku", "Nyokabi"]
+
+
+# ---------------------------------------------------------------- getting Qwen from the sign-in page
+def test_qwen_setup_talks_only_to_ollama_on_this_computer(monkeypatch):
+    from hatua import ai_setup
+    have = set()
+
+    class FakeOllama(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            return
+
+        def do_GET(self):
+            body = json.dumps({"models": [{"name": n} for n in sorted(have)]}).encode()
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_POST(self):
+            assert self.path == "/api/pull"
+            want = json.loads(self.rfile.read(int(self.headers["Content-Length"])))["model"]
+            self.send_response(200)
+            self.end_headers()
+            for done in (0, 50, 100):
+                self.wfile.write(json.dumps({"status": "pulling", "total": 100, "completed": done}).encode() + b"\n")
+            have.add(want)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), FakeOllama)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    monkeypatch.setenv("HATUA_OLLAMA_HOST", f"http://127.0.0.1:{srv.server_address[1]}")
+    monkeypatch.setattr(ai_setup, "_STATE", {"state": "idle", "percent": 0, "message": ""})
+    st = ai_setup.status()
+    assert st["ollama"] == "running" and not st["ready"]
+    ai_setup.get_qwen()
+    for _ in range(100):
+        if ai_setup.status()["ready"]:
+            break
+        threading.Event().wait(0.05)
+    st = ai_setup.status()
+    assert st["ready"] and st["pull"]["percent"] == 100
+    srv.shutdown()
+    monkeypatch.setenv("HATUA_OLLAMA_HOST", "http://example.com:11434")  # never anywhere but this computer
+    assert ai_setup.status()["ollama"] in ("not_running", "not_installed")
+    with pytest.raises(RuntimeError):
+        ai_setup.get_qwen()

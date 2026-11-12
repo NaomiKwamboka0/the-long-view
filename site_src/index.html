@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hatua: every learner's long view</title>
+<meta name="description" content="Hatua helps Kenyan teachers and parents follow each learner from Grade 4 to Grade 9. Free, open source, and it runs on the school's own computer.">
+<link rel="icon" href="icon.png">
+<style>
+:root { --paper: #eef2ee; --surface: #fff; --tint: #f5f7f4; --ink: #213029; --soft: #5b6a63; --jac: #6a4c9c; --jac-ink: #fff; --jac-soft: #efe9f8;
+  --leaf: #2d7451; --leaf-soft: #e2f1e8; --lake: #1f5d72; --lake-soft: #e1eff3; --path: #cdbfe4; --l3: #4b91a5;
+  --shadow: 0 24px 60px -24px rgba(33,48,41,.45); --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --soft: #a3b1ab;
+  --jac: #bba3e8; --jac-ink: #1b1428; --jac-soft: #2f2742; --leaf: #8fd2ac; --leaf-soft: #1d3428; --lake: #8fcbdc; --lake-soft: #18313a; --path: #4a3d66;
+  --shadow: 0 24px 60px -24px rgba(0,0,0,.7); color-scheme: dark; } }
+:root[data-theme="dark"] { --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --soft: #a3b1ab;
+  --jac: #bba3e8; --jac-ink: #1b1428; --jac-soft: #2f2742; --leaf: #8fd2ac; --leaf-soft: #1d3428; --lake: #8fcbdc; --lake-soft: #18313a; --path: #4a3d66; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--font); }
+a { color: var(--jac); text-underline-offset: 3px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+nav.top { display: flex; align-items: center; gap: 18px; padding: 18px 0; flex-wrap: wrap; }
+.brand { display: flex; gap: 10px; align-items: center; font-weight: 700; font-size: 1.3rem; color: var(--ink); text-decoration: none; margin-right: auto; }
+nav.top a:not(.brand) { color: var(--soft); text-decoration: none; font-size: .95rem; }
+nav.top a:not(.brand):hover { color: var(--ink); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 40px; align-items: center; padding: 34px 0 56px; }
+@media (max-width: 880px) { .hero { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.kicker { color: var(--jac); font-weight: 700; font-size: .9rem; letter-spacing: .04em; }
+h1 { font-size: clamp(2.1rem, 5.2vw, 3.4rem); line-height: 1.08; margin: 8px 0 16px; text-wrap: balance; letter-spacing: -.01em; }
+.lead { font-size: 1.15rem; color: var(--soft); max-width: 46ch; margin: 0 0 24px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 14px; padding: 13px 22px; font-weight: 700; text-decoration: none; background: var(--jac); color: var(--jac-ink); }
+.btn.quiet { background: var(--surface); color: var(--ink); font-weight: 600; }
+.shot { border-radius: 20px; box-shadow: var(--shadow); width: 100%; height: auto; display: block; background: var(--surface); }
+.note { font-size: .9rem; color: var(--soft); margin-top: 14px; }
+section.band { padding: 54px 0; }
+section.band.white { background: var(--surface); }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.sub { color: var(--soft); max-width: 60ch; margin: 0 0 28px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.card { background: var(--tint); border-radius: 20px; padding: 20px; }
+section.band:not(.white) .card { background: var(--surface); }
+.card h3 { margin: 0 0 6px; font-size: 1.1rem; }
+.card p { margin: 0; color: var(--soft); font-size: .98rem; }
+.card .ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--jac-soft); color: var(--jac); margin-bottom: 12px; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
+@media (max-width: 880px) { .split { grid-template-columns: minmax(0, 1fr); } }
+ul.ticks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+ul.ticks li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; }
+ul.ticks li::before { content: ""; width: 20px; height: 20px; margin-top: 4px; border-radius: 50%; background: var(--leaf-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3 3 7-7' fill='none' stroke='%232d7451' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat; }
+.dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.dl a { display: grid; gap: 2px; background: var(--surface); border-radius: 18px; padding: 18px 20px; text-decoration: none; color: var(--ink); box-shadow: inset 0 0 0 2px var(--jac-soft); }
+.dl a:hover { box-shadow: inset 0 0 0 2px var(--jac); }
+.dl b { font-size: 1.05rem; } .dl span { color: var(--soft); font-size: .9rem; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--tint); }
+th { color: var(--soft); font-weight: 600; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--tint); border-radius: 6px; padding: 1px 6px; font-size: .92em; }
+footer { padding: 34px 0 50px; color: var(--soft); font-size: .92rem; }
+:focus-visible { outline: 3px solid var(--jac); outline-offset: 2px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Main">
+    <a class="brand" href="./"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jac)"/></svg>Hatua</a>
+    <a href="try/">Try it</a><a href="#download">Download</a><a href="guide/">User guide</a><a href="https://github.com/NaomiKwamboka0/the-long-view">GitHub</a>
+  </nav>
+  <section class="hero">
+    <div>
+      <p class="kicker">FOR KENYAN SCHOOLS, GRADE 4 TO GRADE 9</p>
+      <h1>See every learner's long view, not just this term.</h1>
+      <p class="lead">Hatua puts each child's CBC results from Grade 4 onwards in one place. Teachers see who needs help early. Parents see how their own child is doing. Nothing leaves the school's computer.</p>
+      <div class="btns"><a class="btn" href="try/">Try it in your browser</a><a class="btn quiet" href="#download">Download for free</a></div>
+      <p class="note">The practice school has made-up people only. No sign-up.</p>
+    </div>
+    <img class="shot" src="guide/guide/11-today-alerts.png" alt="Hatua's Today tab for a Grade 6 teacher, showing learners to watch" width="1180" height="820">
+  </section>
+</div>
+
+<section class="band white">
+  <div class="wrap">
+    <h2>Simple for teachers. Clear for parents.</h2>
+    <p class="sub">Hatua does the slow work of joining up the years. A teacher always makes the decision.</p>
+    <div class="cards">
+      <div class="card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg></div><h3>One Excel file per term</h3><p>Each class has a folder for Term 1, 2 and 3. The class teacher checks the file and approves it. If a file is deleted, that teacher is told.</p></div>
+      <div class="card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/></svg></div><h3>Early signs, with proof</h3><p>When a learner drops two levels, or slides over several terms, Hatua says so. Every claim shows the record behind it.</p></div>
+      <div class="card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.4 5 2.8 5 5.8"/></svg></div><h3>Parents see their own child</h3><p>The class teacher gives each parent a number and a one-time PIN. A parent sees only their own child: results, days in school, and the teacher's messages.</p></div>
+      <div class="card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></div><h3>An assistant that asks first</h3><p>Ask in English or Kiswahili. It always asks one short question first, then answers with the record numbers. It never ranks children.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap split">
+    <img class="shot" src="guide/guide/u12-parent-achieng.png" alt="A parent's page showing her daughter's newest results and days in school" width="1180" height="820" loading="lazy">
+    <div>
+      <h2>Safe by design</h2>
+      <p class="sub">Children's records are sensitive. Hatua is built so the safe way is the only way.</p>
+      <ul class="ticks">
+        <li>Runs on the school's own computer. Learner data is never sent to the internet.</li>
+        <li>The AI, Qwen, runs on the same computer. It is free and open.</li>
+        <li>Each person has their own PIN. Easy PINs are refused. 5 wrong PINs lock sign-in for 15 minutes.</li>
+        <li>A teacher approves every results file, and opens pathway ideas with their name.</li>
+        <li>No rankings, no labels like "weak" or "bright", and no pathway is ever picked for a child.</li>
+        <li>Every action is written to a log that shows if anyone changed it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band white" id="download">
+  <div class="wrap">
+    <h2>Download Hatua</h2>
+    <p class="sub">Free and open source. Unzip it and open Hatua. The first time, it makes a practice school so you can look around. Then the sign-in page helps you add Qwen, the AI helper.</p>
+    <div class="dl">
+      <a href="https://github.com/NaomiKwamboka0/the-long-view/releases/latest/download/Hatua-Mac-Apple-chip.zip"><b>Mac, Apple chip</b><span>M1, M2, M3 or newer</span></a>
+      <a href="https://github.com/NaomiKwamboka0/the-long-view/releases/latest/download/Hatua-Mac-Intel.zip"><b>Mac, Intel</b><span>Older Macs</span></a>
+      <a href="https://github.com/NaomiKwamboka0/the-long-view/releases/latest/download/Hatua-Windows.zip"><b>Windows</b><span>Windows 10 or 11</span></a>
+    </div>
+    <p class="note">Each download has the app, the user guide, and a "START HERE" file. The Mac or Windows may ask you once if you trust Hatua: the <a href="guide/#install">guide</a> shows what to press. <a href="https://github.com/NaomiKwamboka0/the-long-view/releases">All versions</a></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Try the practice school</h2>
+    <p class="sub">Open <a href="try/">the practice school</a> and sign in with any of these. The PIN for all of them is <code>246810</code>.</p>
+    <table>
+      <tr><th>Sign in as</th><th>Number</th><th>Try this</th></tr>
+      <tr><td>Grade 6 teacher</td><td><code>M-6001</code></td><td>Approve the Term 3 file, then read the alerts</td></tr>
+      <tr><td>Grade 9 teacher</td><td><code>M-9001</code></td><td>Open Kiprono's senior school pathway ideas</td></tr>
+      <tr><td>Parent of Achieng (Grade 9)</td><td><code>P-100001</code></td><td>Ask the assistant "How is Achieng doing?"</td></tr>
+      <tr><td>Parent of two children</td><td><code>P-100002</code></td><td>Switch between Wanjiku and Nyokabi</td></tr>
+    </table>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Hatua means "step" in Kiswahili. Made in Kenya by Naomi Kwamboka Onyancha for the African Agentic AI Design Challenge, Education track. MIT licence. <a href="https://github.com/NaomiKwamboka0/the-long-view">Source code on GitHub</a> · <a href="guide/">User guide</a> · <a href="teacher-page/">The first single-page version</a></p>
+</footer>
+</body>
+</html>

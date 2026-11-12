@@ -16,6 +16,9 @@ evaluations is not changed. It holds:
   Files there are NOT in Hatua until the class teacher approves them in the portal.
   Term 1 and Term 2 are approved at setup, through the real approval gate.
 
+Practice parents (same PIN; P-100003 has a one-time PIN): P-100001 sees Achieng
+(Grade 9, pathway ideas shared), P-100002 sees two children in Grades 4 and 8.
+
 Planted situations, so every feature has something to show:
 
     Any grade  Delete a Term 1 or Term 2 Excel file from the drive: that class's
@@ -95,6 +98,18 @@ TEACHERS = [  # member number, invented name, stream
 TERM3_ON_DRIVE = {4: "approved", 5: "waiting", 6: "waiting", 8: "waiting", 9: "waiting"}  # 7: missing
 # This practice teacher signs in with a one-time PIN and must choose their own PIN first.
 FIRST_SIGN_IN = ["M-5001"]
+# Practice parents. Each sees only the children listed. Lucy has two children in two classes.
+# Samuel has a one-time PIN, like M-5001. Achieng's teacher opens her pathway ideas at setup,
+# so Rose can see them; every other learner's pathway ideas stay closed.
+PARENTS = [
+    {"parent_id": "P-100001", "name": "Rose Akinyi", "relation": "Mother", "children": ["HT-0001"],
+     "teacher_id": "M-9001"},
+    {"parent_id": "P-100002", "name": "Lucy Wanjiru", "relation": "Mother", "children": ["HT-0405", "HT-0805"],
+     "teacher_id": "M-4001"},
+    {"parent_id": "P-100003", "name": "Samuel Mwangi", "relation": "Father", "children": ["HT-0603"],
+     "teacher_id": "M-6001", "one_time": True},
+]
+OPEN_PATHWAYS = [("M-9001", "HT-0001")]
 
 
 def results_name(grade: int, term: int) -> str:
@@ -246,7 +261,8 @@ def main(home: Path) -> None:
                  for g, st in TERM3_ON_DRIVE.items() if st == "approved" for t in teachers_of(g)]
     demo = {"today": DEMO_TODAY, "pin": DEMO_PIN, "school": SCHOOL,
             "teachers": [{"teacher_id": t, "name": n, "stream": s} for t, n, s in TEACHERS],
-            "first_sign_in": FIRST_SIGN_IN, "already_approved": approved}
+            "first_sign_in": FIRST_SIGN_IN, "already_approved": approved,
+            "parents": PARENTS, "open_pathways": OPEN_PATHWAYS}
     (home / "demo.json").write_text(json.dumps(demo, indent=2), encoding="utf-8")
     shutil.copytree(REPO / "data" / "calendar", home / "data" / "calendar")
     print(f"school demo: {len(learners)} learners in Grades 4-9, {len(records)} history records, "

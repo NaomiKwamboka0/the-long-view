@@ -84,8 +84,12 @@ ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do
 - Learner page, "Senior school pathway ideas" (Grades 7 to 9): closed until the class
   teacher presses "Open pathway ideas". Then it shows the cited strengths
   for each of the three pathways. Hatua never picks one; it is for the conversation
-  with the learner and family. Pathway ideas never go into parent messages or report
-  comments by themselves.
+  with the learner and family. Once opened, the learner's parents can see them on their
+  Hatua page. They never go into parent messages or report comments by themselves.
+- Parents: on a learner's page, "Give a parent access" makes a parent number and a
+  one-time PIN to give the parent. A parent sees only their own child: approved
+  results, days in school, the comment the teacher approved, messages the teacher
+  marked as told, and pathway ideas the teacher opened. Never teacher notes or alerts.
 - Levels: EE Exceeding, ME Meeting, AE Approaching, BE Below Expectations.
 - An early sign means a learning area fell two levels in one term. A pattern means
   several terms in a row."""
@@ -384,15 +388,19 @@ def follow_up(question: str, ctx: dict) -> dict:
 _PENDING: dict[str, dict] = {}
 
 
-def open_follow_up(teacher_id: str, ctx: dict) -> dict:
-    """Remember the question and hand back the follow-up. The answer step needs this ask_id."""
+def open_follow_up(teacher_id: str, ctx: dict, fu: dict | None = None) -> dict:
+    """Remember the question and hand back the follow-up. The answer step needs this ask_id.
+
+    `teacher_id` is the signed-in account: a parent's follow-ups use the same store, keyed
+    by the parent number, with the parent's own question (`fu`, from hatua.family).
+    """
     now = time.time()
     for key in [k for k, v in _PENDING.items() if v["expires"] < now]:
         del _PENDING[key]
     mine = [k for k, v in _PENDING.items() if v["teacher_id"] == teacher_id]
     for key in mine[:-MAX_PENDING + 1] if len(mine) >= MAX_PENDING else []:
         del _PENDING[key]  # a teacher's oldest unanswered follow-ups make room for the new one
-    fu = follow_up(ctx["question"], ctx)
+    fu = fu or follow_up(ctx["question"], ctx)
     ask_id = secrets.token_urlsafe(12)
     _PENDING[ask_id] = {"teacher_id": teacher_id, "question": ctx["question"], "asked": fu["question"],
                         "expires": now + PENDING_MINUTES * 60}

@@ -1,0 +1,31 @@
+HATUA - START HERE
+==================
+
+Hatua helps Kenyan teachers and parents follow each learner from Grade 4 to Grade 9.
+It runs on this computer. Learner data never goes to the internet.
+
+1. OPEN HATUA
+   Mac:     Open the Hatua app. The first time, right-click it and choose Open,
+            then press Open again. (Hatua is free and not from the App Store,
+            so the Mac asks once.)
+   Windows: Open the Hatua folder and double-click Hatua.exe. If Windows says
+            "Windows protected your PC", press "More info", then "Run anyway".
+
+2. A SMALL HATUA WINDOW OPENS, AND HATUA OPENS IN YOUR WEB BROWSER.
+   The first time it makes a practice school with made-up people (20 seconds).
+
+3. SIGN IN WITH A PRACTICE ACCOUNT
+   Teacher: M-6001    Parent: P-100001    PIN: 246810
+
+4. THE AI HELPER (QWEN) - OPTIONAL
+   On the sign-in page, follow the steps in the box "Add the AI helper".
+   You install Ollama once (free). Then Hatua downloads Qwen for you
+   (about 4.7 GB, once). Hatua works without it too.
+
+5. READ THE GUIDE
+   Open "User guide.html" in this folder, or press Help inside Hatua.
+
+To stop Hatua, close the small Hatua window.
+
+Try Hatua online first: https://naomikwamboka0.github.io/the-long-view/
+Source code (free, MIT licence): https://github.com/NaomiKwamboka0/the-long-view

@@ -142,12 +142,21 @@ def _fail_message() -> str:
 
 
 # ---------------------------------------------------------------- registry
-def register(teacher_id: str, name: str, pin: str, must_change: bool = False) -> dict:
-    """Add or update one teacher on this computer. Returns {teacher_id, name}.
+ROLES = ("teacher", "parent")
 
-    must_change=True makes `pin` a one-time PIN: the teacher must choose their own at
+
+def register(teacher_id: str, name: str, pin: str, must_change: bool = False, role: str = "teacher") -> dict:
+    """Add or update one account on this computer. Returns {teacher_id, name}.
+
+    must_change=True makes `pin` a one-time PIN: the person must choose their own at
     the first sign-in, before they can open anything.
+
+    role is "teacher" (the default) or "parent". A parent account can open only the
+    family page for the children linked to it (hatua.family); every teacher route
+    refuses it.
     """
+    if role not in ROLES:
+        raise ValueError("Unknown role.")
     teacher_id = (teacher_id or "").strip()
     name = (name or "").strip()
     if not TEACHER_ID.match(teacher_id):
@@ -162,14 +171,39 @@ def register(teacher_id: str, name: str, pin: str, must_change: bool = False) ->
                             "registered": _now().isoformat(timespec="seconds")}
     if must_change:
         teachers[teacher_id]["must_change"] = True
+    if role != "teacher":
+        teachers[teacher_id]["role"] = role
     _write(_path("teachers"), teachers)
     return {"teacher_id": teacher_id, "name": name}
 
 
 def teachers() -> list[dict]:
-    """The registry without any PIN material."""
+    """The teachers in the registry, without any PIN material. Parents are not listed."""
     return [{"teacher_id": tid, "name": t.get("name", "")}
-            for tid, t in sorted(_read(_path("teachers"), {}).items())]
+            for tid, t in sorted(_read(_path("teachers"), {}).items()) if t.get("role", "teacher") == "teacher"]
+
+
+def remove_sessions(account_id: str) -> None:
+    """End every sign-in of one account, for example after the school gives a new one-time PIN."""
+    sessions = _pruned_sessions()
+    _write(_path("sessions"), {k: s for k, s in sessions.items() if s.get("teacher_id") != account_id})
+
+
+def role_of(account_id: str) -> str | None:
+    """"teacher", "parent", or None when the ID is not registered here."""
+    entry = _read(_path("teachers"), {}).get(account_id)
+    return entry.get("role", "teacher") if isinstance(entry, dict) else None
+
+
+def remove(account_id: str) -> bool:
+    """Delete an account and end all of its sign-ins. Used when a parent loses access."""
+    registry = _read(_path("teachers"), {})
+    if account_id not in registry:
+        return False
+    del registry[account_id]
+    _write(_path("teachers"), registry)
+    remove_sessions(account_id)
+    return True
 
 
 # ---------------------------------------------------------------- sign-in
@@ -252,7 +286,7 @@ def login(teacher_id: str, pin: str) -> dict:
     _write(_path("sessions"), sessions)
     # The CSRF value reaches the caller once and is kept only as its digest.
     return {"session": token, "teacher_id": teacher_id, "name": entry.get("name", ""),
-            "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60,
+            "role": entry.get("role", "teacher"), "kind": "human", "csrf": csrf, "expires_in": SESSION_MINUTES * 60,
             "must_change": limited, "previous_login": previous, "failed_since": failed}
 
 
@@ -356,12 +390,16 @@ def resolve(session: str | None, kind: str = "human", action: str = "continue",
     if stored.get("limited") and not allow_limited:
         raise GateBlocked("Choose your own PIN first. A one-time PIN cannot open anything else.")
     teacher_id = stored.get("teacher_id", "")
-    name = (_read(_path("teachers"), {}).get(teacher_id) or {}).get("name")
+    entry = _read(_path("teachers"), {}).get(teacher_id) or {}
+    name = entry.get("name")
     if not name:
-        raise GateBlocked("Sign-in required. That teacher is no longer registered on this computer.")
+        raise GateBlocked("Sign-in required. That account is no longer registered on this computer.")
     if kind == "human":
         _slide(digest)  # each authenticated request buys 15 more minutes
+    role = entry.get("role", "teacher")
     who = {"teacher_id": teacher_id, "name": name, "kind": kind}
+    if role != "teacher":
+        who["role"] = role  # only added for parents, so a teacher's record keeps its old shape
     if stored.get("limited"):
         who["limited"] = True  # a one-time-PIN session: it may only choose a new PIN
     return who
@@ -438,6 +476,8 @@ def mint_agent_token(session: str | None) -> str:
     dies with that session, so signing out is enough to stop a run.
     """
     digest, stored = _valid(session, "human", "start an agent run")
+    if role_of(stored.get("teacher_id", "")) != "teacher":
+        raise GateBlocked("Only a teacher can start an agent run.")
     if stored.get("limited"):
         raise GateBlocked("Choose your own PIN first. A one-time PIN cannot start an agent run.")
     now = _now()

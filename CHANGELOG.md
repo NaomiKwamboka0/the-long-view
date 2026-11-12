@@ -1,3 +1,19 @@
+# Parents, the app download, and the practice website — 12 November 2026
+
+- **Parents.** New `hatua/family.py`.
+  - The class teacher presses **Give a parent access** on a learner's page. Hatua makes a parent number (`P-123456`) and a one-time PIN, shown once on a slip to print. A second class teacher can link the same parent number to a brother or sister.
+  - The parent signs in on the same page ("I am a parent"), must choose their own PIN, and follows the same rules as teachers: easy PINs refused, lock after 5 wrong PINs, signed out after 15 minutes, one place at a time, **My account**.
+  - One rule decides what a parent sees (`family.can_view`): only the learners linked to their number. Every teacher route refuses a parent session, and a parent cannot start an agent run.
+  - A parent sees approved results, days in school, the comment the teacher approved, messages the teacher marked as told, and pathway ideas only after the class teacher opened them. Never teacher notes, alerts the teacher has not raised, or other children.
+  - The parent assistant asks one question first, cites records, never compares children, and will not talk about another child. Its context holds only the parent's own children.
+  - The teacher can give a new one-time PIN or remove access. Adding, removing and new PINs are in the audit log.
+  - The practice school has three parents: `P-100001` (Grade 9, pathway ideas shared), `P-100002` (two children) and `P-100003` (one-time PIN).
+- **The app.** `hatua/app.py` and `packaging/hatua.spec` build a double-click app for Mac and Windows with PyInstaller (`.github/workflows/release.yml`; a `v*` tag publishes it on GitHub Releases). It makes the practice school the first time, starts Ollama if it is installed, opens Hatua in the browser, and shows a small window to open or stop it.
+- **Qwen from the sign-in page.** New `hatua/ai_setup.py`. The sign-in page shows what to do: install Ollama (a link to ollama.com), start it, then **Download Qwen**, which asks Ollama on this computer to download the model, with a progress bar. Hatua itself still only talks to 127.0.0.1.
+- **The practice website.** `scripts/build_site.py` builds a landing page, the user guide, and `/try/`: the real portal running inside the visitor's browser with Pyodide, on the practice school. Nothing is saved; there is no AI model online. Published to GitHub Pages on every push to `main`.
+- **User guide.** New `docs/USER_GUIDE.html`, in simple English with pictures, for teachers, parents and the school's Hatua admin. It is in the download, at `/guide` in the portal, and on the website.
+- **Not done:** the Mac and Windows apps are not signed, so each asks once if you trust Hatua. A parent can only use Hatua on the computer where the school runs it; there is no online version with real data. The app's window was not tried on a real Mac or Windows screen.
+
 # Excel term folders, safer sign-in, ask-first assistant, pathway gate — 12 November 2026
 
 - **Excel on the school drive.** Each class has a folder for Term 1, 2 and 3 with one Excel results file in it. New `hatua/xlsx.py` reads and writes `.xlsx` with the standard library only (no new dependency). It refuses zip bombs and XML entity tricks and never runs a formula. CSV still works.

@@ -1,0 +1,83 @@
+name: Build the Hatua app
+# Builds the Mac and Windows downloads. A tag like v1.0.0 also publishes them on the
+# GitHub Releases page; "Run workflow" builds them without publishing.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Hatua-Windows
+          - os: macos-latest
+            name: Hatua-Mac-Apple-chip
+          - os: macos-15-intel
+            name: Hatua-Mac-Intel
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check the code first
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest==8.4.2 pyinstaller==6.22.3
+          python -m pytest -q tests/test_school_portal.py
+      - name: Build the app
+        run: pyinstaller packaging/hatua.spec --noconfirm
+      - name: Put the download together
+        shell: bash
+        run: |
+          mkdir -p "out/Hatua"
+          if [ "${{ runner.os }}" = "macOS" ]; then cp -R dist/Hatua.app out/Hatua/; else cp -R dist/Hatua out/Hatua/Hatua; fi
+          cp docs/USER_GUIDE.html "out/Hatua/User guide.html"
+          cp -R docs/guide out/Hatua/guide
+          cp packaging/START_HERE.txt "out/Hatua/START HERE.txt"
+          cp LICENSE out/Hatua/LICENSE.txt
+      - name: Zip (Mac)
+        if: runner.os == 'macOS'
+        run: cd out && ditto -c -k --sequesterRsrc --keepParent Hatua "../${{ matrix.name }}.zip"
+      - name: Zip (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path out/Hatua -DestinationPath "${{ matrix.name }}.zip"
+      - name: Start the built app once
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ]; then APP=dist/Hatua.app/Contents/MacOS/Hatua; else APP=dist/Hatua/Hatua.exe; fi
+          HATUA_APP_HOME="$RUNNER_TEMP/apphome" "$APP" --no-window &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8765/api/public >/dev/null && break; sleep 2; done
+          curl -sf http://127.0.0.1:8765/api/public | grep -q "fictional"
+          curl -sf -o /dev/null http://127.0.0.1:8765/guide
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}.zip
+  publish:
+    if: always() && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+          body: |
+            Download Hatua for your computer, unzip it, and open "START HERE.txt".
+
+            * **Mac with an Apple chip (M1 or newer):** Hatua-Mac-Apple-chip.zip
+            * **Older Mac (Intel):** Hatua-Mac-Intel.zip
+            * **Windows 10 or 11:** Hatua-Windows.zip
+
+            Try it first in your browser: https://naomikwamboka0.github.io/the-long-view/try/

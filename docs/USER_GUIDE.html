@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hatua user guide</title>
+<style>
+:root { --paper: #eef2ee; --surface: #fff; --tint: #f5f7f4; --ink: #213029; --soft: #5b6a63; --jac: #6a4c9c; --jac-soft: #efe9f8;
+  --leaf: #2d7451; --leaf-soft: #e2f1e8; --sun: #8f5a06; --sun-soft: #fbefd8; --path: #cdbfe4; --l3: #4b91a5;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --soft: #a3b1ab;
+  --jac: #bba3e8; --jac-soft: #2f2742; --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --path: #4a3d66; color-scheme: dark; } }
+:root[data-theme="dark"] { --paper: #151b19; --surface: #1d2522; --tint: #242e2a; --ink: #e4ebe7; --soft: #a3b1ab;
+  --jac: #bba3e8; --jac-soft: #2f2742; --leaf: #8fd2ac; --leaf-soft: #1d3428; --sun: #f0c47c; --sun-soft: #3a2c14; --path: #4a3d66; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 18px/1.6 var(--font); }
+a { color: var(--jac); text-underline-offset: 3px; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 80px; }
+header { padding: 36px 0 12px; display: grid; gap: 10px; }
+.brand { display: flex; gap: 10px; align-items: center; font-weight: 700; font-size: 1.3rem; }
+h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); line-height: 1.15; margin: 6px 0 0; text-wrap: balance; }
+h2 { font-size: 1.6rem; margin: 0 0 12px; line-height: 1.2; }
+h3 { font-size: 1.15rem; margin: 26px 0 8px; }
+p { margin: 0 0 12px; }
+.lead { font-size: 1.15rem; color: var(--soft); max-width: 60ch; }
+section.part { background: var(--surface); border-radius: 24px; padding: 26px 24px; margin-top: 22px; }
+nav.toc { background: var(--surface); border-radius: 24px; padding: 18px 24px; margin-top: 18px; }
+nav.toc ol { margin: 6px 0 0; padding-left: 22px; columns: 2 240px; }
+nav.toc li { margin: 2px 0; }
+.steps { padding-left: 22px; margin: 0 0 14px; }
+.steps li { margin: 6px 0; }
+.box { border-radius: 16px; padding: 14px 16px; margin: 14px 0; background: var(--tint); }
+.box.tip { background: var(--leaf-soft); } .box.warn { background: var(--sun-soft); } .box.try { background: var(--jac-soft); }
+.box b:first-child { display: block; margin-bottom: 4px; }
+figure { margin: 16px 0 22px; }
+figure img { width: 100%; height: auto; border-radius: 14px; display: block; box-shadow: 0 10px 30px -14px rgba(33,48,41,.45); background: var(--tint); }
+figure.phone img { max-width: 320px; }
+figcaption { font-size: .9rem; color: var(--soft); margin-top: 8px; }
+code, kbd { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; background: var(--tint); border-radius: 6px; padding: 1px 6px; }
+pre { background: var(--tint); border-radius: 12px; padding: 12px 14px; overflow-x: auto; font-size: .88rem; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; margin: 8px 0 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--tint); vertical-align: top; }
+th { color: var(--soft); font-weight: 600; }
+.lv { display: inline-grid; place-items: center; min-width: 2.2em; border-radius: 999px; font-size: .75rem; font-weight: 700; padding: 1px 6px; color: #fff; }
+.EE { background: #1f5d72; } .ME { background: #4b91a5; } .AE { background: #a6cfd9; color: #123947; } .BE { background: #dcedf2; color: #123947; }
+footer { color: var(--soft); font-size: .9rem; margin-top: 28px; }
+@media (max-width: 520px) { body { font-size: 17px; } section.part { padding: 20px 16px; border-radius: 20px; } }
+@media print { section.part, nav.toc { break-inside: auto; box-shadow: none; } figure { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jac)"/></svg>Hatua</div>
+  <h1>The Hatua user guide</h1>
+  <p class="lead">Hatua helps Kenyan teachers and parents see how each learner is doing, term by term, from Grade 4 to Grade 9. This guide shows you every step, with pictures.</p>
+</header>
+
+<nav class="toc" aria-label="In this guide"><b>In this guide</b>
+  <ol>
+    <li><a href="#what">What Hatua does</a></li>
+    <li><a href="#try">Try it online first</a></li>
+    <li><a href="#install">Put Hatua on your computer</a></li>
+    <li><a href="#ai">The AI helper (Qwen)</a></li>
+    <li><a href="#signin">Signing in safely</a></li>
+    <li><a href="#teachers">For teachers</a></li>
+    <li><a href="#parents">For parents</a></li>
+    <li><a href="#safe">How Hatua keeps children safe</a></li>
+    <li><a href="#admin">For the school's Hatua admin</a></li>
+    <li><a href="#help">If something goes wrong</a></li>
+  </ol>
+</nav>
+
+<section class="part" id="what">
+  <h2>1. What Hatua does</h2>
+  <p>A child's results are written down every term, but they are spread across many files and many teachers. Hatua puts them in one place, so a teacher and a parent can see the <b>long view</b>: what is going up, what is going down, and what has stayed strong since Grade 4.</p>
+  <ul class="steps">
+    <li><b>Teachers</b> upload each term's Excel results file, approve it, and see alerts when a learner needs help.</li>
+    <li><b>Parents</b> sign in and see their own child's results, days in school, and messages from the class teacher.</li>
+    <li><b>The Hatua assistant</b> answers questions in simple English or Kiswahili. It always asks one short question first, so the answer fits what you need.</li>
+  </ul>
+  <p>Hatua never ranks children, never calls a child "weak" or "bright", and never picks a senior school pathway for a child. A teacher always decides.</p>
+  <p>Levels follow the CBC: <span class="lv EE">EE</span> Exceeding, <span class="lv ME">ME</span> Meeting, <span class="lv AE">AE</span> Approaching, <span class="lv BE">BE</span> Below Expectations.</p>
+</section>
+
+<section class="part" id="try">
+  <h2>2. Try it online first</h2>
+  <p>You can try Hatua in your web browser, with nothing to install:</p>
+  <p><a href="https://naomikwamboka0.github.io/the-long-view/try/"><b>naomikwamboka0.github.io/the-long-view/try</b></a></p>
+  <p>It is a practice school. Every person in it is made up. It runs inside your browser and saves nothing: reload the page and it starts again. The online practice school has no AI model, so the assistant gives Hatua's built-in answers.</p>
+  <div class="box try"><b>Practice accounts (PIN for all: 246810)</b>
+    <table>
+      <tr><th>Who</th><th>Number</th><th>What you will see</th></tr>
+      <tr><td>Grade 6 teacher, Mary Njeri</td><td><code>M-6001</code></td><td>A Term 3 file to approve, and learners to watch</td></tr>
+      <tr><td>Grade 9 teacher, Daniel Mutiso</td><td><code>M-9001</code></td><td>Senior school pathway ideas</td></tr>
+      <tr><td>Grade 5 teacher, Peter Otieno</td><td><code>M-5001</code></td><td>A one-time PIN: you must choose your own</td></tr>
+      <tr><td>Parent, Rose Akinyi</td><td><code>P-100001</code></td><td>Achieng in Grade 9, with pathway ideas shared</td></tr>
+      <tr><td>Parent, Lucy Wanjiru</td><td><code>P-100002</code></td><td>Two children, in Grade 4 and Grade 8</td></tr>
+      <tr><td>Parent, Samuel Mwangi</td><td><code>P-100003</code></td><td>A one-time PIN, like a new parent</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="part" id="install">
+  <h2>3. Put Hatua on your computer</h2>
+  <p>Hatua is free and open source. Download it from the <a href="https://github.com/NaomiKwamboka0/the-long-view/releases/latest">Hatua download page</a>.</p>
+  <table>
+    <tr><th>Your computer</th><th>Download this file</th></tr>
+    <tr><td>Mac with an Apple chip (M1, M2, M3 or newer)</td><td><code>Hatua-Mac-Apple-chip.zip</code></td></tr>
+    <tr><td>Older Mac with an Intel chip</td><td><code>Hatua-Mac-Intel.zip</code></td></tr>
+    <tr><td>Windows 10 or Windows 11</td><td><code>Hatua-Windows.zip</code></td></tr>
+  </table>
+  <p class="soft">Not sure which Mac you have? Click the Apple menu, then <b>About This Mac</b>. It says "Chip: Apple M..." or "Processor: Intel".</p>
+
+  <h3>On a Mac</h3>
+  <ol class="steps">
+    <li>Open your <b>Downloads</b> folder and double-click the zip file. A <b>Hatua</b> folder appears.</li>
+    <li>Drag the <b>Hatua</b> app into your <b>Applications</b> folder.</li>
+    <li>The first time only: <b>right-click</b> Hatua (or Control-click) and choose <b>Open</b>. The Mac asks if you are sure. Press <b>Open</b>.</li>
+    <li>After that, open Hatua the normal way.</li>
+  </ol>
+  <div class="box warn"><b>Why does the Mac ask?</b> Hatua is free and does not come from the App Store, so the Mac checks with you once. This is normal for free school software.</div>
+
+  <h3>On Windows</h3>
+  <ol class="steps">
+    <li>Open your <b>Downloads</b> folder. Right-click the zip file and choose <b>Extract All</b>, then <b>Extract</b>.</li>
+    <li>Open the new <b>Hatua</b> folder, then the <b>Hatua</b> folder inside it, and double-click <b>Hatua.exe</b>.</li>
+    <li>If Windows says "Windows protected your PC", press <b>More info</b>, then <b>Run anyway</b>. This happens once.</li>
+    <li>Tip: right-click <b>Hatua.exe</b> and choose <b>Send to</b> &gt; <b>Desktop (create shortcut)</b>.</li>
+  </ol>
+
+  <h3>What happens when Hatua opens</h3>
+  <p>A small Hatua window opens. The first time, it says "Getting Hatua ready" for about 20 seconds while it makes the practice school. Then Hatua opens in your web browser. The small window has three buttons: <b>Open Hatua</b>, <b>User guide</b> and <b>Stop Hatua</b>. Closing the small window stops Hatua.</p>
+  <div class="box tip"><b>Your data stays on this computer.</b> Hatua opens in the web browser, but it is not on the internet. The address is <code>http://127.0.0.1</code>, which means "this computer". No other computer can open it.</div>
+</section>
+
+<section class="part" id="ai">
+  <h2>4. The AI helper (Qwen)</h2>
+  <p>The Hatua assistant can use <b>Qwen</b>, a free AI that runs on your own computer. Without Qwen, Hatua still works: the assistant gives built-in answers to the common questions.</p>
+  <p>On the sign-in page, a box tells you what to do next. It changes as you go:</p>
+  <ol class="steps">
+    <li><b>Add the AI helper.</b> Press <b>Get Ollama</b>. Ollama is the free program that runs Qwen. Download it, open the file, and follow its steps. It takes about two minutes.</li>
+    <li>Come back to Hatua and press <b>Check again</b>.</li>
+    <li><b>Get the AI helper.</b> Press <b>Download Qwen</b>. Hatua asks Ollama to download Qwen. It is about 4.7 GB, once. A bar shows how far it is. You can use Hatua while it downloads.</li>
+    <li>When the box turns green and says <b>Qwen is ready</b>, the assistant writes its answers with Qwen. It works without internet from now on.</li>
+  </ol>
+  <figure><img src="guide/u18-ai-box.png" alt="The sign-in page with the box Add the AI helper" loading="lazy"><figcaption>The AI helper box on the sign-in page, before Ollama is installed.</figcaption></figure>
+  <div class="box warn"><b>Use good internet for the download.</b> 4.7 GB is large. Use school Wi-Fi or a big data bundle. If the download stops, press the button again: it continues where it stopped.</div>
+  <p class="soft">A computer with 8 GB of memory or more works best. On a smaller computer, Qwen is slow; Hatua's built-in answers are always quick.</p>
+</section>
+
+<section class="part" id="signin">
+  <h2>5. Signing in safely</h2>
+  <ol class="steps">
+    <li>Choose <b>I am a teacher</b> or <b>I am a parent</b>.</li>
+    <li>Teachers type their TSC <b>member number</b>. Parents type the <b>parent number</b> the class teacher gave them (it starts with P-).</li>
+    <li>Type your PIN and press <b>Sign in</b>.</li>
+  </ol>
+  <figure><img src="guide/01-sign-in.png" alt="The Hatua sign-in page" loading="lazy"><figcaption>The sign-in page. In the practice school, tap a number to fill it in.</figcaption></figure>
+  <h3>The first time: choose your own PIN</h3>
+  <p>The PIN you are given works <b>one time</b>. Hatua then asks you to choose a PIN that only you know. Nothing opens until you do.</p>
+  <figure><img src="guide/02-own-pin.png" alt="Choose your own PIN" loading="lazy"><figcaption>The one-time PIN only opens this step.</figcaption></figure>
+  <p>Hatua says no to PINs that are easy to guess, like <code>123456</code>, <code>111111</code> or your own number.</p>
+  <figure><img src="guide/03-weak-pin.png" alt="Hatua refuses an easy PIN" loading="lazy"><figcaption>An easy PIN is refused, with the reason.</figcaption></figure>
+  <h3>Rules that protect you</h3>
+  <ul class="steps">
+    <li>After <b>5 wrong PINs</b>, sign-in stops for 15 minutes.</li>
+    <li>If you do not use Hatua for <b>15 minutes</b>, it signs you out and clears the screen.</li>
+    <li>Your number works in <b>one place at a time</b>. A new sign-in ends the old one.</li>
+    <li><b>My account</b> shows every sign-in and every wrong PIN on your number. If you see one that was not you, change your PIN.</li>
+  </ul>
+  <figure><img src="guide/05-account.png" alt="My account" loading="lazy"><figcaption>My account: sign-ins, wrong PINs, what you did, and Change my PIN.</figcaption></figure>
+  <p><b>Forgot your PIN?</b> Teachers ask the school's Hatua admin for a new one-time PIN. Parents ask the class teacher.</p>
+</section>
+
+<section class="part" id="teachers">
+  <h2>6. For teachers</h2>
+  <p>After you sign in, you see five tabs: <b>Today</b>, <b>School drive</b>, <b>My class</b>, <b>School calendar</b> and <b>Hatua assistant</b>. You see only your own class.</p>
+
+  <h3>The Today tab: what needs you</h3>
+  <p>Today shows learners to watch and results files that need you. An <b>early sign</b> means a learning area fell two levels in one term. A <b>pattern</b> means several terms in a row.</p>
+  <figure><img src="guide/11-today-alerts.png" alt="The Today tab" loading="lazy"><figcaption>Learners to watch, with the reason for each alert.</figcaption></figure>
+  <p>Press <b>Message for the parent</b> to get a short, kind message in English or Kiswahili. Copy it and send it your usual way: SMS, WhatsApp, a call or a note. Then press <b>I have told the parent</b>. Hatua sends nothing by itself.</p>
+  <figure><img src="guide/12-parent.png" alt="A message for the parent, in Kiswahili" loading="lazy"><figcaption>The message for the parent, in Kiswahili.</figcaption></figure>
+
+  <h3>The School drive tab: one Excel file per term</h3>
+  <p>Your class has a folder for <b>Term 1</b>, <b>Term 2</b> and <b>Term 3</b>. Each folder holds one Excel results file. The cards at the top say if each term is <b>In Hatua</b>, <b>Waiting for you</b>, <b>File missing</b> or <b>Not due yet</b>.</p>
+  <figure><img src="guide/06-drive.png" alt="The School drive tab" loading="lazy"><figcaption>The term cards and the files in each folder.</figcaption></figure>
+  <p><b>To add a term's results:</b> choose the term, choose your Excel file, and press <b>Upload to the drive</b>. Then press <b>Check the file</b>. Hatua shows how many rows are for your class, and how many are for another class (it leaves those for their teacher). Press <b>Approve and add to Hatua</b>.</p>
+  <figure><img src="guide/10-check-file.png" alt="Check the file before approving" loading="lazy"><figcaption>Check the file: nothing is in Hatua until you approve it.</figcaption></figure>
+  <div class="box tip"><b>The Excel file needs these columns in row 1:</b> <code>learner_id</code>, <code>grade</code>, <code>year</code>, <code>term</code>, <code>learning_area</code>, <code>level</code>. <code>score</code> and <code>task</code> are optional. An empty template is in <code>docs/templates/results_template.xlsx</code>.</div>
+  <h3>If a file is deleted, you are told</h3>
+  <p>If someone deletes or moves an approved Excel file from a term folder, Hatua tells <b>that class's teacher only</b>, the next time they open Hatua or come back to its window. The card says which file is gone and the day you approved it. The results stay safe in Hatua. Put the file back, or upload it again, and the alert goes away.</p>
+  <p>If a term's results are <b>late</b> (past the due date, 7 days after the term closes) and no file is in the folder, Hatua tells you too.</p>
+  <figure><img src="guide/08-today-deleted.png" alt="Hatua tells the teacher a file is gone" loading="lazy"><figcaption>The Grade 6 teacher is told: the Term 1 file is gone.</figcaption></figure>
+  <figure><img src="guide/07-drive-deleted.png" alt="The Term 1 card says File gone" loading="lazy"><figcaption>On the School drive tab, the Term 1 card turns amber.</figcaption></figure>
+
+  <h3>The My class tab: one learner across the years</h3>
+  <p>Tap a learner. You see the alerts, the report comment, what the records show, and <b>the long view</b> from Grade 4. Earlier grades were written by earlier teachers and are read only. Tap any round mark to see the record behind it.</p>
+  <figure><img src="guide/13-learner.png" alt="A learner's page" loading="lazy"><figcaption>A learner's page.</figcaption></figure>
+  <p><b>Report comment:</b> press <b>Write a comment</b>. If it sounds right, press the thumbs up, change a word if you like, and press <b>Use this comment</b>. If not, press the thumbs down, say why, and Hatua writes it again. Hatua learns from your thumbs.</p>
+  <figure><img src="guide/14-comment.png" alt="The report comment with thumbs up and down" loading="lazy"><figcaption>You decide if the comment sounds right.</figcaption></figure>
+
+  <h3>Senior school pathway ideas (Grades 7 to 9)</h3>
+  <p>For Grades 7 to 9, Hatua can show which strengths in the records relate to each senior school pathway: <b>STEM</b>, <b>Social Sciences</b>, and <b>Arts and Sports Science</b>. They are <b>closed</b> until you press <b>Open pathway ideas</b>. Hatua records your name and the time. Once you open them, the learner's parents can see them too.</p>
+  <figure><img src="guide/19-pathway-closed.png" alt="Pathway ideas are closed" loading="lazy"><figcaption>Closed until the class teacher opens them.</figcaption></figure>
+  <figure><img src="guide/21-pathway-open.png" alt="Pathway ideas after opening" loading="lazy"><figcaption>All three pathways, side by side, with the record behind each line. Hatua never picks one.</figcaption></figure>
+
+  <h3>Give a parent access</h3>
+  <p>On a learner's page, find <b>Parents who can see</b> and press <b>Give a parent access</b>.</p>
+  <ol class="steps">
+    <li>Type the parent's full name and choose Mother, Father, Guardian and so on.</li>
+    <li>If the parent already has a parent number (a brother or sister is at the school), type that number instead. One parent, one number.</li>
+    <li>Press <b>Make the parent number and PIN</b>. Hatua shows a slip with the <b>parent number</b> and a <b>one-time PIN</b>. Print it or write it down. Hatua shows the PIN only now.</li>
+    <li>Give the slip to the parent yourself, the way the school always checks who a parent is.</li>
+  </ol>
+  <figure><img src="guide/u08-add-parent.png" alt="Give a parent access" loading="lazy"><figcaption>Add a parent from the learner's page.</figcaption></figure>
+  <figure><img src="guide/u09-slip.png" alt="The slip with the parent number and one-time PIN" loading="lazy"><figcaption>The slip to give the parent.</figcaption></figure>
+  <p>The list shows who can see the learner and when they last signed in. <b>New PIN</b> gives a parent who forgot their PIN a new one-time PIN. <b>Remove</b> stops their access at once.</p>
+  <figure><img src="guide/u07-parents-section.png" alt="Parents who can see the learner" loading="lazy"><figcaption>Parents who can see this learner.</figcaption></figure>
+
+  <h3>The Hatua assistant</h3>
+  <p>Press <b>Hatua assistant</b>. You can move the window, make it bigger or smaller, or make it fill the screen. Ask in English or Kiswahili.</p>
+  <p>The assistant <b>always asks one short question first</b>, with answers to tap. Then it answers, with the record numbers it used. Tap a record number to check it.</p>
+  <figure><img src="guide/16-ask-followup.png" alt="The assistant asks a question first" loading="lazy"><figcaption>First, one short question.</figcaption></figure>
+  <figure><img src="guide/17-ask-answer.png" alt="The answer with record numbers" loading="lazy"><figcaption>Then the answer, with record numbers.</figcaption></figure>
+  <p>It never ranks learners. Ask "Who is the best in my class?" and it says no, kindly.</p>
+  <figure><img src="guide/18-ask-refuse.png" alt="The assistant will not rank learners" loading="lazy"><figcaption>No rankings, ever.</figcaption></figure>
+
+  <h3>The School calendar tab</h3>
+  <p>The 2026 term dates from the Ministry of Education, and the day each term's results are due in Hatua.</p>
+  <figure><img src="guide/22-calendar.png" alt="The school calendar" loading="lazy"><figcaption>Kenya's 2026 school calendar.</figcaption></figure>
+</section>
+
+<section class="part" id="parents">
+  <h2>7. For parents</h2>
+  <h3>Sign in</h3>
+  <ol class="steps">
+    <li>The class teacher gives you a slip with a <b>parent number</b> (like P-123456) and a <b>one-time PIN</b>.</li>
+    <li>Open Hatua on the school computer or the computer where your school runs it. Choose <b>I am a parent</b>.</li>
+    <li>Type your parent number and the one-time PIN. Hatua asks you to choose your own PIN. Keep it secret.</li>
+  </ol>
+  <figure><img src="guide/u10-parent-signin.png" alt="A parent signs in" loading="lazy"><figcaption>Choose "I am a parent", then type your parent number.</figcaption></figure>
+
+  <h3>Your child's page</h3>
+  <ul class="steps">
+    <li><b>Newest results:</b> each learning area's level, and if it went up or down since the term before.</li>
+    <li><b>Days in school:</b> how many days your child came, out of the days the school was open.</li>
+    <li><b>From the class teacher:</b> the report comment and messages the teacher sent you, in English or Kiswahili.</li>
+    <li><b>Senior school pathway ideas</b> (Grades 7 to 9): only when the class teacher has shared them.</li>
+    <li><b>Every term since Grade 4:</b> the long view. Tap a level to see the record.</li>
+  </ul>
+  <figure><img src="guide/u12-parent-achieng.png" alt="A parent's page" loading="lazy"><figcaption>Rose sees Achieng's newest results and days in school.</figcaption></figure>
+  <p>If you have two or more children at the school, tap a name at the top to switch.</p>
+  <figure><img src="guide/u16-two-children.png" alt="A parent with two children" loading="lazy"><figcaption>One parent number for two children.</figcaption></figure>
+  <figure class="phone"><img src="guide/u17-parent-phone.png" alt="The parent's page on a phone" loading="lazy"><figcaption>It works on a phone screen too.</figcaption></figure>
+
+  <h3>Ask the Hatua assistant</h3>
+  <p>Press <b>Hatua assistant</b> and ask about your child: "How is Achieng doing?", "How can I help at home?", "When does the next term open?". It asks one short question first, then answers with the record numbers.</p>
+  <figure><img src="guide/u13-parent-ask.png" alt="The assistant asks a parent a question first" loading="lazy"><figcaption>One question first.</figcaption></figure>
+  <figure><img src="guide/u14-parent-answer.png" alt="The answer for the parent" loading="lazy"><figcaption>Then the answer.</figcaption></figure>
+  <p>The assistant knows <b>only your own child</b>. It will not compare your child with others, and it will not tell you about another child.</p>
+  <figure><img src="guide/u15-parent-refuse.png" alt="The assistant will not talk about another child" loading="lazy"><figcaption>Other children's results are never shown.</figcaption></figure>
+</section>
+
+<section class="part" id="safe">
+  <h2>8. How Hatua keeps children safe</h2>
+  <table>
+    <tr><th>Who</th><th>Can see</th><th>Can never see</th></tr>
+    <tr><td>Class teacher</td><td>Their own class, with each learner's full history from Grade 4</td><td>Other classes</td></tr>
+    <tr><td>Parent</td><td>Their own child: approved results, days in school, the comment and messages the teacher shared, pathway ideas the teacher opened</td><td>Other children, teacher notes, alerts the teacher has not raised, any ranking</td></tr>
+    <tr><td>The assistant</td><td>The same as the person asking</td><td>Anything else</td></tr>
+  </table>
+  <ul class="steps">
+    <li>A teacher must <b>approve</b> each results file before Hatua uses it.</li>
+    <li>A teacher must <b>open</b> pathway ideas, with their name, before anyone sees them.</li>
+    <li>Every sign-in, approval and change is written to a log that cannot be changed without Hatua noticing.</li>
+    <li>Everything stays on the school's computer. Hatua does not send learner data to the internet, and Qwen runs on the same computer.</li>
+    <li>PINs are stored only as a secure code (a hash), never as the PIN itself.</li>
+  </ul>
+</section>
+
+<section class="part" id="admin">
+  <h2>9. For the school's Hatua admin</h2>
+  <p>The download opens the <b>practice school</b>. Setting up your real school is a job for one person who is comfortable with spreadsheets and a terminal. It is done once.</p>
+  <ol class="steps">
+    <li>Install Python 3.9 or newer, download the Hatua source code from GitHub, and run <code>pip install -r requirements.txt</code> in its folder.</li>
+    <li>Make a folder for your school, for example <code>Hatua School</code>, with a <code>data/raw</code> folder inside it.</li>
+    <li>Put five CSV files there: <code>learners.csv</code> (the class list), <code>teacher_assignments.csv</code> (which teacher has which class), <code>attendance.csv</code>, <code>teacher_notes.csv</code> and <code>records_2021_2026.csv</code> (past results). The practice school's files show the columns.</li>
+    <li>Load them, then add each teacher with a one-time PIN:</li>
+  </ol>
+<pre>HATUA_HOME="Hatua School" python -m hatua setup
+HATUA_HOME="Hatua School" python -m hatua teacher-add --id M-1234 --name "Jane Wanjiru" --one-time
+HATUA_HOME="Hatua School" python -m hatua portal</pre>
+  <p>On Windows, use <code>set HATUA_HOME=Hatua School</code> first. Teachers then add parents themselves, from each learner's page.</p>
+  <div class="box warn"><b>Before you use real learners' data</b>, the school must agree to it in writing, and parents must be told. Read <code>PRIVACY.md</code> and <code>docs/DPIA.md</code> in the source code. Kenya's Data Protection Act, 2019 applies.</div>
+  <div class="box"><b>One computer at a time.</b> Hatua runs on one computer, for example the school office computer. Teachers and parents use it there. It is not on the internet, so a parent cannot open it from home yet.</div>
+</section>
+
+<section class="part" id="help">
+  <h2>10. If something goes wrong</h2>
+  <table>
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>"Sign-in failed"</td><td>Check the number and PIN. Capital letters do not matter in the number.</td></tr>
+    <tr><td>"These sign-ins are locked"</td><td>5 wrong PINs were tried. Wait 15 minutes.</td></tr>
+    <tr><td>I forgot my PIN</td><td>Teachers: ask the Hatua admin. Parents: ask the class teacher for a new PIN.</td></tr>
+    <tr><td>Hatua did not open in the browser</td><td>Press <b>Open Hatua</b> in the small Hatua window.</td></tr>
+    <tr><td>The Mac says Hatua "cannot be opened"</td><td>Right-click Hatua, choose <b>Open</b>, then press <b>Open</b>.</td></tr>
+    <tr><td>Windows says "protected your PC"</td><td>Press <b>More info</b>, then <b>Run anyway</b>.</td></tr>
+    <tr><td>The assistant says "Qwen is off"</td><td>See <a href="#ai">The AI helper</a>. The built-in answers still work.</td></tr>
+    <tr><td>Qwen is slow</td><td>A first answer can take up to a minute on a small computer. Close other programs.</td></tr>
+    <tr><td>A file is "gone from the school drive"</td><td>Put the Excel file back in its term folder, or upload it again on the School drive tab.</td></tr>
+  </table>
+  <p>Questions or ideas? Open an issue on <a href="https://github.com/NaomiKwamboka0/the-long-view/issues">GitHub</a>.</p>
+</section>
+
+<footer>
+  <p>Hatua is free and open source (MIT licence). Made in Kenya by Naomi Kwamboka Onyancha for the African Agentic AI Design Challenge, Education track. Source code: <a href="https://github.com/NaomiKwamboka0/the-long-view">github.com/NaomiKwamboka0/the-long-view</a>.</p>
+</footer>
+</div>
+</body>
+</html>

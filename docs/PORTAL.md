@@ -138,6 +138,18 @@ For learners in **Grade 9**, the learner page and the assistant then show the ev
 
 This follows the challenge brief. It allows "plain-language subject or career-direction suggestions" that are "age-appropriate, never prescriptive", for "a teacher to raise with the learner and their guardian". It disqualifies "an agent that assigns a track or label".
 
+## Parents
+
+Code: `hatua/family.py`. Practice parents: `P-100001`, `P-100002` (two children), `P-100003` (one-time PIN), PIN `246810`.
+
+- The class teacher gives access from a learner's page. Hatua makes a parent number and a one-time PIN, shown once on a printable slip. To link a brother or sister, the other class teacher types the existing parent number.
+- Parents sign in on the same page and follow the same PIN rules as teachers.
+- `family.can_view` is the only rule for parents: the learners linked to the parent number that are still on the class list. Every teacher route refuses a parent session (`portal._family` is the only way in).
+- A parent sees approved results, days in school, the approved report comment, messages the teacher marked as told, and pathway ideas the class teacher opened. Never teacher notes, unraised alerts, other children or rankings.
+- The parent assistant: one follow-up question first, record numbers on every claim, no comparisons, no other children, no pathway ideas before the teacher opens them.
+- Audit log: `parent.add`, `parent.remove`, `parent.new_pin`, `family.view`, and the parent's sign-ins.
+- Limit: Hatua listens only on 127.0.0.1, so a parent uses the computer where the school runs Hatua. There is no way in from home.
+
 ## Comments, and thumbs up or down
 
 1. **Write a comment.** Qwen 2.5 (through Ollama, on the same laptop) writes a two- or three-sentence report comment.
