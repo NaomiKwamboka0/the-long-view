@@ -152,3 +152,5 @@ assert.equal(w.document.getElementById('dlg-body').querySelector('script'), null
 assert.equal(w.__x, undefined);
 
 console.log('PASS all portal XSS audit checks passed without script execution.');
+
+dom.window.close();
