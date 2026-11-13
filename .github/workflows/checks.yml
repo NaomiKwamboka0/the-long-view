@@ -1,11 +1,15 @@
+# Updated GitHub Actions workflow: split UI test into its own job
+
 name: Regression checks
 on: [push, pull_request]
+
 permissions:
   contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30  # increased to give room for all non‑UI steps
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
@@ -27,5 +31,28 @@ jobs:
         run: python scripts/run_evals.py
       - name: Build the synthetic teacher demo
         run: python scripts/package_teacher_demo.py
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: npm run test:ui
+      - name: Upload built UI bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: dist
+
+  ui-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Download UI bundle from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: ui-dist
+          path: dist
+      - name: Install node dependencies (no scripts)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run UI integration tests
+        run: npm run test:ui
