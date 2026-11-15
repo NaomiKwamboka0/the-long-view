@@ -32,7 +32,11 @@ The demo's date is fixed at 4 November 2026, after Term 3 closed, so Term 3 resu
 **Today.** What needs the teacher now:
 - results that are overdue or waiting for approval;
 - learners to watch, grouped by learner;
-- for each learner, **Message for the parent**: a short message in English or Kiswahili to copy and send. Hatua sends nothing. The teacher then ticks **I have told the parent** and says how (SMS, WhatsApp, phone call, in person, a note). That way every teacher knows what has already been said.
+- for each learner, **Message for the parent**: a short message in English or Kiswahili, drafted from the records. It can be a concern (an alert) or good news (a result going up, a strength that held), or the teacher's own words.
+  - **Send by WhatsApp (free).** The teacher edits the message, types the parent's WhatsApp number, ticks that they checked both, and presses **Open WhatsApp**. WhatsApp opens with the message ready (a normal `wa.me` link) and the teacher presses Send with their own account. There is no paid service and no WhatsApp API.
+  - Hatua never sends anything by itself. It refuses a message that ranks or compares learners or gives pathway advice (`hatua/guard.py`). The teacher's approval is in the audit log with their name, the message and its records. The parent's number is not kept; only its last three digits are logged.
+  - Or the teacher copies the message, tells the parent another way, and ticks **I have told the parent** (SMS, phone call, in person, a note). That way every teacher knows what has already been said.
+- **How Hatua looks.** On the sign-in page and in **My account**: light, dark, or the same as the computer. It is remembered in that browser only.
 
 **School drive.** The whole school shares one drive. It is divided into a folder for each grade, and inside it a folder for each term. Each term folder holds one Excel results file for the class:
 

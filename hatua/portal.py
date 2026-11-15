@@ -49,6 +49,7 @@ from . import (
     school_calendar,
     scope,
     store,
+    whatsapp,
 )
 from .summary import GateBlocked
 
@@ -102,6 +103,8 @@ def _did(e: dict) -> str | None:
         return f"Uploaded the file '{name}' to the school drive"
     if tool == "pathways.open":
         return f"Opened pathway ideas for {child}"
+    if tool == "parent.whatsapp":
+        return f"Checked a WhatsApp message for the parent of {child} (number ending {out.get('to_ending', '')})"
     if tool == "parent.told":
         return f"Recorded that the parent of {child} was told ({str(out.get('how', '')).lower()})"
     if tool == "comment.rate":
@@ -477,6 +480,22 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError as exc:
                 raise Refused(400, str(exc)) from None
             return self._send(200, {**out, "parents": family.parents_of(m.group(1))})
+        m = re.fullmatch(r"learner/(HT-\d{4})/whatsapp(/sent)?", path)
+        if m:
+            try:
+                if method == "GET" and not m.group(2):
+                    return self._send(200, {"messages": whatsapp.options(tid, m.group(1)),
+                                            "max_chars": whatsapp.MAX_CHARS})
+                if method == "POST":
+                    self._check_post()
+                    body = self._json()
+                    if m.group(2):
+                        return self._send(200, whatsapp.sent(tid, who["name"], m.group(1), str(body.get("key", ""))))
+                    return self._send(200, whatsapp.prepare(
+                        tid, who["name"], m.group(1), phone=str(body.get("phone", "")), text=str(body.get("text", "")),
+                        key=str(body.get("key", "")), checked=body.get("checked")))
+            except whatsapp.Refused as exc:
+                raise Refused(400, str(exc)) from None
         m = re.fullmatch(r"learner/(HT-\d{4})/comment", path)
         if method == "POST" and m:
             self._check_post()

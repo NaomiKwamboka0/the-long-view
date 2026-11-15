@@ -79,8 +79,11 @@ ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do
 - My class tab: open a learner to see what the records show, the long view from
   Grade 4 (earlier grades are read only), and the report comment. Press "Write a
   comment", then thumbs up to use it or thumbs down to get a new version.
-- On an alert, "Message for the parent" gives a message in English or Kiswahili to
-  copy and send your usual way. Then press "I have told the parent". Hatua sends nothing.
+- "Message the parent" on a learner's page (or "Message for the parent" on an alert) gives
+  a message in English or Kiswahili: good news or a concern, from the records. Edit it, type
+  the parent's WhatsApp number, tick that you checked it, and press "Open WhatsApp". You
+  press Send in WhatsApp yourself; it is free. Or copy it and tell the parent another way,
+  then press "I have told the parent". Hatua never sends anything by itself.
 - Learner page, "Senior school pathway ideas" (Grades 7 to 9): closed until the class
   teacher presses "Open pathway ideas". Then it shows the cited strengths
   for each of the three pathways. Hatua never picks one; it is for the conversation

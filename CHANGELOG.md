@@ -1,3 +1,13 @@
+# Free WhatsApp message to a parent, and light or dark look — 16 November 2026
+
+- **WhatsApp, free.** New `hatua/whatsapp.py`. On a learner's page, **Message the parent** drafts a short message from the records: a concern (an alert) or good news (a result going up, a strength that held), in English or Kiswahili, or the teacher's own words.
+  - The teacher edits it, types the parent's WhatsApp number, and ticks that they checked both. Hatua then gives a normal `wa.me` link. WhatsApp opens with the message ready and the teacher presses Send with their own account. No paid service, no WhatsApp API.
+  - Hatua never sends anything by itself. The guard refuses a message that ranks or compares learners or gives pathway advice.
+  - Sharing with a guardian cannot be undone, so the approval is in the audit log: the teacher's name, the message, the records behind it. The parent's number is not stored; only its last three digits are logged.
+  - **Yes, I sent it** marks the learner's alerts as told by WhatsApp.
+- **Light, dark, or same as the computer.** On the sign-in page and in **My account**. Kept in that browser only.
+- **Not done:** Hatua cannot know if the message was really sent in WhatsApp; the teacher says so. The message leaves the school's computer through WhatsApp, so the school should send only to parents who agreed. The Kiswahili good-news wording has not been checked by a teacher.
+
 # Parents, the app download, and the practice website — 12 November 2026
 
 - **Parents.** New `hatua/family.py`.

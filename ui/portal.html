@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hatua portal</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Ccircle cx=%226%22 cy=%2222%22 r=%224%22 fill=%22%23cdbfe4%22/%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%224.5%22 fill=%22%234b91a5%22/%3E%3Ccircle cx=%2224%22 cy=%227%22 r=%225%22 fill=%22%236a4c9c%22/%3E%3C/svg%3E">
+<script>/* The look the person chose (My account): light, dark, or the same as this computer. */
+try { var t = localStorage.getItem("hatua-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <style>
 /* Hatua teacher portal. Same language as the teacher page: soft sage paper, white
    surfaces with no borders, jacaranda for actions, amber (never red) for attention. */
@@ -56,7 +58,7 @@ p { margin: 0; }
 .pill.reject { background: var(--sun-soft); color: var(--sun); }
 .pill.watch { background: var(--sun-soft); color: var(--sun); }
 .empty { padding: 26px 12px; text-align: center; color: var(--ink-soft); }
-input[type=text], input[type=password], input[type=search], select, textarea { border: 0; border-radius: 12px; background: var(--tint); padding: 11px 14px; min-width: 0; }
+input[type=text], input[type=password], input[type=search], input[type=tel], select, textarea { border: 0; border-radius: 12px; background: var(--tint); padding: 11px 14px; min-width: 0; }
 .error { color: var(--sun); }
 
 /* sign-in */
@@ -208,6 +210,14 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
 .langs { justify-self: start; display: inline-flex; gap: 4px; background: var(--tint); padding: 4px; border-radius: 999px; }
 .langs button { border: 0; background: transparent; border-radius: 999px; padding: 6px 14px; color: var(--ink-soft); }
 .langs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; }
+.look { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+.wa { background: var(--leaf-soft); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+.wa label { display: grid; gap: 4px; font-size: .9rem; }
+.wa .tick { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; }
+.wa .tick input { width: 20px; height: 20px; flex: none; margin-top: 2px; accent-color: var(--leaf); }
+.wa input[type=tel] { background: var(--surface); font-size: 1.1rem; letter-spacing: .03em; }
+.quote { background: var(--tint); border-radius: 14px; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+a.btn { text-decoration: none; display: inline-block; }
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); background: var(--ink); color: var(--paper); border-radius: 18px; padding: 14px 18px; box-shadow: var(--shadow); z-index: 9; display: flex; gap: 12px; align-items: center; }
 .toast p { flex: 1 1 auto; }
 .toast .btn { background: var(--paper); color: var(--ink); }
@@ -338,6 +348,7 @@ a.btn { text-decoration: none; display: inline-block; }
     </div>
     <section class="ai" id="ai-box" aria-live="polite" hidden></section>
     <p class="small soft" style="text-align:center"><a href="/guide" target="_blank" rel="noopener" style="color:var(--jacaranda)">Open the user guide</a></p>
+    <div class="look small soft"><span>Look:</span><span data-look></span></div>
     <details class="practice" id="practice" hidden>
       <summary><b>Practice accounts</b> <span class="soft small">(demo only: made-up people)</span></summary>
       <p class="small soft">PIN for all: <b id="pr-pin"></b>. Tap a number to fill it in.</p>
@@ -463,6 +474,17 @@ a.btn { text-decoration: none; display: inline-block; }
 "use strict";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* ---------- the look: light, dark, or the same as this computer. Kept in this browser only ---------- */
+const LOOKS = [["system", "Same as computer"], ["light", "Light"], ["dark", "Dark"]];
+const lookNow = () => { try { const t = localStorage.getItem("hatua-theme"); return t === "light" || t === "dark" ? t : "system"; } catch (e) { return "system"; } };
+const lookButtons = () => `<div class="langs" role="group" aria-label="How Hatua looks">${LOOKS.map(([k, t]) => `<button type="button" data-look-pick="${k}" aria-pressed="${lookNow() === k}">${t}</button>`).join("")}</div>`;
+function setLook(t) {
+  if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem("hatua-theme", t); } catch (e) {}
+  document.querySelectorAll("[data-look-pick]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lookPick === t)));
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-look-pick]"); if (b) setLook(b.dataset.lookPick); });
+document.querySelectorAll("[data-look]").forEach(el => { el.innerHTML = lookButtons(); });
 const LEVEL = { EE: "Exceeding Expectations", ME: "Meeting Expectations", AE: "Approaching Expectations", BE: "Below Expectations" };
 const KIND = { sustained_strength: ["held", "A held strength"], improvement: ["up", "Going up"], decline: ["down", "Going down"],
   sustained_struggle: ["down", "Needs support"], attendance_drop: ["down", "Missing school"] };
@@ -613,10 +635,12 @@ async function accountDialog() {
       <p class="small soft">6 or more numbers or letters. Not in order, not repeated, not your ${ROLE === "parent" ? "parent" : "member"} number.${a.pin_changed ? ` Last changed ${esc(when(a.pin_changed))}.` : ""}</p>
       <p class="error small" id="cp-error" role="alert" hidden></p>
       <div><button class="btn" type="submit" id="cp-go">Save my new PIN</button></div></form>
+    <div class="section"><h3>How Hatua looks</h3>
+      <p class="small soft">Choose light, dark, or the same as this computer. Hatua remembers it in this browser.</p>${lookButtons()}</div>
     <div class="section"><h3>How Hatua keeps your class safe</h3>
       <ul class="rules small"><li>${ROLE === "parent" ? "You see only your own child. No other parent sees your child, and you never see other children." : "You see only your own class. No other teacher sees it."}</li><li>After ${a.lock_failures} wrong PINs, sign-in stops for ${a.lock_minutes} minutes.</li>
         <li>You are signed out after ${a.idle_minutes} minutes without use.</li><li>Your number works in one place at a time. A new sign-in ends the old one.</li>
-        <li>Everything stays on this computer. Nothing is sent over the internet.</li></ul></div>`;
+        <li>Everything stays on this computer. ${ROLE === "parent" ? "Nothing is sent over the internet." : "Nothing goes over the internet unless you choose to send a parent a WhatsApp message yourself."}</li></ul></div>`;
   $("dlg-x").onclick = () => $("dlg").close();
   $("cp-form").onsubmit = async e => {
     e.preventDefault();
@@ -727,29 +751,74 @@ function wireCommon(el) {
   el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => evidence(b.dataset.ev)));
 }
 
-async function parentDialog(noticeId) {
-  const n = NOTICES.find(x => x.notice_id === noticeId);
-  const msg = await api(`notices/${noticeId}/parent`);
-  let lang = "en";
+/* A message for the parent: good news or a concern, from the records. The teacher edits it,
+   checks it, and sends it with their own WhatsApp (free), or tells the parent another way.
+   Hatua never sends anything by itself, and it does not keep the parent's number. */
+async function parentDialog(noticeId, learnerId) {
+  const n = noticeId ? NOTICES.find(x => x.notice_id === noticeId) : null;
+  const lid = learnerId || n.learner_id;
+  let data;
+  try { data = await api(`learner/${lid}/whatsapp`); } catch (err) { return toast(err.message); }
+  const msgs = data.messages, edits = {};
+  let key = (msgs.find(m => m.key === "notice:" + noticeId) || msgs[0]).key, lang = "en", phone = "";
+  const cur = () => msgs.find(m => m.key === key);
+  const text = () => edits[key + lang] ?? cur()[lang];
+  const done = async () => { $("dlg").close(); await loadNotices(); await loadClass(); if (selected === lid) select(selected); };
   const draw = () => {
+    const m = cur();
     $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Message for the parent</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
-      <p class="small soft">Hatua does not send anything. Edit it, then send it your usual way: SMS, WhatsApp, a call, or a note.</p>
+      <p class="small soft">Choose the message, check the words, then send it yourself. Hatua never sends anything by itself.</p>
+      <label class="small" style="display:grid;gap:4px">What is it about?<select id="pm-key">${msgs.map(x => `<option value="${esc(x.key)}" ${x.key === key ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>
       <div class="langs" role="group" aria-label="Language">${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-l="${k}" aria-pressed="${lang === k}">${t}</button>`).join("")}</div>
-      <textarea id="pm-text" style="width:100%;min-height:150px;line-height:1.6">${esc(msg[lang])}</textarea>
-      <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn quiet" type="button" id="pm-copy">Copy</button>
-        <select id="pm-how" aria-label="How you told the parent"><option>By SMS</option><option>By WhatsApp</option><option>By phone call</option><option>In person</option><option>By a note</option></select>
-        <button class="btn leaf" type="button" id="pm-told">I have told the parent</button></div>`;
+      <textarea id="pm-text" maxlength="${data.max_chars}" aria-label="The message" style="width:100%;min-height:150px;line-height:1.6">${esc(text())}</textarea>
+      <p class="small soft">${m.evidence.length ? `From the records ${m.evidence.slice(0, 6).map(esc).join(", ")}.` : "Your own words. Hatua checks that the message does not rank or compare learners."} You can change any word.</p>
+      <div class="wa"><h3>Send by WhatsApp (free)</h3>
+        <label>Parent's WhatsApp number<input type="tel" id="pm-phone" inputmode="tel" autocomplete="off" placeholder="0712 345 678" value="${esc(phone)}"></label>
+        <p class="small soft">WhatsApp opens with your own account and the message ready. You press Send there. It needs internet. Hatua does not keep the number.</p>
+        <label class="tick"><input type="checkbox" id="pm-ok"><span>I checked the message and the number. This parent agreed to get WhatsApp messages.</span></label>
+        <p class="error small" id="pm-err" role="alert" hidden></p>
+        <div><button class="btn leaf" type="button" id="pm-wa" disabled>Check and get ready to send</button></div></div>
+      <div class="section"><h3>Or tell the parent another way</h3>
+        <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn quiet" type="button" id="pm-copy">Copy the message</button>
+        ${key.startsWith("notice:") ? `<select id="pm-how" aria-label="How you told the parent"><option>By SMS</option><option>By phone call</option><option>In person</option><option>By a note</option></select>
+        <button class="btn quiet" type="button" id="pm-told">I have told the parent</button>` : ""}</div></div>`;
     $("dlg-x").onclick = () => $("dlg").close();
-    $("dlg-body").querySelectorAll("[data-l]").forEach(b => b.onclick = () => { lang = b.dataset.l; draw(); });
+    const keep = () => { edits[key + lang] = $("pm-text").value; phone = $("pm-phone").value; };
+    $("pm-key").onchange = () => { keep(); key = $("pm-key").value; draw(); };
+    $("dlg-body").querySelectorAll("[data-l]").forEach(b => b.onclick = () => { keep(); lang = b.dataset.l; draw(); });
+    $("pm-ok").onchange = () => { $("pm-wa").disabled = !$("pm-ok").checked; };
     $("pm-copy").onclick = async () => { try { await navigator.clipboard.writeText($("pm-text").value); $("pm-copy").textContent = "Copied"; } catch (e) { $("pm-text").select(); } };
-    $("pm-told").onclick = async () => {
-      const ids = NOTICES.filter(x => x.learner_id === n.learner_id && !x.told_parent).map(x => x.notice_id);
+    $("pm-wa").onclick = async () => {
+      keep(); $("pm-wa").disabled = true;
+      try { ready(await api(`learner/${lid}/whatsapp`, { method: "POST", json: { key, phone, text: text(), checked: $("pm-ok").checked } })); }
+      catch (err) { $("pm-err").hidden = false; $("pm-err").textContent = err.message; $("pm-wa").disabled = false; }
+    };
+    if ($("pm-told")) $("pm-told").onclick = async () => {
+      const ids = NOTICES.filter(x => x.learner_id === lid && !x.told_parent).map(x => x.notice_id);
       for (const id of ids) await api(`notices/${id}`, { method: "POST", json: { told_parent: $("pm-how").value } });
-      $("dlg").close(); await loadNotices(); await loadClass();
-      if (selected === n.learner_id) select(selected);
+      await done();
     };
   };
-  draw(); $("dlg").showModal();
+  const ready = out => {
+    $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Ready to send</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+      <p>To <b>${esc(out.to)}</b>. Read it one more time.</p>
+      <div class="quote">${esc(text())}</div>
+      <p class="small soft">Step 1: press the green button. WhatsApp opens with the message. Step 2: press Send in WhatsApp. Step 3: come back here.</p>
+      <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn leaf" id="pm-open" href="${esc(out.url)}" target="_blank" rel="noopener noreferrer">Open WhatsApp</a>
+        <button class="btn quiet" type="button" id="pm-back">Go back and change</button></div>
+      <div class="section" id="pm-after" hidden><h3>Did you press Send in WhatsApp?</h3>
+        <div class="row" style="display:flex;flex-wrap:wrap;gap:10px"><button class="btn" type="button" id="pm-sent">Yes, I sent it</button><button class="btn quiet" type="button" id="pm-not">No, not yet</button></div></div>`;
+    $("dlg-x").onclick = () => $("dlg").close();
+    $("pm-back").onclick = draw;
+    $("pm-open").onclick = () => { $("pm-after").hidden = false; };
+    $("pm-not").onclick = () => $("dlg").close();
+    $("pm-sent").onclick = async () => {
+      $("pm-sent").disabled = true;
+      try { await api(`learner/${lid}/whatsapp/sent`, { method: "POST", json: { key } }); await done(); toast("Recorded: you told the parent by WhatsApp."); }
+      catch (err) { toast(err.message); $("pm-sent").disabled = false; }
+    };
+  };
+  draw(); if (!$("dlg").open) $("dlg").showModal();
 }
 
 /* ---------- drive ---------- */
@@ -862,7 +931,8 @@ function renderLearner() {
   el = $("learner");
   el.innerHTML = `<div class="learner">
     <div class="learner-head"><span class="face" aria-hidden="true">${esc(l.name[0])}</span>
-      <div style="flex:1 1 220px;min-width:0"><h2>${esc(l.name)}</h2><p class="soft">${l.id}, Grade ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</p></div></div>
+      <div style="flex:1 1 220px;min-width:0"><h2>${esc(l.name)}</h2><p class="soft">${l.id}, Grade ${l.stream}. ${l.reviewed} records, ${esc(l.span)}.</p></div>
+      <button class="btn quiet small" type="button" id="msg-parent">Message the parent</button></div>
     ${open.length ? `<div class="cards">${open.map(n => `<article class="card ${n.told_parent ? "ok" : "watch"}"><p><b>${n.kind === "sharp_drop" ? "Early sign" : "Pattern"}:</b> ${esc(n.text)}</p>
       <div class="row">${n.evidence.slice(0, 6).map(e => `<button class="link small" type="button" data-ev="${e}">${e}</button>`).join(" ")}</div>
       ${n.told_parent ? `<p class="small">Parent told (${esc(n.told_parent.how)}) on ${fmt(n.told_parent.at.slice(0, 10))}.</p>` : `<div class="row"><button class="btn quiet small" type="button" data-parent="${n.notice_id}">Message for the parent</button></div>`}</article>`).join("")}</div>` : ""}
@@ -878,6 +948,7 @@ function renderLearner() {
   wireCommon(el);
   wireComment(latest);
   wireParents();
+  $("msg-parent").addEventListener("click", () => parentDialog(null, l.id));
   $("pw-open")?.addEventListener("click", async e => {
     e.target.disabled = true;
     try { L.pathways = (await api(`learner/${L.id}/pathways/open`, { method: "POST", json: {} })).pathways; renderLearner(); }

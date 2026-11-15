@@ -10,7 +10,7 @@
 
 **Purpose.** Help a class teacher notice multi-term strengths and difficulties in a learner's assessment record, early enough to talk with the family. The tool prepares cited drafts. A teacher decides what is saved or shared. It does not assign a pathway, label, score or rank.
 
-**Data subjects.** Learners in Grades 4-9 (children). Teachers (identity and approval records). Guardians appear only as recipients of messages a teacher chooses to send; Hatua collects no guardian contact details and sends nothing.
+**Data subjects.** Learners in Grades 4-9 (children). Teachers (identity and approval records). Guardians appear only as recipients of messages a teacher chooses to send. Hatua sends nothing itself. For a WhatsApp message the teacher types the guardian's number each time; Hatua uses it once to build the link, does not store it, and logs only its last three digits. The message then travels through WhatsApp, outside the school's computer, under the teacher's own account.
 
 | Data | Source | Notes |
 |---|---|---|
@@ -50,7 +50,7 @@ Likelihood and severity are for the school to rate once the deployment is known.
 | 3 | An inaccurate pattern harms a child (stigma, wrong assumption) | Fixed rules; every claim cited; teacher approves; guard blocks labels, ranking and pathways | The guard is a phrase list and can be phrased around. Teacher judgement remains the control. |
 | 4 | Someone approves while pretending to be a teacher | Optional PIN sign-in records the registry name and ID, rejects typed names, locks after repeated failures | Off by default. Turn it on for any pilot. It identifies a person among teachers on that computer only; it is not TSC/KEMIS sign-in, and the log files can still be edited by anyone with file access. |
 | 5 | Data leaves the device (cloud backup, swapped-in hosted model, tracing) | Loopback-only model endpoint; proxies and redirects disabled | Operator policy: no cloud sync of the Hatua folder; no hosted model. |
-| 6 | A family message is sent before a teacher has spoken to the guardian | Hatua sends nothing; guardian text needs a separate sharing approval | School procedure: conversation first, message second. |
+| 6 | A family message is sent before a teacher has spoken to the guardian | Hatua sends nothing; guardian text needs a separate sharing approval. A WhatsApp message needs the signed-in class teacher to tick that they checked the words and the number, and the guard refuses ranking, comparison and pathway advice | School procedure: conversation first, message second. Send WhatsApp only to a guardian who agreed to it. A wrong number is still possible: the teacher must read it back. |
 | 7 | Data kept longer than needed; erasure not honoured | None | [Retention schedule and deletion procedure.] |
 | 8 | Breach not detected or not reported in time | Audit log of tool calls | No incident process in the repository. [Create one; check the notification deadline against ODPC guidance.] |
 | 9 | Learners re-identified (small class, first names, IDs) | Pseudonymous IDs; ID map kept private | First names remain in the class list. Consider initials only for pilots. |

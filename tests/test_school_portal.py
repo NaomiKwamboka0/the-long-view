@@ -27,6 +27,7 @@ from hatua import (
     school_calendar,
     school_demo,
     store,
+    whatsapp,
     xlsx,
 )
 from hatua.summary import GateBlocked
@@ -284,6 +285,65 @@ def test_parent_message_and_told_parent(school_home):
         notify.mark(kamau["notice_id"], "M-5001", told_parent="By SMS")  # not their notice
     marked = notify.mark(kamau["notice_id"], "M-6001", told_parent="By SMS")
     assert marked["told_parent"]["how"] == "By SMS"
+
+
+def test_whatsapp_numbers_are_checked_before_a_link_is_made():
+    for typed in ("0712 345 678", "712345678", "+254 712-345-678", "254712345678"):
+        assert whatsapp.phone_digits(typed) == "254712345678"
+    assert whatsapp.phone_digits("0110 000 111") == "254110000111"
+    assert whatsapp.phone_digits("+255 754 123 456") == "255754123456", "another country needs its + and code"
+    for bad in ("", "0712", "07123456789", "0212345678", "call me", "0712 345 67x"):
+        with pytest.raises(whatsapp.Refused):
+            whatsapp.phone_digits(bad)
+    url = whatsapp.link("254712345678", "Hello & well done, 100%")
+    assert url == "https://wa.me/254712345678?text=Hello%20%26%20well%20done%2C%20100%25"
+
+
+def test_a_whatsapp_message_needs_the_class_teacher_s_check_and_is_logged(school_home):
+    drive.decide(G6, login("M-6001"), "approve")
+    msgs = whatsapp.options("M-6001", "HT-0603")
+    concern = next(m for m in msgs if m["tone"] == "concern")
+    assert "Mathematics" in concern["en"] and concern["evidence"], "the draft stands on records"
+    assert msgs[-1]["key"] == "own"
+    with pytest.raises(whatsapp.Refused):
+        whatsapp.options("M-5001", "HT-0603")  # not their class
+    send = {"phone": "0712 345 678", "text": concern["en"], "key": concern["key"]}
+    with pytest.raises(whatsapp.Refused, match="Tick the box"):
+        whatsapp.prepare("M-6001", "Teacher Six", "HT-0603", checked=False, **send)
+    with pytest.raises(whatsapp.Refused, match="rank or compare"):
+        whatsapp.prepare("M-6001", "Teacher Six", "HT-0603", checked=True,
+                         **{**send, "text": "Kamau is now bottom of the class in Mathematics."})
+    with pytest.raises(whatsapp.Refused, match="pathway"):
+        whatsapp.prepare("M-6001", "Teacher Six", "HT-0603", checked=True,
+                         **{**send, "key": "own", "text": "Kamau should take the STEM pathway next year."})
+    assert not [e for e in audit.read_events() if e.get("tool") == "parent.whatsapp"], "a refusal shares nothing"
+    out = whatsapp.prepare("M-6001", "Teacher Six", "HT-0603", checked=True, **send)
+    assert out["url"].startswith("https://wa.me/254712345678?text=Hello") and out["to"] == "+254 712 345 678"
+    event = [e for e in audit.read_events() if e.get("tool") == "parent.whatsapp"][-1]
+    assert event["actor"] == "M-6001" and event["output"]["approved_by"] == "Teacher Six"
+    assert event["output"]["to_ending"] == "678" and event["output"]["sent_by_hatua"] is False
+    assert "712345" not in json.dumps(event), "the parent's number is not kept"
+    assert "254712345678" not in "".join(p.read_text(encoding="utf-8") for p in (school_home / "store").glob("*.json"))
+    done = whatsapp.sent("M-6001", "Teacher Six", "HT-0603", concern["key"])
+    assert done["notices"]
+    told = [n for n in notify.for_teacher("M-6001", True) if n.get("learner_id") == "HT-0603"]
+    assert told and all(n["told_parent"]["how"] == "By WhatsApp" for n in told)
+
+
+def test_good_news_can_go_to_a_parent_too(school_home):
+    for tid in sorted(t["teacher_id"] for t in auth.teachers()):
+        for learner in school.learners_of(tid):
+            good = [m for m in whatsapp.options(tid, learner["learner_id"]) if m["tone"] == "good"]
+            if good:
+                m = good[0]
+                assert "good news" in m["en"] and "habari njema" in m["sw"] and m["evidence"]
+                assert not whatsapp.guard.labels_in(m["en"]), "Hatua's own draft passes its own guard"
+                out = whatsapp.prepare(tid, "A Teacher", learner["learner_id"], phone="0110000111", text=m["en"],
+                                       key=m["key"], checked=True)
+                assert "wa.me/254110000111" in out["url"]
+                assert whatsapp.sent(tid, "A Teacher", learner["learner_id"], m["key"])["notices"] == []
+                return
+    pytest.fail("the practice school has no learner with good news")
 
 
 # ---------------------------------------------------------------- comments
@@ -817,3 +877,24 @@ def test_qwen_setup_talks_only_to_ollama_on_this_computer(monkeypatch):
     assert ai_setup.status()["ollama"] in ("not_running", "not_installed")
     with pytest.raises(RuntimeError):
         ai_setup.get_qwen()
+
+
+def test_portal_whatsapp_is_for_the_class_teacher_only(portal):
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    call(portal, "POST", "/api/drive/decide", {"path": G6, "decision": "approve"}, cookie=cookie, csrf=csrf)
+    st, _, body = call(portal, "GET", "/api/learner/HT-0603/whatsapp", cookie=cookie)
+    assert st == 200 and body["messages"][0]["tone"] == "concern" and body["max_chars"] == whatsapp.MAX_CHARS
+    key = body["messages"][0]["key"]
+    send = {"key": key, "phone": "0712345678", "text": body["messages"][0]["sw"], "checked": True}
+    assert call(portal, "POST", "/api/learner/HT-0603/whatsapp", send, cookie=cookie)[0] == 403, "needs the CSRF header"
+    st, _, bad = call(portal, "POST", "/api/learner/HT-0603/whatsapp", {**send, "phone": "12"}, cookie=cookie, csrf=csrf)
+    assert st == 400 and "Kenyan mobile number" in bad["error"]
+    assert call(portal, "GET", "/api/learner/HT-0401/whatsapp", cookie=cookie)[0] == 400, "another class"
+    st, _, out = call(portal, "POST", "/api/learner/HT-0603/whatsapp", send, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["url"].startswith("https://wa.me/254712345678?text=Habari")
+    st, _, done = call(portal, "POST", "/api/learner/HT-0603/whatsapp/sent", {"key": key}, cookie=cookie, csrf=csrf)
+    assert st == 200 and done["notices"]
+    did = call(portal, "GET", "/api/account", cookie=cookie)[2]["did"]
+    assert any("WhatsApp message" in d["what"] and "ending 678" in d["what"] for d in did)
+    parent_cookie, _, _ = sign_in(portal, "P-100001")
+    assert call(portal, "GET", "/api/learner/HT-0001/whatsapp", cookie=parent_cookie)[0] != 200, "parents cannot use it"

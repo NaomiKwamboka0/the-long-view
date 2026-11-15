@@ -58,6 +58,12 @@ This notice describes the current prototype. Review and update it when data coll
 
 A class teacher can give a parent access to one learner. The parent gets a parent number and a one-time PIN, and must choose their own PIN. A parent sees only the learners linked to their number: results a teacher approved, days in school, the report comment the teacher approved, messages the teacher marked as told, and pathway ideas the class teacher opened. A parent never sees teacher notes, other children, alerts the teacher has not raised, or any ranking. Hatua stores the parent's name and relationship (for example Mother), never a phone number. The teacher can remove access at any time; a parent with no child left is deleted. The school must check who a parent is before giving access, the way it does today.
 
+## WhatsApp messages to a parent
+
+A class teacher can send a parent a short message by WhatsApp. Hatua does not send it. Hatua drafts the message, the teacher edits it, types the parent's number and ticks that they checked both. Hatua then opens WhatsApp with the message ready, and the teacher presses Send with their own WhatsApp account.
+
+The message leaves the school's computer and travels through WhatsApp, under WhatsApp's own terms. It names the learner and says how a learning area is going. Send it only to a parent or guardian who agreed to get WhatsApp messages, and read the number back before sending. Hatua does not store the parent's number. The activity log keeps the teacher's name, the time, the message and the last three digits of the number, so a wrong number can be traced. Hatua refuses a message that ranks or compares learners or gives pathway advice. It cannot know whether the message was really sent; the teacher records that.
+
 ## The practice website
 
 The practice website runs Hatua inside the visitor's browser with made-up people only. It sends nothing anywhere and saves nothing.

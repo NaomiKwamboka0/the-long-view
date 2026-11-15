@@ -180,7 +180,7 @@ A message says: "Added 70 records to Hatua. 2 alerts about learners who need att
 1. Press **Show me** on the message, or open **Today**.
 2. Read the two cards: Kamau fell two levels in Mathematics. Atieno has gone down in English over several terms.
 3. Press **Message for the parent**. Press **Kiswahili**.
-4. Press **I have told the parent**.
+4. To send it free by WhatsApp: type the parent's number, tick the box, press **Check and get ready to send**, then **Open WhatsApp**. Or press **I have told the parent** if you told them another way.
 
 **What you will see**
 
@@ -188,7 +188,7 @@ A message says: "Added 70 records to Hatua. 2 alerts about learners who need att
 
 ![A message for the parent, in Kiswahili](guide/12-parent.png)
 
-**What to say:** "Hatua sends nothing. The teacher sends the message their own way and records that the parent was told."
+**What to say:** "Hatua sends nothing by itself. The teacher checks the message, sends it with their own WhatsApp for free, and Hatua logs who approved it. The parent's number is not kept."
 
 ### Step 6. One learner across the years, with every claim sourced
 
