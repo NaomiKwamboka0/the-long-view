@@ -13,6 +13,7 @@ Built for the **Education: The Long View** track of the African Agentic AI Desig
 | **Try it in your browser** (practice school, no install) | https://naomikwamboka0.github.io/the-long-view/try/ |
 | **Download the app** for Mac or Windows | [Releases](https://github.com/NaomiKwamboka0/the-long-view/releases/latest) |
 | **User guide**, with pictures, for teachers, parents and the school admin | [docs/USER_GUIDE.html](https://naomikwamboka0.github.io/the-long-view/guide/) |
+| **Video guide**, one for teachers and one for parents. Kwamboka shows each step on the real portal. | Press **Video guide** on the sign-in page, or open [docs/guide](docs/guide) |
 
 The app opens a practice school the first time. Its sign-in page helps you install Ollama and then downloads Qwen for you (about 4.7 GB, once). Practice accounts: teacher `M-6001`, parent `P-100001`, PIN `246810`.
 
@@ -52,7 +53,15 @@ A demo school with Grades 4 to 9 and one class teacher per class. Each teacher:
 - can **give a parent access** to one learner: Hatua makes a parent number and a one-time PIN to print. The parent signs in on the same page, chooses their own PIN, and sees **only their own child**: approved results, days in school, the report comment the teacher approved, messages the teacher marked as told, and pathway ideas the teacher opened. Never teacher notes, other children or rankings. Parents have their own assistant, with the same ask-first and no-ranking rules ([hatua/family.py](hatua/family.py));
 - can open **senior school pathway ideas** for a Grade 9 learner (early ideas in Grades 7 and 8). They stay **closed until the named teacher opens them**, which is logged. Then they show the cited strengths for each of STEM, Social Sciences, and Arts and Sports Science, side by side. Hatua never picks one; the teacher raises them with the learner and guardian.
 
-Everything runs on the laptop: no outside service, no API, not even a web font. See [docs/PORTAL.md](docs/PORTAL.md).
+Also in the portal:
+
+- **A privacy notice at first sign-in.** Each teacher and parent reads a short notice for their role and ticks to agree before anything opens. Hatua records who agreed, which version and when. If the notice changes, everyone is asked again ([hatua/privacy.py](hatua/privacy.py), [PRIVACY.md](PRIVACY.md)).
+- **A WhatsApp message to a parent.** The teacher picks the parent by name. Hatua writes the message, the teacher edits it, and Hatua opens WhatsApp with the message ready. The teacher presses Send. Hatua never sends anything by itself, and a tick in Hatua means "WhatsApp opened", not "delivered". A parent's number is kept only if the teacher ticks that the parent agreed. A parent can also message the class teacher the same way ([hatua/whatsapp.py](hatua/whatsapp.py)).
+- **Help with the words.** Under each message there are buttons: Write it for me, Shorter, More casual, More formal and Warmer. Qwen rewrites on the laptop. If Qwen is not running, simple word rules do it and Hatua says so.
+- **Next steps in the assistant.** After an answer, the assistant offers what to do next, such as sending a message to the parent or checking a learner's records. Anyone can type their own question instead.
+- **Light, dark or system look**, set per person.
+
+Everything runs on the laptop: no outside service, no API, not even a web font. The only exception is the WhatsApp link, which opens WhatsApp on the same device. See [docs/PORTAL.md](docs/PORTAL.md).
 
 **To show every challenge requirement, step by step with screenshots, follow [docs/SHOW_THE_REQUIREMENTS.md](docs/SHOW_THE_REQUIREMENTS.md).**
 
@@ -88,6 +97,11 @@ Node and npm are needed only for developer UI checks and the optional agent, not
 - **No bid or exam documents:** Hatua uses marks, notes and attendance. It does not read the national exam portals, and no public API for them was found.
 - The score bands used when a rubric level is missing (EE from 75%, ME from 50%, AE from 25%) are our assumption.
 - Kiswahili messages use fixed templates. A native speaker should review them.
+- **WhatsApp has no free way to check a number.** Hatua cannot tell whether a number is on WhatsApp, whose it is, or whether a message was delivered. Names come from the school's own records.
+- **The privacy notice has not been reviewed by a lawyer or a Data Protection Officer.** A school should have it checked before using real data.
+- **Parents use Hatua on the school computer.** The portal listens only on that computer, so a parent cannot sign in from home yet. The website version runs in the browser and has no Qwen.
+- **The video guide uses a computer voice.** Check how it says "Asante sana" and the names before you share it.
+- **Not built yet:** setting up a real school (choosing the drive folder, classes and streams, adding teachers) and an upload box for results files with a check step.
 
 ## Future improvements
 
