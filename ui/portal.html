@@ -219,6 +219,17 @@ dialog::backdrop { background: rgba(33, 48, 41, .35); }
 .wa input[type=tel] { background: var(--surface); font-size: 1.1rem; letter-spacing: .03em; }
 .quote { background: var(--tint); border-radius: 14px; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 a.btn { text-decoration: none; display: inline-block; }
+.pv-body { display: grid; gap: 12px; max-height: min(52vh, 460px); overflow: auto; padding-right: 6px; }
+.pv-body h2 { font-size: 1.02rem; margin: 0; }
+.pv-body p { margin: 2px 0 0; color: var(--ink-soft); }
+#privacy .pv-tick { display: flex; flex-direction: row; gap: 10px; align-items: flex-start; background: var(--jacaranda-soft); border-radius: 14px; padding: 12px 14px; }
+.pv-tick input { width: 20px; height: 20px; flex: none; margin-top: 2px; accent-color: var(--jacaranda); }
+.next { margin-top: 8px; }
+.restyle .chip { background: var(--tint); }
+.restyle { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.restyle .chip:disabled { opacity: .5; }
+.spin.tiny { display: inline-block; width: 14px; height: 14px; border-width: 2px; vertical-align: -2px; }
+#pm-style-note:empty { display: none; }
 .who-card { display: flex; gap: 12px; align-items: center; background: var(--surface); border-radius: 14px; padding: 10px 12px; min-height: 56px; }
 .who-card .face { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--leaf-soft); color: var(--leaf); font-weight: 800; }
 .send-row { display: grid; gap: 10px; justify-items: start; }
@@ -368,6 +379,21 @@ a.btn { text-decoration: none; display: inline-block; }
       <h4>Teachers</h4><table><tbody id="pr-rows"></tbody></table>
       <h4>Parents</h4><table><tbody id="pr-parents"></tbody></table>
     </details>
+  </div>
+</main>
+
+<!-- PRIVACY: read and tick before Hatua opens the first time -->
+<main class="signin" id="privacy" hidden>
+  <div class="signin-card" style="width:min(680px, 100%)">
+    <div class="panel" style="display:grid;gap:14px">
+      <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
+      <h1 id="pv-title" style="font-size:1.45rem;line-height:1.25"></h1>
+      <div id="pv-body" class="pv-body" tabindex="0"></div>
+      <label class="tick pv-tick"><input type="checkbox" id="pv-ok"><span id="pv-agree"></span></label>
+      <p class="error small" id="pv-error" role="alert" hidden></p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="button" id="pv-go" disabled>Agree and continue</button><button class="btn quiet" type="button" id="pv-out">Not now, sign out</button></div>
+      <p class="small soft">The full privacy policy is in the user guide, under Help.</p>
+    </div>
   </div>
 </main>
 
@@ -526,7 +552,7 @@ async function api(path, opts = {}) {
 
 /* ---------- sign in ---------- */
 async function showSignin(message) {
-  $("app").hidden = true; $("family").hidden = true; $("signin").hidden = false; CSRF = null; ONE_TIME = null;
+  $("app").hidden = true; $("family").hidden = true; $("privacy").hidden = true; $("signin").hidden = false; CSRF = null; ONE_TIME = null;
   ME = null; FAM = null; CHILD = null; NOTICES = []; CLASS = []; DRIVE = []; TERMS = []; selected = null; L = null; knownFiles = null;
   $("ask").hidden = true; $("ask-launch").hidden = true; if ($("dlg").open) $("dlg").close();
   for (const id of ["today", "drive", "people", "learner", "calendar", "ask-log", "kids", "child", "f-who"]) $(id).innerHTML = "";  // leave nothing on screen
@@ -630,6 +656,24 @@ setInterval(async () => {
   else $("idle").hidden = idle < IDLE_MIN - 1;
 }, 10000);
 
+/* ---------- the privacy notice: read and tick once, before anything opens ---------- */
+async function showPrivacy(me) {
+  CSRF = me.csrf;
+  const n = await api("privacy");
+  $("signin").hidden = true; $("app").hidden = true; $("family").hidden = true; $("privacy").hidden = false;
+  $("pv-title").textContent = n.title; $("pv-agree").textContent = n.agree;
+  $("pv-body").innerHTML = n.sections.map(x => `<section><h2>${esc(x.heading)}</h2><p>${esc(x.text)}</p></section>`).join("");
+  $("pv-ok").checked = false; $("pv-go").disabled = true; $("pv-error").hidden = true;
+  $("pv-ok").onchange = () => { $("pv-go").disabled = !$("pv-ok").checked; };
+  $("pv-go").onclick = async () => {
+    $("pv-go").disabled = true;
+    try { await api("privacy", { method: "POST", json: { agree: $("pv-ok").checked } }); $("privacy").hidden = true; await start(); }
+    catch (err) { $("pv-error").hidden = false; $("pv-error").textContent = err.message; $("pv-go").disabled = false; }
+  };
+  $("pv-out").onclick = async () => { $("privacy").hidden = true; await signOut(); };
+  $("pv-body").scrollTop = 0; $("pv-title").focus?.();
+}
+
 /* ---------- the video guide: teachers see the teachers' episode, parents see the parents' episode ---------- */
 const VIDEO_BASE = "/guide/";
 function videoDialog() {
@@ -703,6 +747,7 @@ async function accountDialog() {
 async function start() {
   const me = await api("me");
   ROLE = me.role || "teacher";
+  if (me.privacy_needed) return showPrivacy(me);
   if (ROLE === "parent") return startFamily(me);
   $("ask-note").textContent = "I ask one short question first, so my answer fits what you need. I know only your class. I never rank learners. This chat is not saved.";
   CSRF = me.csrf; ME = me.me; CAL = me.calendar; MODEL = me.model; IDLE_MIN = me.idle_minutes || 15; lastActive = Date.now();
@@ -819,6 +864,7 @@ async function parentDialog(noticeId, learnerId) {
       <label class="small" style="display:grid;gap:4px">What is it about?<select id="pm-key">${msgs.map(x => `<option value="${esc(x.key)}" ${x.key === key ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>
       <div class="langs" role="group" aria-label="Language">${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-l="${k}" aria-pressed="${lang === k}">${t}</button>`).join("")}</div>
       <textarea id="pm-text" maxlength="${data.max_chars}" aria-label="The message" style="width:100%;min-height:140px;line-height:1.6">${esc(text())}</textarea>
+      <div class="restyle" id="pm-style"><span class="small soft">Change it:</span>${RESTYLE.map(([k, t]) => `<button class="chip" type="button" data-style="${k}">${t}</button>`).join("")}</div><p class="small soft" id="pm-style-note" aria-live="polite"></p>
       <p class="small soft">${m.evidence.length ? `From the records ${m.evidence.slice(0, 6).map(esc).join(", ")}.` : "Your own words."} You can change any word. Hatua checks that it does not rank or compare learners.</p>
       <div class="wa" id="pm-wa-box"><h3>Send by WhatsApp</h3>
         <label>Who is it for?<select id="pm-to">${people.map(x => `<option value="${esc(x.parent_id)}" ${x.parent_id === to ? "selected" : ""}>${esc(x.name)} (${esc(x.relation)})</option>`).join("")}<option value="" ${to ? "" : "selected"}>Another number</option></select></label>
@@ -843,6 +889,7 @@ async function parentDialog(noticeId, learnerId) {
     $("pm-to").onchange = () => { keep(); to = $("pm-to").value; phone = ""; save = false; draw(); };
     $("dlg-body").querySelectorAll("[data-l]").forEach(b => b.onclick = () => { keep(); lang = b.dataset.l; draw(); });
     $("pm-phone").oninput = who; $("pm-ok").onchange = who; who();
+    wireRestyle(`learner/${lid}/whatsapp/rewrite`, () => { const q = person(); return q ? `${q.name}, ${child}'s ${q.relation.toLowerCase()}` : `${child}'s parent`; });
     $("pm-copy").onclick = async () => { try { await navigator.clipboard.writeText($("pm-text").value); $("pm-copy").textContent = "Copied"; } catch (e) { $("pm-text").select(); } };
     $("pm-wa").onclick = () => { keep(); sendOnWhatsApp({ path: `learner/${lid}/whatsapp`, json: { key, to, phone, save, text: text(), checked: $("pm-ok").checked },
       after: out => `<div class="row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><span>Did you press Send in WhatsApp?</span><button class="btn small" type="button" id="pm-sent">Yes, I sent it</button><button class="btn quiet small" type="button" id="pm-not">Not yet</button></div>`,
@@ -859,6 +906,25 @@ async function parentDialog(noticeId, learnerId) {
     };
   };
   draw(); if (!$("dlg").open) $("dlg").showModal();
+}
+
+/* Qwen writes or changes the message: shorter, more casual, more formal, warmer. The person
+   reads it and can change any word. Without Qwen, simple word rules do the same changes. */
+const RESTYLE = [["write", "Write it for me"], ["shorter", "Shorter"], ["casual", "More casual"], ["formal", "More formal"], ["warmer", "Warmer"]];
+function wireRestyle(path, recipient) {
+  document.querySelectorAll("#pm-style [data-style]").forEach(b => b.addEventListener("click", async () => {
+    const t = $("pm-text"), before = t.value, row = $("pm-style"), note = $("pm-style-note");
+    row.querySelectorAll("button").forEach(x => { x.disabled = true; });
+    note.innerHTML = `<span class="spin tiny" aria-hidden="true"></span> ${MODEL ? "Qwen is writing. This can take up to a minute..." : "Changing it..."}`;
+    try {
+      const out = await api(path, { method: "POST", json: { text: before, style: b.dataset.style, recipient: recipient() } });
+      t.value = out.text; t.dispatchEvent(new Event("input", { bubbles: true }));
+      note.innerHTML = `${esc(out.writer === "rules" ? "Changed with simple word rules, because Qwen is not running on this computer."
+        : out.writer === "none" ? out.note : `Written by ${out.writer} on this computer. Read it, and change any word.`)} <button class="link small" type="button" id="pm-undo">Undo</button>`;
+      $("pm-undo").onclick = () => { t.value = before; t.dispatchEvent(new Event("input", { bubbles: true })); note.textContent = ""; };
+    } catch (err) { note.innerHTML = `<span class="error">${esc(err.message)}</span>`; }
+    finally { row.querySelectorAll("button").forEach(x => { x.disabled = false; }); }
+  }));
 }
 
 /* One press: a circle turns while Hatua checks the message, then WhatsApp opens with it ready.
@@ -887,11 +953,13 @@ function teacherDialog() {
   $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Message ${esc(c.teacher)}</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
     <p class="small soft">Write your message. Hatua opens WhatsApp with it ready, and you press Send there.</p>
     <textarea id="pm-text" maxlength="700" aria-label="Your message" style="width:100%;min-height:140px;line-height:1.6">${esc(start)}</textarea>
+    <div class="restyle" id="pm-style"><span class="small soft">Change it:</span>${RESTYLE.map(([k, t]) => `<button class="chip" type="button" data-style="${k}">${t}</button>`).join("")}</div><p class="small soft" id="pm-style-note" aria-live="polite"></p>
     <div class="wa"><div class="who-card"><span class="face" aria-hidden="true">${esc(c.teacher[0])}</span><div><b>${esc(c.teacher)}</b><br><span class="small soft">${esc(first)}'s class teacher · ${esc(c.teacher_whatsapp)}</span></div></div>
       <label class="tick"><input type="checkbox" id="pm-ok"><span>Yes, this is the person I want, and I checked my message.</span></label>
       <div class="send-row" id="pm-state"><button class="btn leaf" type="button" id="pm-wa" disabled>Send on WhatsApp</button></div></div>`;
   $("dlg-x").onclick = () => $("dlg").close();
   $("pm-ok").onchange = () => { $("pm-wa").disabled = !$("pm-ok").checked; };
+  wireRestyle(`family/child/${c.id}/whatsapp/rewrite`, () => c.teacher);
   $("pm-wa").onclick = () => sendOnWhatsApp({ path: `family/child/${c.id}/whatsapp`, json: { text: $("pm-text").value, checked: $("pm-ok").checked } });
   $("dlg").showModal();
 }
@@ -1282,6 +1350,7 @@ async function askSend(text) {
       const by = out.writer === "hatua" ? (out.refused ? "Hatua's rule: no rankings, comparisons or other children" : out.gated ? "Hatua's rule: the teacher opens pathway ideas first" : "Built-in answer from Hatua's records")
         : `Answered by ${out.writer} on this laptop. Check the records before you act.`;
       askAdd("bot", renderAnswer(out.answer), by);
+      if (!out.refused) askNext(out);
       ASK.history.push({ role: "teacher", text: step2 ? `${step2.question} (${text})` : text }, { role: "assistant", text: out.answer });
       ASK.history = ASK.history.slice(-6);
     }
@@ -1290,6 +1359,27 @@ async function askSend(text) {
     if (step2) { ASK.pending = null; $("ask-q").placeholder = "Ask a question"; }
     wait.classList.remove("thinking"); wait.innerHTML = `<p class="error">${esc(err.message)}</p>`;
   } finally { ASK.busy = false; $("ask-send").disabled = false; if (ASK.state !== "min") $("ask-q").focus(); }
+}
+/* After an answer, Hatua offers the next step: send a message, open the records, or ask more.
+   The person can also type anything in the box. */
+function askNext(out) {
+  const steps = [];
+  if (ROLE === "parent") {
+    const c = CHILD;
+    if (c && c.teacher_whatsapp) steps.push([`Send a message to ${c.teacher}`, () => { askSet("min"); teacherDialog(); }]);
+    if (c) steps.push([`See ${c.name}'s results`, () => { askSet("min"); $("child").scrollIntoView({ behavior: "smooth" }); }]);
+  } else {
+    const ids = out.learners || [], one = ids.length === 1 ? CLASS.find(l => l.id === ids[0]) : null;
+    if (one) {
+      steps.push([`Send a message to ${one.name}'s parent`, () => { askSet("min"); setTab("class"); select(one.id); parentDialog(null, one.id); }]);
+      steps.push([`Check ${one.name}'s records`, () => { askSet("min"); setTab("class"); select(one.id); }]);
+    } else if (ids.length > 1) steps.push(["Open My class", () => { askSet("min"); setTab("class"); }]);
+  }
+  steps.push(["Ask something else", () => { $("ask-q").focus(); }]);
+  const div = askAdd("bot", `<p><b>What would you like to do next?</b></p><div class="chips live next">${steps.map((s, i) => `<button class="chip" type="button" data-next="${i}">${esc(s[0])}</button>`).join("")}</div>`,
+    "Tap one, or type your own question below.");
+  div.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => { div.querySelectorAll(".chips.live").forEach(c => c.classList.remove("live")); steps[+b.dataset.next][1](); }));
+  $("ask-q").placeholder = "Or type your own question";
 }
 function askGrow() { const t = $("ask-q"); t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; }
 $("ask-q").addEventListener("input", askGrow);

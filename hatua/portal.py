@@ -45,6 +45,7 @@ from . import (
     notify,
     pathways,
     patterns,
+    privacy,
     school,
     school_calendar,
     scope,
@@ -103,6 +104,8 @@ def _did(e: dict) -> str | None:
         return f"Uploaded the file '{name}' to the school drive"
     if tool == "pathways.open":
         return f"Opened pathway ideas for {child}"
+    if tool == "privacy.accept":
+        return "Read the privacy notice and agreed"
     if tool == "teacher.whatsapp":
         return f"Got a WhatsApp message ready for {child}'s class teacher"
     if tool == "whatsapp.number":
@@ -284,14 +287,47 @@ class Handler(BaseHTTPRequestHandler):
             raise Refused(404, "Not found.")
         if method == "POST" and path == "/api/assistant":
             return self._assistant()
+        if method == "POST" and re.fullmatch(r"/api/(learner|family/child)/HT-\d{4}/whatsapp/rewrite", path):
+            return self._rewrite(path)
         with LOCK:
             return self._api(method, path[5:], q)
+
+    def _rewrite(self, path: str):
+        """Qwen writes or changes a WhatsApp message. Like the assistant, the store is read under
+        the lock and the model is asked WITHOUT it, so the portal keeps working while Qwen writes."""
+        with LOCK:
+            who = self._who()
+            if not privacy.accepted(who["teacher_id"]):
+                raise Refused(403, "Read the privacy notice and tick that you agree first.")
+            self._check_post()
+            body = self._json()
+            lid = re.search(r"HT-\d{4}", path).group(0)
+            parent = who.get("role") == "parent"
+            if parent != path.startswith("/api/family/"):
+                raise Refused(403, "This is not your page.")
+            if parent:
+                if not family.can_view(who["teacher_id"], lid):
+                    raise Refused(403, "You can only write about your own child.")
+                recipient = f"{family._teacher_name(lid)[1]}, the class teacher"
+            else:
+                if not scope.can_view(who["teacher_id"], lid):
+                    raise Refused(403, "This learner is not in your class.")
+                recipient = str(body.get("recipient") or "the parent")[:80]
+            child = (store.learner(lid) or {}).get("first_name", "the learner")
+        try:
+            out = whatsapp.rewrite(str(body.get("text", "")), str(body.get("style", "")), sender=who["name"],
+                                   recipient=recipient, child=child, check=not parent)
+        except whatsapp.Refused as exc:
+            raise Refused(400, str(exc)) from None
+        return self._send(200, out)
 
     def _assistant(self):
         """Read the store under the lock, then ask the model WITHOUT the lock, so the rest of
         the portal keeps working while Qwen thinks."""
         with LOCK:
             who = self._who()
+            if not privacy.accepted(who["teacher_id"]):
+                raise Refused(403, "Read the privacy notice and tick that you agree first.")
             self._check_post()
             body = self._json()
             tid, history = who["teacher_id"], body.get("history") or []
@@ -346,6 +382,7 @@ class Handler(BaseHTTPRequestHandler):
         pid = who["teacher_id"]
         if method == "GET" and path == "me":
             return self._send(200, {"role": "parent", "family": family.profile(pid), "csrf": auth.new_csrf(self._session()),
+                                    "privacy_needed": not privacy.accepted(pid),
                                     "calendar": school_calendar.summary(config.today()), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
         if method == "GET" and path == "account":
@@ -463,11 +500,23 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True, "role": "teacher", "me": school.profile(who["teacher_id"])})
 
         who = self._who()
+        role = who.get("role", "teacher")
+        if path == "privacy":
+            if method == "GET":
+                return self._send(200, {**privacy.notice(role), "accepted": privacy.accepted(who["teacher_id"])})
+            if method == "POST":
+                self._check_post()
+                if self._json().get("agree") is not True:
+                    raise Refused(400, "Tick the box to say you have read the notice and agree.")
+                return self._send(200, privacy.accept(who["teacher_id"], role))
+        if path != "me" and not privacy.accepted(who["teacher_id"]):
+            raise Refused(403, "Read the privacy notice and tick that you agree first.")
         if who.get("role") == "parent":
             return self._family(method, path, who)
         tid = who["teacher_id"]
         if method == "GET" and path == "me":
             return self._send(200, {"role": "teacher", "me": school.profile(tid), "csrf": auth.new_csrf(self._session()),
+                                    "privacy_needed": not privacy.accepted(tid),
                                     "calendar": school_calendar.summary(today), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
         if method == "GET" and path == "account":

@@ -1,3 +1,10 @@
+# Privacy notice at first sign-in, Qwen helps write messages, the assistant suggests next steps — 16 November 2026
+
+- **Privacy notice.** New `hatua/privacy.py`. The first time a teacher or parent signs in, Hatua shows a short notice in plain English for their role (what it keeps, who sees what, WhatsApp, the AI helper, the activity log, their choices). Nothing opens until they tick and agree; the portal refuses every other page and the assistant until then. Hatua keeps who agreed, to which version and when (`store/consents.json`) and logs it. A new `VERSION` asks everyone again.
+- **Qwen helps write the WhatsApp message.** Under the message: **Write it for me**, **Shorter**, **More casual**, **More formal**, **Warmer**, and **Undo**. Qwen runs on this computer and is told to keep every fact and name; for a teacher's message, a rewrite that ranks, compares or suggests a pathway is never shown. A parent can type a few words and press **Write it for me**. Without Qwen, simple word rules make the same changes and never add a fact. The model is asked outside the portal's lock, so the portal keeps working while it writes.
+- **The assistant suggests a next step** after each answer: for a teacher, **Send a message to Kamau's parent**, **Check Kamau's records**, or **Ask something else**; for a parent, **Send a message to the class teacher** or **See the results**. The person can always type their own question instead.
+- **Not done:** the next-step buttons come from Hatua's rules, not from Qwen, so they are always safe and the same.
+
 # WhatsApp by name, in one press, and parents can message the teacher — 16 November 2026
 
 - **Choose the parent by name.** The message dialog asks **Who is it for?** and lists the parents who can see the learner. A card shows the name, who they are to the learner, and the number before the teacher ticks **Yes, this is the person I want**.

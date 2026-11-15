@@ -67,6 +67,8 @@ def school_home(built, tmp_path, monkeypatch):
     root = tmp_path / "home"
     shutil.copytree(built, root)
     _point(monkeypatch, root)
+    from hatua import privacy  # the practice people have read the notice; its own test starts fresh
+    monkeypatch.setattr(privacy, "accepted", lambda person_id: True)
     return root
 
 
@@ -477,10 +479,13 @@ def call(port, method, path, body=None, cookie=None, csrf=None, host=None):
     return r.status, dict(r.getheaders()), (json.loads(data) if r.getheader("Content-Type", "").startswith("application/json") else data)
 
 
-def sign_in(port, teacher_id, pin=PIN):
+def sign_in(port, teacher_id, pin=PIN, agree=True):
     st, headers, body = call(port, "POST", "/api/login", {"teacher_id": teacher_id, "pin": pin})
     assert st == 200, body
-    return headers["Set-Cookie"].split(";")[0], body["csrf"], body
+    cookie = headers["Set-Cookie"].split(";")[0]
+    if agree and not body.get("must_change"):  # the privacy notice, read and ticked once
+        assert call(port, "POST", "/api/privacy", {"agree": True}, cookie=cookie, csrf=body["csrf"])[0] == 200
+    return cookie, body["csrf"], body
 
 
 def test_portal_sign_in_scope_and_csrf(portal):
@@ -969,3 +974,73 @@ def test_portal_my_number_and_message_the_teacher(portal):
     st, _, bad = call(portal, "POST", "/api/family/child/HT-0405/whatsapp", {"text": "Hello there teacher", "checked": True},
                       cookie=pc, csrf=pcsrf)
     assert st == 400 and "has not added a WhatsApp number" in bad["error"]
+
+
+def test_nothing_opens_until_the_privacy_notice_is_ticked(portal, monkeypatch):
+    from hatua import privacy
+    monkeypatch.setattr(privacy, "accepted", lambda person_id: (privacy._consents().get(person_id) or {}).get("version") == privacy.VERSION)
+    cookie, csrf, _ = sign_in(portal, "M-6001", agree=False)
+    me = call(portal, "GET", "/api/me", cookie=cookie)[2]
+    assert me["privacy_needed"] is True
+    csrf = me["csrf"]  # /api/me gives a fresh CSRF token, as the page uses it
+    st, _, refused = call(portal, "GET", "/api/class", cookie=cookie)
+    assert st == 403 and "privacy notice" in refused["error"]
+    assert call(portal, "POST", "/api/assistant", {"question": "Who needs me?"}, cookie=cookie, csrf=csrf)[0] == 403
+    notice = call(portal, "GET", "/api/privacy", cookie=cookie)[2]
+    assert notice["accepted"] is False and notice["version"] == privacy.VERSION
+    assert any("WhatsApp" in x["heading"] for x in notice["sections"]) and "Data Protection Act" in json.dumps(notice)
+    assert call(portal, "POST", "/api/privacy", {"agree": False}, cookie=cookie, csrf=csrf)[0] == 400
+    assert call(portal, "POST", "/api/privacy", {"agree": True}, cookie=cookie)[0] == 403, "needs the CSRF header"
+    assert call(portal, "POST", "/api/privacy", {"agree": True}, cookie=cookie, csrf=csrf)[0] == 200
+    assert call(portal, "GET", "/api/class", cookie=cookie)[0] == 200
+    assert call(portal, "GET", "/api/me", cookie=cookie)[2]["privacy_needed"] is False
+    assert any(d["what"] == "Read the privacy notice and agreed" for d in call(portal, "GET", "/api/account", cookie=cookie)[2]["did"])
+    pc, pcsrf, _ = sign_in(portal, "P-100001", agree=False)
+    pn = call(portal, "GET", "/api/privacy", cookie=pc)[2]
+    assert "your child" in pn["title"] and call(portal, "GET", "/api/family/child/HT-0001", cookie=pc)[0] == 403
+    call(portal, "POST", "/api/privacy", {"agree": True}, cookie=pc, csrf=pcsrf)
+    assert call(portal, "GET", "/api/family/child/HT-0001", cookie=pc)[0] == 200
+
+
+def test_message_styles_without_qwen_never_add_a_fact(school_home):
+    text = ("Hello. I would like to talk with you about Kamau. We have noticed that Kamau's results in Mathematics "
+            "went down this term. We would like to support Kamau together. Please let me know a good time to talk. Thank you.")
+    kw = {"sender": "Mary Njeri", "recipient": "Samuel Mwangi", "child": "Kamau", "check": True}
+    short = whatsapp.rewrite(text, "shorter", **kw)
+    assert short["writer"] == "rules" and len(short["text"]) < len(text) and "Mathematics" in short["text"]
+    casual = whatsapp.rewrite(text, "casual", **kw)["text"]
+    assert casual.startswith("Hi!") and "I'd like to" in casual and casual.endswith("Thanks!")
+    formal = whatsapp.rewrite(casual, "formal", **kw)["text"]
+    assert formal.startswith("Good day.") and "I would like to" in formal and formal.endswith("Kind regards,\nMary Njeri")
+    warm = whatsapp.rewrite(text, "warmer", **kw)["text"]
+    assert "I hope you and the family are well." in warm
+    kept = whatsapp.rewrite("ask about homework", "write", **kw)
+    assert kept["text"] == "ask about homework" and kept["writer"] == "none", "no Qwen: the words stay as typed"
+    with pytest.raises(whatsapp.Refused):
+        whatsapp.rewrite(text, "shout", **kw)
+
+
+def test_qwen_writes_the_message_and_the_guard_still_decides(school_home, fake_qwen):
+    kw = {"sender": "Mary Njeri", "recipient": "Samuel Mwangi", "child": "Kamau", "check": True}
+    fake_qwen.reply = "Hi Samuel! Kamau found Mathematics harder this term. Can we talk this week?"
+    out = whatsapp.rewrite("Hello. Kamau's Mathematics went down this term.", "casual", **kw)
+    assert out == {"text": fake_qwen.reply, "writer": "qwen2.5:7b"}
+    fake_qwen.reply = "Kamau is now bottom of the class and should take the STEM pathway."
+    out = whatsapp.rewrite("Hello. Kamau's Mathematics went down this term. Thank you.", "casual", **kw)
+    assert out["writer"] == "rules" and "bottom" not in out["text"], "a ranking from Qwen is never shown"
+    parent = whatsapp.rewrite("ask about homework", "write", **{**kw, "check": False})
+    assert parent["writer"] == "qwen2.5:7b", "Qwen turns a parent's few words into a message"
+
+
+def test_portal_rewrite_is_for_your_own_class_or_child(portal):
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    body = {"text": "Hello. Kamau did well. Thank you.", "style": "casual", "recipient": "Samuel Mwangi, Kamau's father"}
+    st, _, out = call(portal, "POST", "/api/learner/HT-0603/whatsapp/rewrite", body, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["text"].startswith("Hi!") and out["writer"] == "rules"
+    assert call(portal, "POST", "/api/learner/HT-0603/whatsapp/rewrite", body, cookie=cookie)[0] == 403, "needs the CSRF header"
+    assert call(portal, "POST", "/api/learner/HT-0401/whatsapp/rewrite", body, cookie=cookie, csrf=csrf)[0] == 403
+    assert call(portal, "POST", "/api/family/child/HT-0603/whatsapp/rewrite", body, cookie=cookie, csrf=csrf)[0] == 403
+    pc, pcsrf, _ = sign_in(portal, "P-100001")
+    assert call(portal, "POST", "/api/family/child/HT-0001/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 200
+    assert call(portal, "POST", "/api/family/child/HT-0603/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 403
+    assert call(portal, "POST", "/api/learner/HT-0001/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 403

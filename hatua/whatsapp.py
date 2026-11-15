@@ -270,3 +270,85 @@ def to_teacher(parent_id: str, parent_name: str, learner_id: str, *, text: str, 
                        "inputs": {"kwargs": {"learner_id": learner_id, "teacher_id": tid}},
                        "output": {"by": parent_name, "to_ending": digits[-3:], "chars": len(text), "sent_by_hatua": False}})
     return {"url": link(digits, text), "to": pretty(digits), "name": contact["name"]}
+
+
+# ---------------------------------------------------------------- Qwen writes or changes the message
+STYLES = {
+    "write": "Write the message from the notes below. Keep every fact. Make it clear and kind.",
+    "shorter": "Make it shorter: two or three short sentences. Keep the facts and the names.",
+    "casual": "Make it more casual and friendly, like a WhatsApp message to someone you know. Keep the facts.",
+    "formal": "Make it more formal and professional, like a note from a school. Keep the facts.",
+    "warmer": "Make it warmer and more encouraging. Keep the facts.",
+}
+PROMPT = """You help {sender} write a WhatsApp message to {recipient} about {child}.
+{style}
+Rules: write only the message, nothing else. {language} Do not add any fact, number, score or
+date that is not in the message. Keep the names. Never rank the child or compare them with other
+children. Never suggest a career, pathway or school track. Under {limit} letters.
+
+The message now:
+{text}
+"""
+_CASUAL = [("Hello.", "Hi!"), ("Hello", "Hi"), ("I would like to", "I'd like to"), ("We would like to", "We'd like to"),
+           ("We have noticed", "We've noticed"), ("Please let me know", "Let me know"), ("Thank you.", "Thanks!"),
+           ("I am ", "I'm ")]
+_FORMAL = [("Hi!", "Good day."), ("Hi ", "Good day "), ("Hello.", "Good day."), ("I'd", "I would"), ("We'd", "We would"),
+           ("We've", "We have"), ("I'm", "I am"), ("Let me know", "Please let me know"), ("Thanks!", "Thank you."),
+           ("Thanks", "Thank you")]
+
+
+_FILLER = re.compile(r"^(I would like to talk|I'd like to talk|We would like to support|We'd like to support|"
+                     r"I hope you|Please tell .* well done|Nimefurahi|Ningependa tuzungumze|Tumsaidie)", re.I)
+
+
+def _sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
+
+
+def _by_rule(text: str, style: str, sender: str) -> str:
+    """When Qwen is not running: simple, safe word rules that never add a fact."""
+    if style == "shorter":  # drop the polite filler, keep the greeting, the facts and the thanks
+        s = _sentences(text)
+        kept = [x for i, x in enumerate(s) if i in (0, len(s) - 1) or not _FILLER.search(x)]
+        return " ".join(kept)
+    if style == "casual":
+        for a, b in _CASUAL:
+            text = text.replace(a, b)
+        return text
+    if style == "formal":
+        for a, b in _FORMAL:
+            text = text.replace(a, b)
+        return text if sender.split()[0] in text[-60:] else f"{text}\n\nKind regards,\n{sender}"
+    if style == "warmer":
+        s = _sentences(text)
+        if s and "hope you are well" not in text.lower():
+            s.insert(1, "I hope you and the family are well.")
+        return " ".join(s)
+    return text
+
+
+def rewrite(text: str, style: str, *, sender: str, recipient: str, child: str, check: bool) -> dict:
+    """Qwen writes or changes the message in the chosen style. Returns {"text", "writer"}.
+
+    The person still reads it, can change any word, and presses Send in WhatsApp themselves.
+    `check` runs the no-ranking, no-pathway guard on the new words (always on for teachers).
+    """
+    from . import comments  # the same local Qwen the report comments use
+    if style not in STYLES:
+        raise Refused("Choose how to change the message.")
+    text = str(text or "").strip()[:MAX_CHARS]
+    if len(text) < 3:
+        raise Refused("Write a few words first, then I can help.")
+    swahili = sum(w in text.lower().split() for w in ("habari", "mzazi", "asante", "tafadhali", "na", "ya", "wa"))
+    language = "Write in Kiswahili." if swahili >= 3 else "Write in simple English."
+    model = comments.model_name()
+    if model:
+        out = comments._ask_model(model, PROMPT.format(sender=sender, recipient=recipient, child=child,
+                                                      style=STYLES[style], language=language, limit=MAX_CHARS - 100,
+                                                      text=text))
+        if out and len(out) <= MAX_CHARS and not (check and guard.labels_in(out)):
+            return {"text": out.strip(), "writer": model}
+    if style == "write":
+        return {"text": text, "writer": "none",
+                "note": "Qwen is not running on this computer, so your words are kept as they are."}
+    return {"text": _by_rule(text, style, sender), "writer": "rules"}
