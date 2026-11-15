@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Hatua series frame</title>
+<style>
+:root { --paper: #eef2ee; --surface: #fff; --ink: #213029; --soft: #5b6a63; --jac: #6a4c9c; --jac-soft: #efe9f8; --leaf: #2d7451; --path: #cdbfe4; --sun: #e9a23b; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1280px; height: 720px; overflow: hidden; background: transparent; color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif; }
+/* The hole the screen recording shows through: everything outside it is painted. */
+#hole { position: absolute; left: 24px; top: 60px; width: 960px; height: 600px; border-radius: 16px; box-shadow: 0 0 0 2000px var(--paper), inset 0 0 0 2px rgba(33, 48, 41, .16); }
+#top { position: absolute; left: 24px; top: 10px; right: 296px; height: 42px; display: flex; align-items: center; gap: 12px; }
+#top .brand { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 22px; }
+#top .ep { color: var(--soft); font-size: 16px; }
+#top .step { margin-left: auto; background: var(--jac); color: #fff; border-radius: 999px; padding: 6px 16px; font-weight: 700; font-size: 15px; }
+#cap { position: absolute; left: 24px; top: 668px; width: 960px; height: 44px; border-radius: 12px; background: var(--ink); color: #fff; display: grid; place-items: center; padding: 0 16px; text-align: center; font-size: 19px; font-weight: 600; white-space: nowrap; }
+#side { position: absolute; left: 1000px; top: 60px; width: 264px; display: grid; gap: 10px; }
+#who { position: relative; width: 264px; height: 264px; border-radius: 20px; overflow: hidden; outline: 4px solid transparent; outline-offset: -4px; background: #3a2a22; }
+#who img { width: 264px; height: 264px; display: block; }
+#who .tag { position: absolute; left: 10px; bottom: 10px; right: 10px; background: rgba(20, 16, 14, .78); color: #fff; border-radius: 12px; padding: 7px 12px; display: flex; align-items: center; gap: 8px; }
+#who .tag b { font-size: 16px; } #who .tag span { font-size: 12.5px; opacity: .85; display: block; }
+#who .bars { margin-left: auto; display: flex; gap: 3px; align-items: flex-end; height: 18px; }
+#who .bars i { width: 4px; border-radius: 2px; background: #8fd2ac; }
+#who.speaking { outline-color: #8fd2ac; }
+#side h2 { font-size: 18px; line-height: 1.2; height: 22px; white-space: nowrap; }
+#steps { list-style: none; padding: 0; display: grid; gap: 1px; font-size: 13.5px; color: var(--soft); }
+#steps li { display: flex; gap: 8px; align-items: center; padding: 1px 8px; border-radius: 8px; height: 22px; white-space: nowrap; }
+#steps li i { flex: none; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--path); display: grid; place-items: center; font-style: normal; font-size: 9px; color: #fff; }
+#steps li.done i { background: var(--leaf); border-color: var(--leaf); }
+#steps li.now { background: var(--jac-soft); color: var(--ink); font-weight: 700; }
+#steps li.now i { border-color: var(--jac); background: var(--jac); }
+#name { position: absolute; left: 1000px; top: 668px; width: 264px; height: 44px; border-radius: 12px; background: var(--jac-soft); color: var(--ink); display: grid; place-items: center; font-size: 15px; }
+#title { position: absolute; left: 24px; top: 60px; width: 960px; height: 600px; border-radius: 16px; background: linear-gradient(160deg, #fff 0, #f1ebfa 100%); display: grid; grid-template-columns: 330px 1fr; align-items: center; gap: 40px; padding: 0 60px; }
+#title img { width: 330px; height: 330px; border-radius: 50%; display: block; box-shadow: 0 20px 50px -18px rgba(33, 48, 41, .55); }
+#title h1 { font-size: 54px; letter-spacing: -.5px; line-height: 1.1; }
+#title p { font-size: 23px; color: var(--soft); margin-top: 16px; line-height: 1.4; }
+#title .dots { margin-bottom: 18px; }
+</style></head>
+<body>
+  <div id="hole"></div>
+  <div id="title"><img src="kwamboka-drawn.png" alt=""><div><svg class="dots" width="84" height="84" viewBox="0 0 30 30"><circle cx="6" cy="22" r="4" fill="#cdbfe4"/><circle cx="15" cy="15" r="4.5" fill="#4b91a5"/><circle cx="24" cy="7" r="5" fill="#6a4c9c"/></svg><h1 id="t-h"></h1><p id="t-p"></p></div></div>
+  <div id="top"><div class="brand"><svg width="30" height="30" viewBox="0 0 30 30"><circle cx="6" cy="22" r="4" fill="#cdbfe4"/><circle cx="15" cy="15" r="4.5" fill="#4b91a5"/><circle cx="24" cy="7" r="5" fill="#6a4c9c"/></svg>Hatua</div><div class="ep" id="ep"></div><div class="step" id="chip"></div></div>
+  <div id="cap"></div>
+  <div id="name"><span><b>Kwamboka</b> · your Hatua guide</span></div>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let PLAN = null;
+window.load = async plan => { PLAN = plan; $("ep").textContent = plan.label;
+
+  await Promise.all([...document.images].map(im => im.decode())); };
+/* state: { scene: index, caption: text or "", speaking: bool, beat: 0..2 } */
+window.show = st => {
+  const s = PLAN.scenes[st.scene], real = PLAN.scenes.filter(x => x.short), n = real.indexOf(s);
+  $("chip").textContent = s.short ? `Step ${n + 1} of ${real.length} · ${s.title}` : st.scene === 0 ? "Welcome" : "Well done";
+  
+  const doneTo = s.short ? n : st.scene === 0 ? -1 : real.length;
+
+  $("cap").textContent = st.caption; $("cap").style.visibility = st.caption ? "visible" : "hidden";
+
+  $("title").style.display = s.short ? "none" : ""; $("t-h").textContent = s.big || ""; $("t-p").textContent = s.sub || "";
+};
+</script></body></html>

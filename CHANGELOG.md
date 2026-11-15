@@ -1,6 +1,15 @@
-# Free WhatsApp message to a parent, and light or dark look — 16 November 2026
+# The video guide with Kwamboka, and the right Mac opening steps — 16 November 2026
 
-- **WhatsApp, free.** New `hatua/whatsapp.py`. On a learner's page, **Message the parent** drafts a short message from the records: a concern (an alert) or good news (a result going up, a strength that held), in English or Kiswahili, or the teacher's own words.
+- **Video guide, two videos.** One is for teachers (10 steps) and one is for parents (8 steps). A teacher's page has a **Video guide** button that plays the teachers' video; a parent's page plays the parents' video. Both are at the top of the user guide, where they play one after the other, and the sign-in page links to them.
+  - Kwamboka, the guide, is a drawing. She stands beside real recordings of the portal on the practice school. Her lips follow the loudness of the voice and her hands move as she talks and points.
+  - The voice is the open Kokoro voice, made offline. `docs/tutorial/` holds everything needed to film an episode again; `scripts/tutorial_voice.py` can swap the voice.
+  - The portal serves the videos from this computer, in pieces for Safari (`/guide/*.mp4`).
+- **Mac.** New Macs no longer let you right-click and Open an app without an Apple certificate. The guide and START HERE now give the steps that work: Done, then System Settings, Privacy & Security, Open Anyway.
+- **Not done:** nobody has listened to check how the voice says the Kiswahili words and names. The two videos add about 13 MB to the download.
+
+# WhatsApp message to a parent, and light or dark look — 16 November 2026
+
+- **WhatsApp.** New `hatua/whatsapp.py`. On a learner's page, **Message the parent** drafts a short message from the records: a concern (an alert) or good news (a result going up, a strength that held), in English or Kiswahili, or the teacher's own words.
   - The teacher edits it, types the parent's WhatsApp number, and ticks that they checked both. Hatua then gives a normal `wa.me` link. WhatsApp opens with the message ready and the teacher presses Send with their own account. No paid service, no WhatsApp API.
   - Hatua never sends anything by itself. The guard refuses a message that ranks or compares learners or gives pathway advice.
   - Sharing with a guardian cannot be undone, so the approval is in the audit log: the teacher's name, the message, the records behind it. The parent's number is not stored; only its last three digits are logged.

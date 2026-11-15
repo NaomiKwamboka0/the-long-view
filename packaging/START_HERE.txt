@@ -2,12 +2,16 @@ HATUA - START HERE
 ==================
 
 Hatua helps Kenyan teachers and parents follow each learner from Grade 4 to Grade 9.
-It runs on this computer. Learner data never goes to the internet.
+It runs on this computer. Learner data stays on it, unless a teacher chooses to
+send a parent a WhatsApp message.
 
 1. OPEN HATUA
-   Mac:     Open the Hatua app. The first time, right-click it and choose Open,
-            then press Open again. (Hatua is free and not from the App Store,
-            so the Mac asks once.)
+   Mac:     Double-click the Hatua app. The first time, the Mac says
+            "Hatua.app Not Opened". Press Done (not Move to Bin). Then open
+            Apple menu > System Settings > Privacy & Security, scroll down
+            to Security, and press "Open Anyway". Type your Mac password.
+            This happens once. (Apple shows it for every free app that has
+            no paid Apple certificate. It does not mean there is a virus.)
    Windows: Open the Hatua folder and double-click Hatua.exe. If Windows says
             "Windows protected your PC", press "More info", then "Run anyway".
 
@@ -22,8 +26,10 @@ It runs on this computer. Learner data never goes to the internet.
    You install Ollama once (free). Then Hatua downloads Qwen for you
    (about 4.7 GB, once). Hatua works without it too.
 
-5. READ THE GUIDE
+5. WATCH THE VIDEO AND READ THE GUIDE
    Open "User guide.html" in this folder, or press Help inside Hatua.
+   The two short videos at the top show every step: one for teachers,
+   one for parents.
 
 To stop Hatua, close the small Hatua window.
 

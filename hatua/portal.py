@@ -62,7 +62,7 @@ MAX_BODY = 6 * 1024 * 1024
 HEADERS = {
     # Nothing may load from, or be sent to, anywhere but this computer: no web font, no image, no call.
     "Content-Security-Policy": ("default-src 'none'; script-src 'self' 'unsafe-inline'; "
-                                "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                                "style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; "
                                 "connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
     "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer",
     "X-Frame-Options": "DENY", "Cache-Control": "no-store",
@@ -202,6 +202,26 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _video(self, file: Path) -> None:
+        """The tutorial video. Safari asks for it in pieces (a Range header), so pieces are served."""
+        size, start, end = file.stat().st_size, 0, None
+        m = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range") or "")
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start, end = int(m.group(1)), int(m.group(2)) if m.group(2) else size - 1
+            else:
+                start, end = max(0, size - int(m.group(2))), size - 1
+            if start >= size or end < start:
+                return self._send(416, b"", "video/mp4", extra={"Content-Range": f"bytes */{size}"})
+            end = min(end, size - 1)
+        with file.open("rb") as f:
+            f.seek(start)
+            data = f.read((end - start + 1) if end is not None else size)
+        extra = {"Accept-Ranges": "bytes", "Cache-Control": "max-age=3600"}
+        if end is not None:
+            extra["Content-Range"] = f"bytes {start}-{end}/{size}"
+        self._send(206 if end is not None else 200, data, "video/mp4", extra=extra)
+
     def _host_ok(self) -> bool:
         host = (self.headers.get("Host") or "").lower()
         port = self.server.server_address[1]
@@ -253,6 +273,9 @@ class Handler(BaseHTTPRequestHandler):
         if method == "GET" and m and (GUIDE_IMAGES / m.group(1)).is_file():
             return self._send(200, (GUIDE_IMAGES / m.group(1)).read_bytes(), "image/png",
                               extra={"Cache-Control": "max-age=3600"})
+        m = re.fullmatch(r"/guide/([a-z0-9-]{1,60}\.mp4)", path)
+        if method == "GET" and m and (GUIDE_IMAGES / m.group(1)).is_file():
+            return self._video(GUIDE_IMAGES / m.group(1))
         if not path.startswith("/api/"):
             raise Refused(404, "Not found.")
         if method == "POST" and path == "/api/assistant":

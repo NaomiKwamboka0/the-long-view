@@ -1,0 +1,268 @@
+{
+ "episode": "parents",
+ "label": "For parents",
+ "total": 116.733,
+ "voice": "af_heart",
+ "scenes": [
+  {
+   "id": "intro",
+   "title": "Karibu",
+   "start": 0.0,
+   "dur": 11.3,
+   "lines": [
+    {
+     "text": "Hello again, and karibu! I'm Kwamboka.",
+     "start": 0.8,
+     "dur": 2.56,
+     "say": "həlˈoʊ ɐɡˈɛn, ænd kɑːɾˈiːbuː! aɪm kwɑːmbˈɔːkɑː."
+    },
+    {
+     "text": "This one is for you: mum, dad, or guardian.",
+     "start": 3.81,
+     "dur": 2.816,
+     "say": "ðˈɪswˌʌn ɪz fɔːɹ juː: mˈʌm, dˈæd, ɔːɹ ɡˈɑːɹdiən."
+    },
+    {
+     "text": "Let me show you how to follow your child's learning in Hatua.",
+     "start": 7.076,
+     "dur": 3.221,
+     "say": "lˈɛt mˌiː ʃˈoʊ juː hˌaʊ tə fˈɑːloʊ jʊɹ tʃˈaɪldz lˈɜːnɪŋ ɪn hɑːtˈuːɑː."
+    }
+   ],
+   "big": "Hatua for parents",
+   "sub": "With your guide, Kwamboka"
+  },
+  {
+   "id": "slip",
+   "title": "Get your slip",
+   "start": 11.3,
+   "dur": 11.566666666666666,
+   "lines": [
+    {
+     "text": "First, your child's class teacher gives you a small slip.",
+     "start": 0.8,
+     "dur": 2.965,
+     "say": "fˈɜːst, jʊɹ tʃˈaɪldz klˈæs tˈiːtʃɚ ɡˈɪvz juː ɐ smˈɔːl slˈɪp."
+    },
+    {
+     "text": "It has your parent number, and a one-time PIN.",
+     "start": 4.215,
+     "dur": 2.539,
+     "say": "ɪt hɐz jʊɹ pˈɛɹənt nˈʌmbɚ, ænd ɐ wˈʌntˈaɪm pˈɪn."
+    },
+    {
+     "text": "Hatua lives on the school's computer, so you'll use it at school.",
+     "start": 7.204,
+     "dur": 3.371,
+     "say": "hɑːtˈuːɑː lˈaɪvz ɔnðə skˈuːlz kəmpjˈuːɾɚ, sˌoʊ juːl jˈuːz ɪɾ æt skˈuːl."
+    }
+   ],
+   "short": "Get your slip"
+  },
+  {
+   "id": "signin",
+   "title": "Sign in as a parent",
+   "start": 22.8667,
+   "dur": 13.866666666666667,
+   "lines": [
+    {
+     "text": "On the sign-in page, choose: I am a parent.",
+     "start": 0.8,
+     "dur": 2.475,
+     "say": "ɔnðə sˈaɪnɪn pˈeɪdʒ, tʃˈuːz: aɪɐm ɐ pˈɛɹənt."
+    },
+    {
+     "text": "Type your parent number, and the PIN from your slip.",
+     "start": 4.0,
+     "dur": 2.667,
+     "say": "tˈaɪp jʊɹ pˈɛɹənt nˈʌmbɚ, ænd ðə pˈɪn fɹʌm jʊɹ slˈɪp."
+    },
+    {
+     "text": "Then press Sign in.",
+     "start": 10.5,
+     "dur": 1.195,
+     "say": "ðˈɛn pɹˈɛs sˈaɪn ˈɪn."
+    }
+   ],
+   "short": "Sign in"
+  },
+  {
+   "id": "pin",
+   "title": "Choose your own PIN",
+   "start": 36.7333,
+   "dur": 14.833333333333334,
+   "lines": [
+    {
+     "text": "The first time, Hatua asks you to choose your own PIN.",
+     "start": 0.8,
+     "dur": 3.029,
+     "say": "ðə fˈɜːst tˈaɪm, hɑːtˈuːɑː ˈæsks juː tə tʃˈuːz jʊɹ ˈoʊn pˈɪn."
+    },
+    {
+     "text": "Pick one that only you know, and type it twice.",
+     "start": 4.279,
+     "dur": 2.603,
+     "say": "pˈɪk wˈʌn ðæt ˈoʊnli juː nˈoʊ, ænd tˈaɪp ɪt twˈaɪs."
+    },
+    {
+     "text": "From now on, that's your key.",
+     "start": 11.279,
+     "dur": 1.557,
+     "say": "fɹʌm nˈaʊ ˈɔn, ðæts jʊɹ kˈiː."
+    }
+   ],
+   "short": "Your own PIN"
+  },
+  {
+   "id": "child",
+   "title": "Your child's page",
+   "start": 51.5667,
+   "dur": 12.1,
+   "lines": [
+    {
+     "text": "And here is your child's page.",
+     "start": 0.8,
+     "dur": 1.621,
+     "say": "ænd hˈɪɹ ɪz jʊɹ tʃˈaɪldz pˈeɪdʒ."
+    },
+    {
+     "text": "You can see the newest results in every learning area.",
+     "start": 2.871,
+     "dur": 2.731,
+     "say": "juː kæn sˈiː ðə nˈuːɪst ɹɪzˈʌlts ɪn ˈɛvɹi lˈɜːnɪŋ ˈɛɹiə."
+    },
+    {
+     "text": "Tap a level, if you'd like to see the record behind it.",
+     "start": 6.052,
+     "dur": 2.837,
+     "say": "tˈæp ɐ lˈɛvəl, ɪf juːd lˈaɪk tə sˈiː ðə ɹˈɛkɚd bᵻhˈaɪnd ɪt."
+    }
+   ],
+   "short": "Your child's page"
+  },
+  {
+   "id": "days",
+   "title": "Days in school, and the teacher's words",
+   "start": 63.6667,
+   "dur": 11.866666666666667,
+   "lines": [
+    {
+     "text": "You'll also find the days your child was in school.",
+     "start": 0.8,
+     "dur": 2.517,
+     "say": "juːl ˈɔːlsoʊ fˈaɪnd ðə dˈeɪz jʊɹ tʃˈaɪld wʌz ɪn skˈuːl."
+    },
+    {
+     "text": "And here is the comment from the class teacher.",
+     "start": 4.4,
+     "dur": 2.389,
+     "say": "ænd hˈɪɹ ɪz ðə kˈɑːmɛnt fɹʌmðə klˈæs tˈiːtʃɚ."
+    },
+    {
+     "text": "You only ever see your own child. Nobody else's.",
+     "start": 8.0,
+     "dur": 2.88,
+     "say": "juː ˈoʊnli ˈɛvɚ sˈiː jʊɹ ˈoʊn tʃˈaɪld. nˈoʊbɑːdi ˈɛlsᵻz."
+    }
+   ],
+   "short": "Days and comment"
+  },
+  {
+   "id": "pathways",
+   "title": "Pathway ideas",
+   "start": 75.5333,
+   "dur": 9.9,
+   "lines": [
+    {
+     "text": "What about senior school pathways?",
+     "start": 0.8,
+     "dur": 1.728,
+     "say": "wˌʌt ɐbˌaʊt sˈiːnjɚ skˈuːl pˈæθweɪz?"
+    },
+    {
+     "text": "You'll see those ideas only after the teacher has talked them through with you, and opened them.",
+     "start": 4.0,
+     "dur": 4.907,
+     "say": "juːl sˈiː ðoʊz aɪdˈiəz ˈoʊnli ˈæftɚ ðə tˈiːtʃɚ hɐz tˈɔːkt ðˌɛm θɹˈuː wɪð juː, ænd ˈoʊpənd ðˌɛm."
+    }
+   ],
+   "short": "Pathway ideas"
+  },
+  {
+   "id": "assistant",
+   "title": "Ask a question",
+   "start": 85.4333,
+   "dur": 15.866666666666667,
+   "lines": [
+    {
+     "text": "You can also ask the Hatua assistant.",
+     "start": 0.8,
+     "dur": 2.197,
+     "say": "juː kæn ˈɔːlsoʊ ˈæsk ðə hɑːtˈuːɑː ɐsˈɪstənt."
+    },
+    {
+     "text": "Try something like: how is my child doing in Mathematics?",
+     "start": 3.8,
+     "dur": 3.413,
+     "say": "tɹˈaɪ sˈʌmθɪŋ lˈaɪk: hˌaʊ ɪz maɪ tʃˈaɪld dˌuːɪŋ ɪn mˌæθɪmˈæɾɪks?"
+    },
+    {
+     "text": "It answers from the school's records, and it never compares children.",
+     "start": 10.3,
+     "dur": 3.605,
+     "say": "ɪɾ ˈænsɚz fɹʌmðə skˈuːlz ɹˈɛkɚdz, ænd ɪt nˈɛvɚ kəmpˈɛɹz tʃˈɪldɹən."
+    }
+   ],
+   "short": "Ask a question"
+  },
+  {
+   "id": "signout",
+   "title": "Sign out",
+   "start": 101.3,
+   "dur": 7.6,
+   "lines": [
+    {
+     "text": "When you're done, always press Sign out.",
+     "start": 0.8,
+     "dur": 1.984,
+     "say": "wˌɛn jʊɹ dˈʌn, ˈɔːlweɪz pɹˈɛs sˈaɪn ˈaʊt."
+    },
+    {
+     "text": "Other families use this computer, too.",
+     "start": 4.4,
+     "dur": 2.197,
+     "say": "ˈʌðɚ fˈæmɪliz jˈuːs ðɪs kəmpjˈuːɾɚ, tˈuː."
+    }
+   ],
+   "short": "Sign out"
+  },
+  {
+   "id": "outro",
+   "title": "That is all",
+   "start": 108.9,
+   "dur": 7.833333333333333,
+   "lines": [
+    {
+     "text": "That's all you need.",
+     "start": 0.8,
+     "dur": 1.109,
+     "say": "ðæts ˈɔːl juː nˈiːd."
+    },
+    {
+     "text": "You and the teacher, working together, step by step.",
+     "start": 2.359,
+     "dur": 2.88,
+     "say": "juː ænd ðə tˈiːtʃɚ, wˈɜːkɪŋ təɡˈɛðɚ, stˈɛp baɪ stˈɛp."
+    },
+    {
+     "text": "Asante sana!",
+     "start": 5.689,
+     "dur": 1.152,
+     "say": "ɑːsˈɑːntɛ sˈɑːnɑː!"
+    }
+   ],
+   "big": "That is all you need",
+   "sub": "You and the teacher, working together"
+  }
+ ]
+}

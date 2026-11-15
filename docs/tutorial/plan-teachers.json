@@ -1,0 +1,340 @@
+{
+ "episode": "teachers",
+ "label": "For teachers",
+ "total": 154.333,
+ "voice": "af_heart",
+ "scenes": [
+  {
+   "id": "intro",
+   "title": "Karibu",
+   "start": 0.0,
+   "dur": 9.566666666666666,
+   "lines": [
+    {
+     "text": "Hi there, and karibu! I'm Kwamboka.",
+     "start": 0.8,
+     "dur": 2.304,
+     "say": "hˈaɪ ðˈɛɹ, ænd kɑːɾˈiːbuː! aɪm kwɑːmbˈɔːkɑː."
+    },
+    {
+     "text": "I'll be your guide to Hatua.",
+     "start": 3.554,
+     "dur": 1.621,
+     "say": "aɪl biː jʊɹ ɡˈaɪd tə hɑːtˈuːɑː."
+    },
+    {
+     "text": "Give me two minutes, and I'll walk you through it, step by step.",
+     "start": 5.625,
+     "dur": 2.944,
+     "say": "ɡˈɪv mˌiː tˈuː mˈɪnɪts, ænd aɪl wˈɔːk juː θɹˈuː ɪt, stˈɛp baɪ stˈɛp."
+    }
+   ],
+   "big": "Hatua for teachers",
+   "sub": "With your guide, Kwamboka"
+  },
+  {
+   "id": "signin",
+   "title": "Sign in",
+   "start": 9.5667,
+   "dur": 12.833333333333334,
+   "lines": [
+    {
+     "text": "Let's start by signing in.",
+     "start": 0.8,
+     "dur": 1.472,
+     "say": "lˈɛts stˈɑːɹt baɪ sˈaɪnɪŋ ˈɪn."
+    },
+    {
+     "text": "You're a teacher, so leave it on: I am a teacher.",
+     "start": 2.722,
+     "dur": 2.624,
+     "say": "jʊɹ ɐ tˈiːtʃɚ, sˌoʊ lˈiːv ɪɾ ˈɔn: aɪɐm ɐ tˈiːtʃɚ."
+    },
+    {
+     "text": "Type your member number, then your PIN, and press Sign in.",
+     "start": 5.796,
+     "dur": 2.859,
+     "say": "tˈaɪp jʊɹ mˈɛmbɚ nˈʌmbɚ, ðˈɛn jʊɹ pˈɪn, ænd pɹˈɛs sˈaɪn ˈɪn."
+    }
+   ],
+   "short": "Sign in"
+  },
+  {
+   "id": "today",
+   "title": "Start with Today",
+   "start": 22.4,
+   "dur": 8.933333333333334,
+   "lines": [
+    {
+     "text": "This is your Today page.",
+     "start": 0.8,
+     "dur": 1.493,
+     "say": "ðɪs ɪz jʊɹ tədˈeɪ pˈeɪdʒ."
+    },
+    {
+     "text": "It tells you what needs you right now.",
+     "start": 2.743,
+     "dur": 1.856,
+     "say": "ɪt tˈɛlz juː wʌt nˈiːdz juː ɹˈaɪt nˈaʊ."
+    },
+    {
+     "text": "Look, the Term 3 results are waiting for you to check.",
+     "start": 5.049,
+     "dur": 2.88,
+     "say": "lˈʊk, ðə tˈɜːm θɹˈiː ɹɪzˈʌlts ɑːɹ wˈeɪɾɪŋ fɔːɹ juː tə tʃˈɛk."
+    }
+   ],
+   "short": "Today"
+  },
+  {
+   "id": "approve",
+   "title": "Check and approve results",
+   "start": 31.3333,
+   "dur": 15.833333333333334,
+   "lines": [
+    {
+     "text": "So let's check them. Press Check the file.",
+     "start": 0.8,
+     "dur": 2.368,
+     "say": "sˌoʊ lˈɛts tʃˈɛk ðˌɛm. pɹˈɛs tʃˈɛk ðə fˈaɪl."
+    },
+    {
+     "text": "Hatua shows you what's inside, before anything is saved.",
+     "start": 5.3,
+     "dur": 3.328,
+     "say": "hɑːtˈuːɑː ʃˈoʊz juː wʌts ɪnsˈaɪd, bᵻfˌɔːɹ ˈɛnɪθˌɪŋ ɪz sˈeɪvd."
+    },
+    {
+     "text": "Happy with it? Press Approve.",
+     "start": 9.078,
+     "dur": 1.685,
+     "say": "hˈæpi wɪð ɪt? pɹˈɛs ɐpɹˈuːv."
+    },
+    {
+     "text": "Nothing gets into Hatua until you say so.",
+     "start": 12.078,
+     "dur": 2.752,
+     "say": "nˈʌθɪŋ ɡˈɛts ˌɪntʊ hɑːtˈuːɑː ʌntˈɪl juː sˈeɪ sˈoʊ."
+    }
+   ],
+   "short": "Approve results"
+  },
+  {
+   "id": "watch",
+   "title": "Learners to watch",
+   "start": 47.1667,
+   "dur": 10.066666666666666,
+   "lines": [
+    {
+     "text": "Now, back to Today.",
+     "start": 0.8,
+     "dur": 1.301,
+     "say": "nˈaʊ, bˈæk tə tədˈeɪ."
+    },
+    {
+     "text": "Hatua has spotted two learners who need a closer look.",
+     "start": 3.4,
+     "dur": 3.051,
+     "say": "hɑːtˈuːɑː hɐz spˈɑːɾᵻd tˈuː lˈɜːnɚz hˌuː nˈiːd ɐ klˈoʊsɚ lˈʊk."
+    },
+    {
+     "text": "Let's open Kamau.",
+     "start": 6.901,
+     "dur": 1.301,
+     "say": "lˈɛts ˈoʊpən kɑːmˈɑːuː."
+    }
+   ],
+   "short": "Learners to watch"
+  },
+  {
+   "id": "longview",
+   "title": "The long view",
+   "start": 57.2333,
+   "dur": 12.1,
+   "lines": [
+    {
+     "text": "Here's Kamau's story, all the way from Grade 4.",
+     "start": 0.8,
+     "dur": 2.901,
+     "say": "hˈɪɹz kɑːmˈɑːuːz stˈɔːɹi, ˈɔːl ðə wˈeɪ fɹʌm ɡɹˈeɪd fˈɔːɹ."
+    },
+    {
+     "text": "We call it the long view.",
+     "start": 4.2,
+     "dur": 1.387,
+     "say": "wiː kˈɔːl ɪt ðə lˈɔŋ vjˈuː."
+    },
+    {
+     "text": "Tap any mark, and you'll see the record behind it.",
+     "start": 6.037,
+     "dur": 2.667,
+     "say": "tˈæp ˌɛni mˈɑːɹk, ænd juːl sˈiː ðə ɹˈɛkɚd bᵻhˈaɪnd ɪt."
+    }
+   ],
+   "short": "The long view"
+  },
+  {
+   "id": "comment",
+   "title": "Write a report comment",
+   "start": 69.3333,
+   "dur": 14.4,
+   "lines": [
+    {
+     "text": "Report time? Press Write a comment.",
+     "start": 0.8,
+     "dur": 2.069,
+     "say": "ɹᵻpˈɔːɹt tˈaɪm? pɹˈɛs ɹˈaɪt ɐ kˈɑːmɛnt."
+    },
+    {
+     "text": "Hatua drafts one for you, from Kamau's records.",
+     "start": 4.4,
+     "dur": 2.987,
+     "say": "hɑːtˈuːɑː dɹˈæfts wˈʌn fɔːɹ juː, fɹʌm kɑːmˈɑːuːz ɹˈɛkɚdz."
+    },
+    {
+     "text": "You're the teacher, so you decide. If it sounds right, give it a thumbs up.",
+     "start": 7.837,
+     "dur": 3.989,
+     "say": "jʊɹ ðə tˈiːtʃɚ, sˌoʊ juː dᵻsˈaɪd. ɪf ɪt sˈaʊndz ɹˈaɪt, ɡˈɪv ɪɾ ɐ θˈʌmz ˈʌp."
+    }
+   ],
+   "short": "Report comment"
+  },
+  {
+   "id": "whatsapp",
+   "title": "Message the parent",
+   "start": 83.7333,
+   "dur": 19.733333333333334,
+   "lines": [
+    {
+     "text": "Want to tell Kamau's parent? Press Message the parent.",
+     "start": 0.8,
+     "dur": 2.987,
+     "say": "wˈɔnt tə tˈɛl kɑːmˈɑːuːz pˈɛɹənt? pɹˈɛs mˈɛsɪdʒ ðə pˈɛɹənt."
+    },
+    {
+     "text": "Read the words, and change anything you like.",
+     "start": 5.0,
+     "dur": 2.347,
+     "say": "ɹˈiːd ðə wˈɜːdz, ænd tʃˈeɪndʒ ˈɛnɪθˌɪŋ juː lˈaɪk."
+    },
+    {
+     "text": "Type the parent's WhatsApp number, tick the box, and you're ready to send it yourself.",
+     "start": 7.797,
+     "dur": 4.565,
+     "say": "tˈaɪp ðə pˈɛɹənts wʌts ˈæp nˈʌmbɚ, tˈɪk ðə bˈɑːks, ænd jʊɹ ɹˈɛdi tə sˈɛnd ɪt jɔːɹsˈɛlf."
+    },
+    {
+     "text": "You press Send, in your own WhatsApp.",
+     "start": 15.797,
+     "dur": 2.069,
+     "say": "juː pɹˈɛs sˈɛnd, ɪn jʊɹ ˈoʊn wʌts ˈæp."
+    }
+   ],
+   "short": "Message the parent"
+  },
+  {
+   "id": "access",
+   "title": "Give a parent access",
+   "start": 103.4667,
+   "dur": 15.733333333333333,
+   "lines": [
+    {
+     "text": "Parents can have their own sign-in, too.",
+     "start": 0.8,
+     "dur": 2.048,
+     "say": "pˈɛɹənts kæn hæv ðɛɹ ˈoʊn sˈaɪnˈɪn, tˈuː."
+    },
+    {
+     "text": "Press Give a parent access, and type the parent's name.",
+     "start": 4.0,
+     "dur": 2.987,
+     "say": "pɹˈɛs ɡˈɪv ɐ pˈɛɹənt ˈæksɛs, ænd tˈaɪp ðə pˈɛɹənts nˈeɪm."
+    },
+    {
+     "text": "Hatua makes a parent number and a one-time PIN. Print the slip, and hand it over.",
+     "start": 9.2,
+     "dur": 4.885,
+     "say": "hɑːtˈuːɑː mˌeɪks ɐ pˈɛɹənt nˈʌmbɚ ænd ɐ wˈʌntˈaɪm pˈɪn. pɹˈɪnt ðə slˈɪp, ænd hˈænd ɪɾ ˈoʊvɚ."
+    }
+   ],
+   "short": "Parent access"
+  },
+  {
+   "id": "assistant",
+   "title": "Ask the assistant",
+   "start": 119.2,
+   "dur": 14.533333333333333,
+   "lines": [
+    {
+     "text": "Got a question? Just ask the Hatua assistant.",
+     "start": 0.8,
+     "dur": 2.731,
+     "say": "ɡɑːt ɐ kwˈɛstʃən? dʒˈʌst ˈæsk ðə hɑːtˈuːɑː ɐsˈɪstənt."
+    },
+    {
+     "text": "It asks you one quick question first, so the answer fits what you need.",
+     "start": 6.4,
+     "dur": 3.947,
+     "say": "ɪɾ ˈæsks juː wˈʌn kwˈɪk kwˈɛstʃən fˈɜːst, sˌoʊ ðɪ ˈænsɚ fˈɪts wʌt juː nˈiːd."
+    },
+    {
+     "text": "And it will never rank your learners.",
+     "start": 11.0,
+     "dur": 1.749,
+     "say": "ænd ɪt wɪl nˈɛvɚ ɹˈæŋk jʊɹ lˈɜːnɚz."
+    }
+   ],
+   "short": "Ask the assistant"
+  },
+  {
+   "id": "look",
+   "title": "Make it yours",
+   "start": 133.7333,
+   "dur": 11.966666666666667,
+   "lines": [
+    {
+     "text": "One last thing. In My account, you can switch between light and dark.",
+     "start": 0.8,
+     "dur": 4.011,
+     "say": "wˈʌn lˈæst θˈɪŋ. ɪn maɪ ɐkˈaʊnt, juː kæn swˈɪtʃ bᵻtwˌiːn lˈaɪt ænd dˈɑːɹk."
+    },
+    {
+     "text": "And if you ever get stuck, the Help button has the full guide.",
+     "start": 7.8,
+     "dur": 3.136,
+     "say": "ænd ɪf juː ˈɛvɚ ɡɛt stˈʌk, ðə hˈɛlp bˈʌʔn hɐz ðə fˈʊl ɡˈaɪd."
+    }
+   ],
+   "short": "Light or dark"
+  },
+  {
+   "id": "outro",
+   "title": "You are ready",
+   "start": 145.7,
+   "dur": 8.633333333333333,
+   "lines": [
+    {
+     "text": "And that's Hatua.",
+     "start": 0.8,
+     "dur": 1.131,
+     "say": "ænd ðæts hɑːtˈuːɑː."
+    },
+    {
+     "text": "You stay in charge, step by step.",
+     "start": 2.381,
+     "dur": 2.069,
+     "say": "juː stˈeɪ ɪn tʃˈɑːɹdʒ, stˈɛp baɪ stˈɛp."
+    },
+    {
+     "text": "Asante sana, and all the best with your class!",
+     "start": 4.9,
+     "dur": 2.731,
+     "say": "ɑːsˈɑːntɛ sˈɑːnɑː, ænd ˈɔːl ðə bˈɛst wɪð jʊɹ klˈæs!"
+    }
+   ],
+   "big": "You are ready",
+   "sub": "You stay in charge, step by step"
+  }
+ ]
+}

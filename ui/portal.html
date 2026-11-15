@@ -199,6 +199,7 @@ table.long .none { display: inline-block; width: 2.15em; height: 1.75em; border-
 .terms .card.good { background: var(--leaf-soft); }
 
 dialog { border: 0; border-radius: 24px; padding: 0; width: min(560px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+dialog.wide { width: min(980px, calc(100vw - 32px)); }
 dialog::backdrop { background: rgba(33, 48, 41, .35); }
 .dlg { padding: 22px; display: grid; gap: 14px; }
 .dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -347,7 +348,7 @@ a.btn { text-decoration: none; display: inline-block; }
       </ul>
     </div>
     <section class="ai" id="ai-box" aria-live="polite" hidden></section>
-    <p class="small soft" style="text-align:center"><a href="/guide" target="_blank" rel="noopener" style="color:var(--jacaranda)">Open the user guide</a></p>
+    <p class="small soft" style="text-align:center"><a href="/guide#video" target="_blank" rel="noopener" style="color:var(--jacaranda)">Watch the video guide</a> · <a href="/guide" target="_blank" rel="noopener" style="color:var(--jacaranda)">Open the user guide</a></p>
     <div class="look small soft"><span>Look:</span><span data-look></span></div>
     <details class="practice" id="practice" hidden>
       <summary><b>Practice accounts</b> <span class="soft small">(demo only: made-up people)</span></summary>
@@ -364,6 +365,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
     <p class="who" id="who"></p>
     <span class="cal" id="cal-chip"></span>
+    <button class="btn quiet small" type="button" id="video-guide">Video guide</button>
     <a class="btn quiet small" href="/guide" target="_blank" rel="noopener">Help</a>
     <button class="btn quiet small" type="button" id="account">My account</button>
     <button class="btn quiet small" type="button" id="signout">Sign out</button>
@@ -437,6 +439,7 @@ a.btn { text-decoration: none; display: inline-block; }
     <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="var(--path)"/><circle cx="15" cy="15" r="4.5" fill="var(--l3)"/><circle cx="24" cy="7" r="5" fill="var(--jacaranda)"/></svg>Hatua</div>
     <p class="who" id="f-who"></p>
     <span class="cal" id="f-cal"></span>
+    <button class="btn quiet small" type="button" id="f-video-guide">Video guide</button>
     <a class="btn quiet small" href="/guide" target="_blank" rel="noopener">Help</a>
     <button class="btn quiet small" type="button" id="f-account">My account</button>
     <button class="btn quiet small" type="button" id="f-signout">Sign out</button>
@@ -615,6 +618,22 @@ setInterval(async () => {
   else $("idle").hidden = idle < IDLE_MIN - 1;
 }, 10000);
 
+/* ---------- the video guide: teachers see the teachers' episode, parents see the parents' episode ---------- */
+const VIDEO_BASE = "/guide/";
+function videoDialog() {
+  const parent = ROLE === "parent", file = VIDEO_BASE + (parent ? "hatua-parents.mp4" : "hatua-teachers.mp4");
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Video guide for ${parent ? "parents" : "teachers"}</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="small soft">Kwamboka shows every step. It has sound, and the words are on the screen.</p>
+    <video id="vg-play" controls autoplay playsinline preload="metadata" src="${file}" style="width:100%;height:auto;border-radius:14px;background:#213029;display:block"></video>
+    <p class="small soft">The written guide with pictures is under <b>Help</b>.</p>`;
+  const stop = () => { const v = $("vg-play"); if (v) { v.pause(); v.removeAttribute("src"); v.load(); } $("dlg").classList.remove("wide"); };
+  $("dlg-x").onclick = () => $("dlg").close();
+  $("dlg").addEventListener("close", stop, { once: true });
+  $("dlg").classList.add("wide"); $("dlg").showModal();
+}
+$("video-guide").addEventListener("click", videoDialog);
+$("f-video-guide").addEventListener("click", videoDialog);
+
 /* ---------- my account ---------- */
 $("account").addEventListener("click", accountDialog);
 $("f-account").addEventListener("click", accountDialog);
@@ -752,7 +771,7 @@ function wireCommon(el) {
 }
 
 /* A message for the parent: good news or a concern, from the records. The teacher edits it,
-   checks it, and sends it with their own WhatsApp (free), or tells the parent another way.
+   checks it, and sends it with their own WhatsApp, or tells the parent another way.
    Hatua never sends anything by itself, and it does not keep the parent's number. */
 async function parentDialog(noticeId, learnerId) {
   const n = noticeId ? NOTICES.find(x => x.notice_id === noticeId) : null;
@@ -772,7 +791,7 @@ async function parentDialog(noticeId, learnerId) {
       <div class="langs" role="group" aria-label="Language">${[["en", "English"], ["sw", "Kiswahili"]].map(([k, t]) => `<button type="button" data-l="${k}" aria-pressed="${lang === k}">${t}</button>`).join("")}</div>
       <textarea id="pm-text" maxlength="${data.max_chars}" aria-label="The message" style="width:100%;min-height:150px;line-height:1.6">${esc(text())}</textarea>
       <p class="small soft">${m.evidence.length ? `From the records ${m.evidence.slice(0, 6).map(esc).join(", ")}.` : "Your own words. Hatua checks that the message does not rank or compare learners."} You can change any word.</p>
-      <div class="wa"><h3>Send by WhatsApp (free)</h3>
+      <div class="wa"><h3>Send by WhatsApp</h3>
         <label>Parent's WhatsApp number<input type="tel" id="pm-phone" inputmode="tel" autocomplete="off" placeholder="0712 345 678" value="${esc(phone)}"></label>
         <p class="small soft">WhatsApp opens with your own account and the message ready. You press Send there. It needs internet. Hatua does not keep the number.</p>
         <label class="tick"><input type="checkbox" id="pm-ok"><span>I checked the message and the number. This parent agreed to get WhatsApp messages.</span></label>

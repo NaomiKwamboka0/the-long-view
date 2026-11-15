@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Kwamboka, the Hatua guide</title>
+<style>
+* { margin: 0; } html, body { width: 264px; height: 652px; overflow: hidden; background: #eef2ee; }
+svg { display: block; }
+</style></head>
+<body>
+<!-- A drawn guide based on the presenter picture: short swept hair, thin square glasses, gold studs,
+     a black polo-neck and a beaded bracelet in the colours of Kenya's flag. She stands, talks and uses her hands. -->
+<svg id="g" width="264" height="652" viewBox="0 0 264 652">
+  <ellipse cx="168" cy="632" rx="78" ry="10" fill="rgba(33,48,41,.14)"/>
+  <g id="all">
+    <!-- legs and shoes -->
+    <path d="M126 360 h44 l-6 250 h-30 z" fill="#343a45"/><path d="M168 360 h44 l-10 250 h-30 z" fill="#2e333d"/>
+    <ellipse cx="146" cy="616" rx="22" ry="9" fill="#17181b"/><ellipse cx="190" cy="616" rx="22" ry="9" fill="#17181b"/>
+    <g id="upper">
+      <!-- torso: black polo-neck -->
+      <path d="M120 180 q4 -15 30 -19 h36 q26 4 30 19 l-9 96 q-2 34 5 94 h-88 q7 -60 5 -94 z" fill="#1b1b1e"/>
+      <path d="M150 200 q18 10 36 0" stroke="#2a2a2e" stroke-width="2" fill="none"/>
+      <rect x="149" y="136" width="38" height="30" rx="10" fill="#1b1b1e"/>
+      <g id="head">
+        <ellipse cx="124" cy="100" rx="6" ry="9" fill="#6a3f25"/><ellipse cx="212" cy="100" rx="6" ry="9" fill="#6a3f25"/>
+        <circle cx="123" cy="112" r="3.2" fill="#e2b23c"/><circle cx="213" cy="112" r="3.2" fill="#e2b23c"/>
+        <ellipse cx="168" cy="94" rx="43" ry="52" fill="#7a4a2b"/>
+        <!-- short hair, swept to one side -->
+        <path d="M123 102 q-10 -74 50 -76 q56 0 42 74 q-6 -30 -22 -40 q-34 14 -58 14 q-8 8 -12 28 z" fill="#141110"/>
+        <path d="M136 62 q30 -6 54 -22 M150 68 q24 -4 44 -16" stroke="#2c2622" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path id="brow-l" d="M140 80 q10 -6 21 -2" stroke="#141110" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path id="brow-r" d="M175 78 q11 -4 21 2" stroke="#141110" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M142 91 q8 -6 17 0 M177 91 q8 -6 17 0" stroke="#141110" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="150.5" cy="96" rx="7" ry="6.5" fill="#fff"/><ellipse cx="185.5" cy="96" rx="7" ry="6.5" fill="#fff"/>
+        <circle id="pl" cx="150" cy="96.5" r="3.6" fill="#1b130e"/><circle id="pr" cx="185" cy="96.5" r="3.6" fill="#1b130e"/>
+        <rect id="ll" x="142" y="88" width="17" height="0" fill="#7a4a2b"/><rect id="lr" x="177" y="88" width="17" height="0" fill="#7a4a2b"/>
+        <!-- thin square spectacles -->
+        <g fill="rgba(255,255,255,.10)" stroke="#26221f" stroke-width="2.4"><rect x="134" y="82" width="32" height="28" rx="6"/><rect x="170" y="82" width="32" height="28" rx="6"/></g>
+        <path d="M166 93 q2 -3 4 0 M134 92 l-10 -3 M202 92 l10 -3" stroke="#26221f" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <path d="M165 108 q-6 10 0 13 q4 2 9 -1" stroke="#5c341c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <path id="smile" d="M153 126 q15 11 30 0 q-15 4.5 -30 0 z" fill="#9a4350" stroke="#9a4350" stroke-width="3" stroke-linejoin="round"/>
+        <g id="talk"><ellipse id="mouth" cx="168" cy="128" rx="11" ry="5" fill="#4a1018" stroke="#9a4350" stroke-width="3"/><rect id="teeth" x="160" y="124" width="16" height="3.6" rx="1.6" fill="#fff"/></g>
+      </g>
+      <!-- arms: drawn from the shoulder each frame -->
+      <g stroke-linecap="round">
+        <g id="armR"><line class="up" stroke="#1b1b1e" stroke-width="25"/><line class="fo" stroke="#1b1b1e" stroke-width="21"/><circle class="pa" r="12" fill="#7a4a2b"/><g class="fi" stroke="#7a4a2b" stroke-width="7"><line/><line/><line/><line/></g><line class="th" stroke="#6a3f25" stroke-width="7.5"/></g>
+        <g id="armL"><line class="up" stroke="#222226" stroke-width="25"/><line class="fo" stroke="#222226" stroke-width="21"/>
+          <g class="band" stroke-linecap="butt" stroke-width="19"><line stroke="#111"/><line stroke="#fff"/><line stroke="#c8102e"/><line stroke="#fff"/><line stroke="#00693e"/></g>
+          <circle class="pa" r="12" fill="#7a4a2b"/><g class="fi" stroke="#7a4a2b" stroke-width="7"><line/><line/><line/><line/></g><line class="th" stroke="#6a3f25" stroke-width="7.5"/></g>
+      </g>
+    </g>
+  </g>
+</svg>
+<script>
+"use strict";
+const $ = id => document.getElementById(id), rad = Math.PI / 180;
+let PLAN = null, ENV = [];
+const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x), mix = (a, b, k) => a + (b - a) * k;
+window.load = (plan, env) => { PLAN = plan; ENV = env; };
+const seg = (el, p, q) => { el.setAttribute("x1", p[0].toFixed(1)); el.setAttribute("y1", p[1].toFixed(1)); el.setAttribute("x2", q[0].toFixed(1)); el.setAttribute("y2", q[1].toFixed(1)); };
+/* One arm. a1, a2: the directions of the upper arm and forearm in degrees (90 points down, 180 to the screen on the left, 270 up).
+   hand: "open" (fingers spread), "point" (one finger) or "rest". */
+function arm(id, S, a1, a2, hand, spread) {
+  const g = $(id), U = 80, F = 66;
+  const E = [S[0] + Math.cos(a1 * rad) * U, S[1] + Math.sin(a1 * rad) * U], d = [Math.cos(a2 * rad), Math.sin(a2 * rad)];
+  const at = k => [E[0] + d[0] * F * k, E[1] + d[1] * F * k];
+  seg(g.querySelector(".up"), S, E); seg(g.querySelector(".fo"), E, at(0.9));
+  const band = g.querySelectorAll(".band line");
+  [[0.66, 0.73], [0.73, 0.75], [0.75, 0.83], [0.83, 0.85], [0.85, 0.93]].forEach(([a, b], i) => band[i] && seg(band[i], at(a), at(b)));
+  const P = at(1 + 9 / F), pa = g.querySelector(".pa"); pa.setAttribute("cx", P[0].toFixed(1)); pa.setAttribute("cy", P[1].toFixed(1));
+  const ray = (el, deg, from, len) => { const a = (a2 + deg) * rad; seg(el, [P[0] + Math.cos(a) * from, P[1] + Math.sin(a) * from], [P[0] + Math.cos(a) * (from + len), P[1] + Math.sin(a) * (from + len)]); };
+  const fi = g.querySelectorAll(".fi line"), th = g.querySelector(".th"), side = id === "armL" ? 1 : -1;
+  if (hand === "point") { ray(fi[0], 0, 8, 24); [1, 2, 3].forEach(i => ray(fi[i], 0, 0, 0.01)); ray(th, 70 * side, 5, 10); }
+  else { const s = hand === "open" ? spread : 5, len = hand === "open" ? 17 : 12; [-1.5, -0.5, 0.5, 1.5].forEach((k, i) => ray(fi[i], k * s, 8, len - Math.abs(k) * 2)); ray(th, 62 * side, 5, hand === "open" ? 12 : 8); }
+}
+window.setT = t => {
+  const S = PLAN.scenes, s = S.find(x => t < x.start + x.dur) || S[S.length - 1], u = t - s.start;
+  const f = Math.round(t * 30), e = ((ENV[f - 1] || 0) + 2 * (ENV[f] || 0) + (ENV[f + 1] || 0)) / 4;
+  // How strongly she is "in" a line right now, and which line.
+  let w = 0, li = -1;
+  s.lines.forEach((l, i) => { const k = ease((u - l.start + 0.25) / 0.4) * (1 - ease((u - l.start - l.dur) / 0.45)); if (k > w) { w = k; li = i; } });
+  const real = !!s.short, pointing = real && li > 0, waving = !real && li === 0 && s === S[0];
+  // body
+  const sway = Math.sin(t * 0.9) * 1.6, bob = Math.sin(t * 1.9) * 1.2 + e * 1.5;
+  $("all").setAttribute("transform", `translate(${sway.toFixed(2)} 0)`);
+  $("upper").setAttribute("transform", `translate(0 ${bob.toFixed(2)}) rotate(${(Math.sin(t * 0.7) * 0.8).toFixed(2)} 168 360)`);
+  $("head").setAttribute("transform", `rotate(${(Math.sin(t * 1.3) * 2 + (pointing ? -4 * w : 0) + e * 2 * Math.sin(t * 5)).toFixed(2)} 168 140)`);
+  const cyc = t % 3.7, blink = cyc > 3.55 ? Math.sin((cyc - 3.55) / 0.15 * Math.PI) : 0;
+  $("ll").setAttribute("height", (blink * 16).toFixed(1)); $("lr").setAttribute("height", (blink * 16).toFixed(1));
+  const look = pointing ? -2 * w : 0; $("pl").setAttribute("cx", 150 + look); $("pr").setAttribute("cx", 185 + look);
+  $("brow-l").setAttribute("transform", `translate(0 ${(-e * 2.2).toFixed(2)})`); $("brow-r").setAttribute("transform", `translate(0 ${(-e * 2.2).toFixed(2)})`);
+  // lips follow the loudness of the real voice
+  const open = Math.min(1, e * 1.35), talking = open > 0.07;
+  $("talk").style.display = talking ? "" : "none"; $("smile").style.display = talking ? "none" : "";
+  $("mouth").setAttribute("ry", (1.6 + 7.4 * open).toFixed(2)); $("mouth").setAttribute("rx", (11.5 - 2.5 * open).toFixed(2)); $("teeth").style.display = open > 0.42 ? "" : "none";
+  // hands: rest at her sides, open and moving while she talks, one pointing at the screen when she shows a step
+  const beat = Math.sin(t * 4.3) * 7 + e * 10 * Math.sin(t * 9.1);
+  const restL = [101, 84], restR = [79, 96];
+  const talkL = [116, 264 + beat * 0.8], talkR = [70, 272 - beat];
+  const pointL = [112, 215 + Math.sin(t * 3) * 3], waveR = [76, 264 + Math.sin(t * 7.5) * 13];
+  const L = pointing ? pointL : talkL, R = waving ? waveR : talkR;
+  arm("armL", [126, 190], mix(restL[0], L[0], w), mix(restL[1], L[1], w), w < 0.5 ? "rest" : pointing ? "point" : "open", 13 + e * 6);
+  arm("armR", [210, 190], mix(restR[0], R[0], w), mix(restR[1], R[1], w), w < 0.5 ? "rest" : "open", (waving ? 17 : 13) + e * 6);
+};
+</script></body></html>

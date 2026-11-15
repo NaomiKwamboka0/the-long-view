@@ -898,3 +898,14 @@ def test_portal_whatsapp_is_for_the_class_teacher_only(portal):
     assert any("WhatsApp message" in d["what"] and "ending 678" in d["what"] for d in did)
     parent_cookie, _, _ = sign_in(portal, "P-100001")
     assert call(portal, "GET", "/api/learner/HT-0001/whatsapp", cookie=parent_cookie)[0] != 200, "parents cannot use it"
+
+
+def test_the_tutorial_video_is_served_in_pieces(portal):
+    c = http.client.HTTPConnection("127.0.0.1", portal, timeout=20)
+    c.request("GET", "/guide/hatua-teachers.mp4", headers={"Host": f"127.0.0.1:{portal}", "Range": "bytes=0-99"})
+    r = c.getresponse()
+    data = r.read()
+    assert r.status == 206 and len(data) == 100 and r.getheader("Content-Type") == "video/mp4"
+    assert r.getheader("Content-Range", "").startswith("bytes 0-99/") and b"ftyp" in data
+    assert "media-src 'self'" in r.getheader("Content-Security-Policy")
+    assert call(portal, "GET", "/guide/../hatua/auth.mp4")[0] == 404

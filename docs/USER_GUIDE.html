@@ -32,6 +32,8 @@ nav.toc li { margin: 2px 0; }
 .box { border-radius: 16px; padding: 14px 16px; margin: 14px 0; background: var(--tint); }
 .box.tip { background: var(--leaf-soft); } .box.warn { background: var(--sun-soft); } .box.try { background: var(--jac-soft); }
 .box b:first-child { display: block; margin-bottom: 4px; }
+.eps button { border: 0; border-radius: 999px; padding: 8px 16px; background: var(--tint); color: var(--ink); font: inherit; cursor: pointer; }
+.eps button[aria-pressed="true"] { background: var(--jac); color: #fff; font-weight: 700; }
 figure { margin: 16px 0 22px; }
 figure img { width: 100%; height: auto; border-radius: 14px; display: block; box-shadow: 0 10px 30px -14px rgba(33,48,41,.45); background: var(--tint); }
 figure.phone img { max-width: 320px; }
@@ -55,6 +57,27 @@ footer { color: var(--soft); font-size: .9rem; margin-top: 28px; }
   <h1>The Hatua user guide</h1>
   <p class="lead">Hatua helps Kenyan teachers and parents see how each learner is doing, term by term, from Grade 4 to Grade 9. This guide shows you every step, with pictures.</p>
 </header>
+
+<section class="part" id="video">
+  <h2>Watch: the Hatua video guide</h2>
+  <p>Kwamboka, the Hatua guide, shows every step on real Hatua screens. The first video is for teachers and the second is for parents. They play one after the other, with sound and with the words on the screen.</p>
+  <video id="vg" controls preload="metadata" poster="guide/tutorial-poster.png" src="guide/hatua-teachers.mp4" style="width:100%;height:auto;border-radius:14px;background:#213029;display:block"></video>
+  <p id="vg-eps" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+    <button type="button" data-ep="guide/hatua-teachers.mp4" aria-pressed="true">For teachers</button>
+    <button type="button" data-ep="guide/hatua-parents.mp4" aria-pressed="false">For parents</button>
+  </p>
+  <p class="soft small">No picture? Open the files <code>hatua-teachers.mp4</code> and <code>hatua-parents.mp4</code> in the <code>guide</code> folder. The guide is a drawing and the voice is a computer voice.</p>
+  <style>#vg-eps button { border: 0; border-radius: 999px; padding: 9px 16px; font: inherit; background: var(--tint); color: var(--ink); cursor: pointer; } #vg-eps button[aria-pressed="true"] { background: var(--jac); color: #fff; font-weight: 700; }</style>
+  <script>
+  (function () { /* a small playlist: when one episode ends, the next one starts */
+    var v = document.getElementById("vg"), bs = [].slice.call(document.querySelectorAll("#vg-eps button"));
+    function play(i, start) { bs.forEach(function (b, k) { b.setAttribute("aria-pressed", String(k === i)); }); v.src = bs[i].getAttribute("data-ep"); if (start) v.play(); }
+    bs.forEach(function (b, i) { b.addEventListener("click", function () { play(i, true); }); });
+    v.addEventListener("ended", function () { var i = bs.findIndex(function (b) { return b.getAttribute("aria-pressed") === "true"; }); if (i + 1 < bs.length) play(i + 1, true); });
+    if (location.hash === "#video-parents") play(1, false);
+  })();
+  </script>
+</section>
 
 <nav class="toc" aria-label="In this guide"><b>In this guide</b>
   <ol>
@@ -116,10 +139,13 @@ footer { color: var(--soft); font-size: .9rem; margin-top: 28px; }
   <ol class="steps">
     <li>Open your <b>Downloads</b> folder and double-click the zip file. A <b>Hatua</b> folder appears.</li>
     <li>Drag the <b>Hatua</b> app into your <b>Applications</b> folder.</li>
-    <li>The first time only: <b>right-click</b> Hatua (or Control-click) and choose <b>Open</b>. The Mac asks if you are sure. Press <b>Open</b>.</li>
-    <li>After that, open Hatua the normal way.</li>
+    <li>Double-click <b>Hatua</b>. The first time, the Mac says <b>"Hatua.app" Not Opened</b>. Press <b>Done</b>. Do not press Move to Bin.</li>
+    <li>Click the Apple menu, then <b>System Settings</b>, then <b>Privacy &amp; Security</b>. Scroll down to <b>Security</b>.</li>
+    <li>You see "Hatua.app was blocked to protect your Mac". Press <b>Open Anyway</b>. Type your Mac password, then press <b>Open Anyway</b> again.</li>
+    <li>After that, open Hatua the normal way. The Mac does not ask again.</li>
   </ol>
-  <div class="box warn"><b>Why does the Mac ask?</b> Hatua is free and does not come from the App Store, so the Mac checks with you once. This is normal for free school software.</div>
+  <p class="soft">On an older Mac (macOS 14 or before) you can also right-click Hatua, choose <b>Open</b>, then press <b>Open</b>.</p>
+  <div class="box warn"><b>Why does the Mac say this?</b> Apple shows this message for every app that has not paid Apple for a yearly developer certificate. Hatua is free and open source, so it does not have one yet. The message does not mean Hatua has a virus: Apple has simply not checked it. Anyone can read Hatua's code on GitHub.</div>
 
   <h3>On Windows</h3>
   <ol class="steps">
@@ -181,7 +207,7 @@ footer { color: var(--soft); font-size: .9rem; margin-top: 28px; }
   <p>Today shows learners to watch and results files that need you. An <b>early sign</b> means a learning area fell two levels in one term. A <b>pattern</b> means several terms in a row.</p>
   <figure><img src="guide/11-today-alerts.png" alt="The Today tab" loading="lazy"><figcaption>Learners to watch, with the reason for each alert.</figcaption></figure>
   <p>Press <b>Message for the parent</b> on an alert, or <b>Message the parent</b> on a learner's page. Hatua writes a short, kind message in English or Kiswahili from the records. It can be a concern or good news. You can change any word.</p>
-  <p><b>To send it by WhatsApp (free):</b></p>
+  <p><b>To send it by WhatsApp:</b></p>
   <ol>
     <li>Type the parent's WhatsApp number, for example 0712 345 678.</li>
     <li>Read the message and the number again. Tick the box.</li>

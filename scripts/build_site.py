@@ -114,8 +114,9 @@ def main() -> None:
         shutil.copy2(PYODIDE / name, OUT / "try" / "pyodide" / name)
     web_zip(OUT / "try" / "hatua-web.zip")
     page = (REPO / "ui" / "portal.html").read_text(encoding="utf-8")
-    page = page.replace('href="/guide"', 'href="../guide/"').replace("<title>Hatua portal</title>",
+    page = page.replace('href="/guide#video"', 'href="../guide/#video"').replace('href="/guide"', 'href="../guide/"').replace("<title>Hatua portal</title>",
                                                                      "<title>Hatua practice school</title>")
+    page = page.replace('const VIDEO_BASE = "/guide/";', 'const VIDEO_BASE = "../guide/guide/";')
     page = page.replace("<script>\n\"use strict\";", LOADER + "<script>\n\"use strict\";", 1)
     page = page.replace("<body>\n", "<body>\n" + BANNER, 1)
     page = page.replace("</style>", "#ai-box { display: none !important; }\n</style>", 1)
