@@ -26,8 +26,10 @@ const CURSOR = () => {
   // What must already be true before the film starts.
   if (ep === 'parents') {
     const q = await (await b.newContext({ viewport: { width: 1180, height: 820 } })).newPage();
-    await q.goto(U); await q.fill('#si-id', 'M-6001'); await q.fill('#si-pin', '246810'); await q.click('#si-go'); await q.waitForSelector('#who b');
+    await q.goto(U); await q.fill('#si-id', 'M-6001'); await q.fill('#si-pin', '246810'); await q.click('#si-go');
+    await q.waitForSelector('#privacy:not([hidden])'); await q.check('#pv-ok'); await q.click('#pv-go'); await q.waitForSelector('#who b');
     await q.evaluate(async () => {
+      await api('account/whatsapp', { method: 'POST', json: { phone: '0700 000 000', agreed: true } });
       await api('drive/decide', { method: 'POST', json: { path: 'Grade 6/2026 Term 3/Grade 6 Term 3 2026 results.xlsx', decision: 'approve' } });
       const c = (await api('learner/HT-0603/comment', { method: 'POST', json: {} })).comment;
       await api(`comment/${c.comment_id}/rate`, { method: 'POST', json: { rating: 'up' } });
@@ -35,6 +37,7 @@ const CURSOR = () => {
     await q.context().close();
   }
   const ctx = await b.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, colorScheme: 'light' });
+  await ctx.route(/wa\.me/, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>WhatsApp</title><p>WhatsApp</p>' }));
   await ctx.addInitScript(CURSOR); const p = await ctx.newPage(); const errs = [];
   p.on('pageerror', e => errs.push(e.message));
   await p.goto(U); await p.waitForSelector('#si-id'); await sleep(600);
@@ -54,7 +57,9 @@ const CURSOR = () => {
   const ACTS = {
     teachers: {
       signin: [async () => { await M.to('#si-role [data-role=teacher]'); }, async () => { await M.click('#si-role [data-role=teacher]'); },
-        async () => { await M.type('#si-id', 'M-6001'); await M.type('#si-pin', '246810'); await M.click('#si-go'); await p.waitForSelector('#who b'); }],
+        async () => { await M.type('#si-id', 'M-6001'); await M.type('#si-pin', '246810'); await M.click('#si-go'); await p.waitForSelector('#privacy:not([hidden])'); }],
+      privacy: [async () => { await M.to('#pv-title', 0, 0.3); }, async () => { await M.to('#pv-body', 0, 0.4, 0.3); await p.evaluate(() => document.getElementById('pv-body').scrollTo({ top: 400, behavior: 'smooth' })); },
+        async () => { await M.click('#pv-ok'); await sleep(300); await M.click('#pv-go'); await p.waitForSelector('#who b'); }],
       today: [async () => { await M.move(300, 150, 500); }, async () => { await M.to('[data-tab=today]'); }, async () => { await M.to('.card.task'); await M.to('.card.task [data-go-drive]'); }],
       approve: [async () => { await M.click('.card.task [data-go-drive]'); await sleep(500); await M.click('[data-preview]'); await p.waitForSelector('.preview'); },
         async () => { await M.show('.preview'); await M.to('.preview', 0, 0.3, 0.35); }, async () => { await M.click('[data-decide=approve]'); }, async () => { await sleep(1900); await p.evaluate(() => { document.getElementById('toast').hidden = true; }); await M.top(); }],
@@ -65,28 +70,38 @@ const CURSOR = () => {
       comment: [async () => { await M.click('#cm-write'); await p.waitForSelector('#cm-up'); }, async () => { await M.show('.comment'); await M.to('.comment', 0, 0.4, 0.3); },
         async () => { await sleep(1600); await M.click('#cm-up'); await sleep(700); await M.click('#cm-use'); }],
       whatsapp: [async () => { await p.evaluate(() => { document.getElementById('toast').hidden = true; }); await M.top(); await M.click('#msg-parent'); await p.waitForSelector('#pm-text'); },
-        async () => { await M.to('#pm-text', 0, 0.5, 0.4); },
-        async () => { await M.type('#pm-phone', '0712 345 678', 110); await M.click('#pm-ok'); await sleep(300); await M.click('#pm-wa'); await p.waitForSelector('#pm-open'); },
-        async () => { await M.to('#pm-open'); await sleep(700); await M.click('#dlg-x'); }],
+        async () => { await M.to('#pm-text', 0, 0.5, 0.4); await M.click('[data-style=shorter]'); await sleep(900); await M.to('#pm-text', 0, 0.5, 0.4); },
+        async () => { await M.show('#pm-to'); await M.to('#pm-to', 0, 0.4); await sleep(400); await M.type('#pm-phone', '0712 345 678', 100); await M.click('#pm-save'); },
+        async () => { await M.to('#pm-who', 0, 0.4); await sleep(900); await M.click('#pm-ok'); await sleep(300); await M.click('#pm-wa'); await p.waitForSelector('.sent.ok'); await p.bringToFront(); },
+        async () => { await M.to('.sent.ok', 0, 0.3); await sleep(1200); await M.click('#pm-sent'); }],
       access: [async () => { await M.show('#pa-add'); await M.to('#pa-add'); },
         async () => { await M.click('#pa-add'); await M.type('#pa-name', 'Grace Wanjiku', 95); },
         async () => { await M.click('#pa-go'); await p.waitForSelector('.slip'); await M.to('.slip', 0, 0.6, 0.55); await sleep(1500); await M.to('#sl-print'); }],
-      assistant: [async () => { await M.click('#sl-done'); await M.click('#ask-launch'); await M.type('#ask-q', 'How is Kamau doing?', 55); },
-        async () => { await M.click('#ask-send'); await sleep(900); await M.click('.msg.bot .chips.live .chip', 1); }, async () => { await M.to('#ask-q'); await sleep(900); await M.click('#ask-min'); }],
-      look: [async () => { await M.click('#account'); await p.waitForSelector('#cp-form'); await M.click('.dlg [data-look-pick=dark]'); await sleep(1500); await M.click('.dlg [data-look-pick=light]'); },
-        async () => { await M.click('#dlg-x'); await M.to('#app header a.btn'); }],
+      assistant: [async () => { await M.click('#sl-done'); await M.click('#ask-launch'); await M.type('#ask-q', 'How is Kamau doing?', 35); },
+        async () => { await M.click('#ask-send'); await sleep(900); await M.click('.msg.bot .chips.live .chip', 1); },
+        async () => { await p.waitForSelector('[data-next]'); await M.to('[data-next]', 0); }, async () => { await sleep(600); await M.click('#ask-min'); }],
+      look: [async () => { await M.click('#account'); await p.waitForSelector('#wn-form'); await M.show('#wn-form'); await M.type('#wn-phone', '0700 000 000', 90); },
+        async () => { await M.click('.dlg [data-look-pick=dark]'); await sleep(900); await M.click('.dlg [data-look-pick=light]'); },
+        async () => { await M.click('#dlg-x'); await M.to('#video-guide'); await sleep(250); await M.to('#app header a.btn'); }],
     },
     parents: {
       slip: [async () => { await M.move(480, 300, 500); }, async () => { await M.to('#si-id'); }, async () => { await M.to('#si-facts'); }],
       signin: [async () => { await M.top(); await M.click('#si-role [data-role=parent]'); }, async () => { await M.type('#si-id', 'P-100003'); await M.type('#si-pin', '246810'); }, async () => { await M.click('#si-go'); await p.waitForSelector('#np-form:not([hidden])'); }],
-      pin: [async () => { await M.to('#np-hello'); }, async () => { await M.type('#np-new', 'mwangi73', 120); await M.type('#np-again', 'mwangi73', 120); }, async () => { await M.click('#np-go'); await p.waitForSelector('#child .area'); }],
+      pin: [async () => { await M.to('#np-hello'); }, async () => { await M.type('#np-new', 'mwangi73', 120); await M.type('#np-again', 'mwangi73', 120); }, async () => { await M.click('#np-go'); await p.waitForSelector('#privacy:not([hidden])'); }],
+      privacy: [async () => { await M.to('#pv-title', 0, 0.3); }, async () => { await M.to('#pv-body', 0, 0.4, 0.3); await p.evaluate(() => document.getElementById('pv-body').scrollTo({ top: 400, behavior: 'smooth' })); },
+        async () => { await M.click('#pv-ok'); await sleep(300); await M.click('#pv-go'); await p.waitForSelector('#child .area'); await p.evaluate(() => { document.getElementById('toast').hidden = true; }); }],
       child: [async () => { await M.to('#child .learner-head', 0, 0.3); }, async () => { await M.to('#child .areas', 0, 0.3, 0.3); await M.to('#child .areas', 0, 0.7, 0.6, 900); },
         async () => { await M.click('#child .area button[data-ev]', 3); await p.waitForSelector('#dlg[open]'); await sleep(2600); await M.click('#dlg-x'); }],
       days: [async () => { await M.show('#child .days'); await M.to('#child .days'); }, async () => { await M.to('#child section:has(h3:text-is("From the class teacher"))', 0, 0.4, 0.6); }, async () => { await sleep(300); }],
+      message: [async () => { await M.show('#msg-teacher'); await M.click('#msg-teacher'); await p.waitForSelector('#pm-text'); },
+        async () => { await M.click('#pm-text'); await p.keyboard.press('End'); await p.keyboard.type('Can we talk about his Mathematics this week?', { delay: 45 }); await M.click('[data-style=warmer]'); },
+        async () => { await sleep(500); await M.to('.who-card', 0, 0.3); await sleep(700); await M.click('#pm-ok'); await sleep(300); await M.click('#pm-wa'); await p.waitForSelector('.sent.ok'); await p.bringToFront(); },
+        async () => { await M.to('.sent.ok', 0, 0.3); await sleep(800); await M.click('#dlg-x'); }],
       pathways: [async () => { const h = p.locator('#child h3', { hasText: /pathway/i }).first(); await h.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' })); await sleep(700); const r = await h.boundingBox(); await M.move(r.x + 120, r.y + 14); },
         async () => { const r = await p.locator('#child h3', { hasText: /pathway/i }).first().boundingBox(); await M.move(r.x + 260, r.y + 70, 900); }],
       assistant: [async () => { await M.top(); await M.click('#ask-launch'); }, async () => { await M.type('#ask-q', 'How is Kamau doing in Mathematics?', 45); await M.click('#ask-send'); },
-        async () => { await sleep(500); await M.click('.msg.bot .chips.live .chip', 0); await sleep(1800); await M.click('#ask-min'); }],
+        async () => { await sleep(500); await M.click('.msg.bot .chips.live .chip', 0); },
+        async () => { await p.waitForSelector('[data-next]'); await M.to('[data-next]', 0); await sleep(900); await M.click('#ask-min'); }],
       signout: [async () => { await M.to('#f-signout'); await sleep(600); await M.click('#f-signout'); }, async () => { await p.waitForSelector('#si-id'); await M.move(480, 330); }],
     },
   }[ep];

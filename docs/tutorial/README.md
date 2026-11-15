@@ -2,8 +2,8 @@
 
 Two videos play one after the other in the user guide:
 
-- `docs/guide/hatua-teachers.mp4` - for teachers (10 steps)
-- `docs/guide/hatua-parents.mp4` - for parents (8 steps)
+- `docs/guide/hatua-teachers.mp4` - for teachers (11 steps)
+- `docs/guide/hatua-parents.mp4` - for parents (10 steps)
 
 Kwamboka, the guide, is a drawing. The screens are real recordings of the Hatua portal on the practice school (made-up people). The voice is the open Kokoro voice (Apache 2.0), made offline.
 

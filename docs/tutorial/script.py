@@ -28,6 +28,10 @@ EPISODES = {
   ("signin", "Sign in", "Sign in", None, None, [
     "Let's start by signing in.", ("You're a teacher, so leave it on: I am a teacher.", 3.0),
     ("Type your member number, then your PIN, and press Sign in.", 6.5)]),
+  ("privacy", "Read the privacy notice", "Privacy notice", None, None, [
+    ("The first time, Hatua shows you a short privacy notice.", 3.6),
+    ("It says what Hatua keeps, and who sees what.", 3.4),
+    ("Read it, tick the box, and press Agree and continue.", 4.6)]),
   ("today", "Start with Today", "Today", None, None, [
     "This is your Today page.", "It tells you what needs you right now.",
     "Look, the Term 3 results are waiting for you to check."]),
@@ -43,18 +47,22 @@ EPISODES = {
     ("Report time? Press Write a comment.", 3.6), "Hatua drafts one for you, from Kamau's records.",
     ("You're the teacher, so you decide. If it sounds right, give it a thumbs up.", 6.0)]),
   ("whatsapp", "Message the parent", "Message the parent", None, None, [
-    ("Want to tell Kamau's parent? Press Message the parent.", 4.2), "Read the words, and change anything you like.",
-    ("Type the parent's WhatsApp number, tick the box, and you're ready to send it yourself.", 8.0),
-    ("You press Send, in your own WhatsApp.", 3.4)]),
+    ("Want to tell Kamau's parent? Press Message the parent.", 4.2),
+    ("Hatua writes the message for you. Want it shorter, or warmer? Just tap a button.", 5.6),
+    ("Now choose the parent by name. The first time, type their WhatsApp number.", 8.4),
+    ("Check the card, tick the box, and press Send on WhatsApp.", 6.6),
+    ("WhatsApp opens with your message ready. You press Send there.", 4.4)]),
   ("access", "Give a parent access", "Parent access", None, None, [
     ("Parents can have their own sign-in, too.", 3.2), ("Press Give a parent access, and type the parent's name.", 5.2),
     ("Hatua makes a parent number and a one-time PIN. Print the slip, and hand it over.", 6.0)]),
   ("assistant", "Ask the assistant", "Ask the assistant", None, None, [
     ("Got a question? Just ask the Hatua assistant.", 5.6),
-    ("It asks you one quick question first, so the answer fits what you need.", 4.6), ("And it will never rank your learners.", 3.0)]),
-  ("look", "Make it yours", "Light or dark", None, None, [
-    ("One last thing. In My account, you can switch between light and dark.", 7.0),
-    ("And if you ever get stuck, the Help button has the full guide.", 3.6)]),
+    ("It asks you one quick question first, so the answer fits what you need.", 5.0),
+    ("Then it suggests a next step, like sending the parent a message.", 3.6), ("And it will never rank your learners.", 2.6)]),
+  ("look", "Make it yours", "My account", None, None, [
+    ("One last thing. In My account, add your WhatsApp number, so parents can message you.", 6.4),
+    ("You can also switch between light and dark.", 4.0),
+    ("And if you get stuck, the Video guide and Help buttons are always here.", 3.6)]),
   ("outro", "You are ready", None, "You are ready", "You stay in charge, step by step", [
     "And that's Hatua.", "You stay in charge, step by step.", "Asante sana, and all the best with your class!"]),
  ]},
@@ -71,18 +79,28 @@ EPISODES = {
   ("pin", "Choose your own PIN", "Your own PIN", None, None, [
     "The first time, Hatua asks you to choose your own PIN.", ("Pick one that only you know, and type it twice.", 7.0),
     ("From now on, that's your key.", 3.0)]),
+  ("privacy", "Read the privacy notice", "Privacy notice", None, None, [
+    ("Next, Hatua shows you a short privacy notice.", 3.4),
+    ("It says what you see, and how your child's information is kept.", 3.6),
+    ("Read it, tick the box, and press Agree and continue.", 4.6)]),
   ("child", "Your child's page", "Your child's page", None, None, [
     "And here is your child's page.", "You can see the newest results in every learning area.",
     ("Tap a level, if you'd like to see the record behind it.", 5.5)]),
   ("days", "Days in school, and the teacher's words", "Days and comment", None, None, [
     ("You'll also find the days your child was in school.", 3.6), ("And here is the comment from the class teacher.", 3.6),
     "You only ever see your own child. Nobody else's."]),
+  ("message", "Message the teacher", "Message the teacher", None, None, [
+    ("Want to talk to the class teacher? Press Message the teacher on WhatsApp.", 4.4),
+    ("Write your message. Hatua can make it shorter or warmer, if you like.", 6.0),
+    ("Check the teacher's name, tick the box, and press Send on WhatsApp.", 6.4),
+    ("WhatsApp opens with it ready, and you press Send there.", 3.4)]),
   ("pathways", "Pathway ideas", "Pathway ideas", None, None, [
     ("What about senior school pathways?", 3.2),
     "You'll see those ideas only after the teacher has talked them through with you, and opened them."]),
   ("assistant", "Ask a question", "Ask a question", None, None, [
     ("You can also ask the Hatua assistant.", 3.0), ("Try something like: how is my child doing in Mathematics?", 6.5),
-    ("It answers from the school's records, and it never compares children.", 5.0)]),
+    ("It answers from the school's records, and it never compares children.", 4.6),
+    ("Then it suggests a next step, like sending the teacher a message.", 4.0)]),
   ("signout", "Sign out", "Sign out", None, None, [
     ("When you're done, always press Sign out.", 3.6), "Other families use this computer, too."]),
   ("outro", "That is all", None, "That is all you need", "You and the teacher, working together", [

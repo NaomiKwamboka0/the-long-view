@@ -1,7 +1,7 @@
 {
  "episode": "parents",
  "label": "For parents",
- "total": 116.733,
+ "total": 155.133,
  "voice": "af_heart",
  "scenes": [
   {
@@ -114,9 +114,36 @@
    "short": "Your own PIN"
   },
   {
+   "id": "privacy",
+   "title": "Read the privacy notice",
+   "start": 51.5667,
+   "dur": 13.266666666666667,
+   "lines": [
+    {
+     "text": "Next, Hatua shows you a short privacy notice.",
+     "start": 0.8,
+     "dur": 2.88,
+     "say": "nˈɛkst, hɑːtˈuːɑː ʃˈoʊz juː ɐ ʃˈɔːɹt pɹˈaɪvəsi nˈoʊɾɪs."
+    },
+    {
+     "text": "It says what you see, and how your child's information is kept.",
+     "start": 4.2,
+     "dur": 3.477,
+     "say": "ɪt sˈɛz wʌt juː sˈiː, ænd hˌaʊ jʊɹ tʃˈaɪldz ˌɪnfɚmˈeɪʃən ɪz kˈɛpt."
+    },
+    {
+     "text": "Read it, tick the box, and press Agree and continue.",
+     "start": 8.127,
+     "dur": 3.072,
+     "say": "ɹˈiːd ɪt, tˈɪk ðə bˈɑːks, ænd pɹˈɛs ɐɡɹˈiː ænd kəntˈɪnjuː."
+    }
+   ],
+   "short": "Privacy notice"
+  },
+  {
    "id": "child",
    "title": "Your child's page",
-   "start": 51.5667,
+   "start": 64.8333,
    "dur": 12.1,
    "lines": [
     {
@@ -143,7 +170,7 @@
   {
    "id": "days",
    "title": "Days in school, and the teacher's words",
-   "start": 63.6667,
+   "start": 76.9333,
    "dur": 11.866666666666667,
    "lines": [
     {
@@ -168,9 +195,42 @@
    "short": "Days and comment"
   },
   {
+   "id": "message",
+   "title": "Message the teacher",
+   "start": 88.8,
+   "dur": 21.533333333333335,
+   "lines": [
+    {
+     "text": "Want to talk to the class teacher? Press Message the teacher on WhatsApp.",
+     "start": 0.8,
+     "dur": 3.904,
+     "say": "wˈɔnt tə tˈɔːk tə ðə klˈæs tˈiːtʃɚ? pɹˈɛs mˈɛsɪdʒ ðə tˈiːtʃɚɹ ˌɔn wʌts ˈæp."
+    },
+    {
+     "text": "Write your message. Hatua can make it shorter or warmer, if you like.",
+     "start": 5.2,
+     "dur": 3.883,
+     "say": "ɹˈaɪt jʊɹ mˈɛsɪdʒ. hɑːtˈuːɑː kæn mˌeɪk ɪt ʃˈɔːɹɾɚ ɔːɹ wˈɔːɹmɚ, ɪf juː lˈaɪk."
+    },
+    {
+     "text": "Check the teacher's name, tick the box, and press Send on WhatsApp.",
+     "start": 11.2,
+     "dur": 3.541,
+     "say": "tʃˈɛk ðə tˈiːtʃɚz nˈeɪm, tˈɪk ðə bˈɑːks, ænd pɹˈɛs sˈɛnd ˌɔn wʌts ˈæp."
+    },
+    {
+     "text": "WhatsApp opens with it ready, and you press Send there.",
+     "start": 17.6,
+     "dur": 2.795,
+     "say": "wˌʌts ˈæp ˈoʊpənz wɪð ɪt ɹˈɛdi, ænd juː pɹˈɛs sˈɛnd ðˈɛɹ."
+    }
+   ],
+   "short": "Message the teacher"
+  },
+  {
    "id": "pathways",
    "title": "Pathway ideas",
-   "start": 75.5333,
+   "start": 110.3333,
    "dur": 9.9,
    "lines": [
     {
@@ -191,8 +251,8 @@
   {
    "id": "assistant",
    "title": "Ask a question",
-   "start": 85.4333,
-   "dur": 15.866666666666667,
+   "start": 120.2333,
+   "dur": 19.466666666666665,
    "lines": [
     {
      "text": "You can also ask the Hatua assistant.",
@@ -211,6 +271,12 @@
      "start": 10.3,
      "dur": 3.605,
      "say": "ɪɾ ˈænsɚz fɹʌmðə skˈuːlz ɹˈɛkɚdz, ænd ɪt nˈɛvɚ kəmpˈɛɹz tʃˈɪldɹən."
+    },
+    {
+     "text": "Then it suggests a next step, like sending the teacher a message.",
+     "start": 14.9,
+     "dur": 3.52,
+     "say": "ðˈɛn ɪt sədʒˈɛsts ɐ nˈɛkst stˈɛp, lˈaɪk sˈɛndɪŋ ðə tˈiːtʃɚɹ ɐ mˈɛsɪdʒ."
     }
    ],
    "short": "Ask a question"
@@ -218,7 +284,7 @@
   {
    "id": "signout",
    "title": "Sign out",
-   "start": 101.3,
+   "start": 139.7,
    "dur": 7.6,
    "lines": [
     {
@@ -239,7 +305,7 @@
   {
    "id": "outro",
    "title": "That is all",
-   "start": 108.9,
+   "start": 147.3,
    "dur": 7.833333333333333,
    "lines": [
     {

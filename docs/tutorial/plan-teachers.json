@@ -1,7 +1,7 @@
 {
  "episode": "teachers",
  "label": "For teachers",
- "total": 154.333,
+ "total": 186.4,
  "voice": "af_heart",
  "scenes": [
   {
@@ -60,9 +60,36 @@
    "short": "Sign in"
   },
   {
+   "id": "privacy",
+   "title": "Read the privacy notice",
+   "start": 22.4,
+   "dur": 13.233333333333333,
+   "lines": [
+    {
+     "text": "The first time, Hatua shows you a short privacy notice.",
+     "start": 0.8,
+     "dur": 3.435,
+     "say": "ðə fˈɜːst tˈaɪm, hɑːtˈuːɑː ʃˈoʊz juː ɐ ʃˈɔːɹt pɹˈaɪvəsi nˈoʊɾɪs."
+    },
+    {
+     "text": "It says what Hatua keeps, and who sees what.",
+     "start": 4.685,
+     "dur": 2.581,
+     "say": "ɪt sˈɛz wʌt hɑːtˈuːɑː kˈiːps, ænd hˌuː sˈiːz wˈʌt."
+    },
+    {
+     "text": "Read it, tick the box, and press Agree and continue.",
+     "start": 8.085,
+     "dur": 3.072,
+     "say": "ɹˈiːd ɪt, tˈɪk ðə bˈɑːks, ænd pɹˈɛs ɐɡɹˈiː ænd kəntˈɪnjuː."
+    }
+   ],
+   "short": "Privacy notice"
+  },
+  {
    "id": "today",
    "title": "Start with Today",
-   "start": 22.4,
+   "start": 35.6333,
    "dur": 8.933333333333334,
    "lines": [
     {
@@ -89,7 +116,7 @@
   {
    "id": "approve",
    "title": "Check and approve results",
-   "start": 31.3333,
+   "start": 44.5667,
    "dur": 15.833333333333334,
    "lines": [
     {
@@ -122,7 +149,7 @@
   {
    "id": "watch",
    "title": "Learners to watch",
-   "start": 47.1667,
+   "start": 60.4,
    "dur": 10.066666666666666,
    "lines": [
     {
@@ -149,7 +176,7 @@
   {
    "id": "longview",
    "title": "The long view",
-   "start": 57.2333,
+   "start": 70.4667,
    "dur": 12.1,
    "lines": [
     {
@@ -176,7 +203,7 @@
   {
    "id": "comment",
    "title": "Write a report comment",
-   "start": 69.3333,
+   "start": 82.5667,
    "dur": 14.4,
    "lines": [
     {
@@ -203,8 +230,8 @@
   {
    "id": "whatsapp",
    "title": "Message the parent",
-   "start": 83.7333,
-   "dur": 19.733333333333334,
+   "start": 96.9667,
+   "dur": 30.533333333333335,
    "lines": [
     {
      "text": "Want to tell Kamau's parent? Press Message the parent.",
@@ -213,22 +240,28 @@
      "say": "wˈɔnt tə tˈɛl kɑːmˈɑːuːz pˈɛɹənt? pɹˈɛs mˈɛsɪdʒ ðə pˈɛɹənt."
     },
     {
-     "text": "Read the words, and change anything you like.",
+     "text": "Hatua writes the message for you. Want it shorter, or warmer? Just tap a button.",
      "start": 5.0,
-     "dur": 2.347,
-     "say": "ɹˈiːd ðə wˈɜːdz, ænd tʃˈeɪndʒ ˈɛnɪθˌɪŋ juː lˈaɪk."
+     "dur": 4.587,
+     "say": "hˈæɾuːɚ ɹˈaɪts ðə mˈɛsɪdʒ fɔːɹ juː. wˈɔnt ɪt ʃˈɔːɹɾɚ, ɔːɹ wˈɔːɹmɚ? dʒˈʌst tˈæp ɐ bˈʌʔn."
     },
     {
-     "text": "Type the parent's WhatsApp number, tick the box, and you're ready to send it yourself.",
-     "start": 7.797,
-     "dur": 4.565,
-     "say": "tˈaɪp ðə pˈɛɹənts wʌts ˈæp nˈʌmbɚ, tˈɪk ðə bˈɑːks, ænd jʊɹ ɹˈɛdi tə sˈɛnd ɪt jɔːɹsˈɛlf."
+     "text": "Now choose the parent by name. The first time, type their WhatsApp number.",
+     "start": 10.6,
+     "dur": 4.245,
+     "say": "nˈaʊ tʃˈuːz ðə pˈɛɹənt baɪ nˈeɪm. ðə fˈɜːst tˈaɪm, tˈaɪp ðɛɹ wʌts ˈæp nˈʌmbɚ."
     },
     {
-     "text": "You press Send, in your own WhatsApp.",
-     "start": 15.797,
-     "dur": 2.069,
-     "say": "juː pɹˈɛs sˈɛnd, ɪn jʊɹ ˈoʊn wʌts ˈæp."
+     "text": "Check the card, tick the box, and press Send on WhatsApp.",
+     "start": 19.0,
+     "dur": 3.008,
+     "say": "tʃˈɛk ðə kˈɑːɹd, tˈɪk ðə bˈɑːks, ænd pɹˈɛs sˈɛnd ˌɔn wʌts ˈæp."
+    },
+    {
+     "text": "WhatsApp opens with your message ready. You press Send there.",
+     "start": 25.6,
+     "dur": 3.179,
+     "say": "wˌʌts ˈæp ˈoʊpənz wɪð jʊɹ mˈɛsɪdʒ ɹˈɛdi. juː pɹˈɛs sˈɛnd ðˈɛɹ."
     }
    ],
    "short": "Message the parent"
@@ -236,7 +269,7 @@
   {
    "id": "access",
    "title": "Give a parent access",
-   "start": 103.4667,
+   "start": 127.5,
    "dur": 15.733333333333333,
    "lines": [
     {
@@ -263,8 +296,8 @@
   {
    "id": "assistant",
    "title": "Ask the assistant",
-   "start": 119.2,
-   "dur": 14.533333333333333,
+   "start": 143.2333,
+   "dur": 18.533333333333335,
    "lines": [
     {
      "text": "Got a question? Just ask the Hatua assistant.",
@@ -279,8 +312,14 @@
      "say": "ɪɾ ˈæsks juː wˈʌn kwˈɪk kwˈɛstʃən fˈɜːst, sˌoʊ ðɪ ˈænsɚ fˈɪts wʌt juː nˈiːd."
     },
     {
+     "text": "Then it suggests a next step, like sending the parent a message.",
+     "start": 11.4,
+     "dur": 3.52,
+     "say": "ðˈɛn ɪt sədʒˈɛsts ɐ nˈɛkst stˈɛp, lˈaɪk sˈɛndɪŋ ðə pˈɛɹənt ɐ mˈɛsɪdʒ."
+    },
+    {
      "text": "And it will never rank your learners.",
-     "start": 11.0,
+     "start": 15.37,
      "dur": 1.749,
      "say": "ænd ɪt wɪl nˈɛvɚ ɹˈæŋk jʊɹ lˈɜːnɚz."
     }
@@ -290,28 +329,34 @@
   {
    "id": "look",
    "title": "Make it yours",
-   "start": 133.7333,
-   "dur": 11.966666666666667,
+   "start": 161.7667,
+   "dur": 16.0,
    "lines": [
     {
-     "text": "One last thing. In My account, you can switch between light and dark.",
+     "text": "One last thing. In My account, add your WhatsApp number, so parents can message you.",
      "start": 0.8,
-     "dur": 4.011,
-     "say": "wˈʌn lˈæst θˈɪŋ. ɪn maɪ ɐkˈaʊnt, juː kæn swˈɪtʃ bᵻtwˌiːn lˈaɪt ænd dˈɑːɹk."
+     "dur": 4.821,
+     "say": "wˈʌn lˈæst θˈɪŋ. ɪn maɪ ɐkˈaʊnt, ˈæd jʊɹ wʌts ˈæp nˈʌmbɚ, sˌoʊ pˈɛɹənts kæn mˈɛsɪdʒ juː."
     },
     {
-     "text": "And if you ever get stuck, the Help button has the full guide.",
-     "start": 7.8,
-     "dur": 3.136,
-     "say": "ænd ɪf juː ˈɛvɚ ɡɛt stˈʌk, ðə hˈɛlp bˈʌʔn hɐz ðə fˈʊl ɡˈaɪd."
+     "text": "You can also switch between light and dark.",
+     "start": 7.2,
+     "dur": 2.325,
+     "say": "juː kæn ˈɔːlsoʊ swˈɪtʃ bᵻtwˌiːn lˈaɪt ænd dˈɑːɹk."
+    },
+    {
+     "text": "And if you get stuck, the Video guide and Help buttons are always here.",
+     "start": 11.2,
+     "dur": 3.797,
+     "say": "ænd ɪf juː ɡɛt stˈʌk, ðə vˈɪdɪoʊ ɡˈaɪd ænd hˈɛlp bˈʌʔnz ɑːɹ ˈɔːlweɪz hˈɪɹ."
     }
    ],
-   "short": "Light or dark"
+   "short": "My account"
   },
   {
    "id": "outro",
    "title": "You are ready",
-   "start": 145.7,
+   "start": 177.7667,
    "dur": 8.633333333333333,
    "lines": [
     {
