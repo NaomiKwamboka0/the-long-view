@@ -62,7 +62,15 @@ A class teacher can give a parent access to one learner. The parent gets a paren
 
 A class teacher can send a parent a short message by WhatsApp. Hatua does not send it. Hatua drafts the message, the teacher edits it, types the parent's number and ticks that they checked both. Hatua then opens WhatsApp with the message ready, and the teacher presses Send with their own WhatsApp account.
 
-The message leaves the school's computer and travels through WhatsApp, under WhatsApp's own terms. It names the learner and says how a learning area is going. Send it only to a parent or guardian who agreed to get WhatsApp messages, and read the number back before sending. Hatua does not store the parent's number. The activity log keeps the teacher's name, the time, the message and the last three digits of the number, so a wrong number can be traced. Hatua refuses a message that ranks or compares learners or gives pathway advice. It cannot know whether the message was really sent; the teacher records that.
+The message leaves the school's computer and travels through WhatsApp, under WhatsApp's own terms. It names the learner and says how a learning area is going. Send it only to a parent or guardian who agreed to get WhatsApp messages.
+
+**Saved numbers.** So that the teacher picks a parent by name instead of typing a number each time, Hatua can keep WhatsApp numbers in `store/contacts.json` on the school's computer:
+- a parent's number, only when the class teacher ticks that the parent agreed, or when the parent saves it in **My account**;
+- a teacher's own number, only when the teacher saves it in **My account** and ticks that they agree. The parents of that teacher's learners then see it and can press **Message the teacher**. No one else sees it.
+
+A number typed for one message, without the tick, is not kept. Anyone can remove their own number in My account. When a parent's access is removed, their saved number is deleted with their account. Hatua cannot check with Safaricom or WhatsApp whose number it is: the name shown comes from Hatua's own records, and WhatsApp shows the chat's name before Send.
+
+The activity log keeps who approved the message, the time, the last three digits of the number, and, for a teacher's message, the message itself. For a parent's message to a teacher it keeps only that a message went and how long it was, not the parent's words. Hatua refuses a message that ranks or compares learners or gives pathway advice. It cannot know whether the message was really sent; the teacher records that.
 
 ## The practice website
 

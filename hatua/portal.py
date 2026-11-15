@@ -103,6 +103,10 @@ def _did(e: dict) -> str | None:
         return f"Uploaded the file '{name}' to the school drive"
     if tool == "pathways.open":
         return f"Opened pathway ideas for {child}"
+    if tool == "teacher.whatsapp":
+        return f"Got a WhatsApp message ready for {child}'s class teacher"
+    if tool == "whatsapp.number":
+        return "Removed your WhatsApp number" if out.get("removed") else f"Saved your WhatsApp number (ending {out.get('to_ending', '')})"
     if tool == "parent.whatsapp":
         return f"Checked a WhatsApp message for the parent of {child} (number ending {out.get('to_ending', '')})"
     if tool == "parent.told":
@@ -345,13 +349,31 @@ class Handler(BaseHTTPRequestHandler):
                                     "calendar": school_calendar.summary(config.today()), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
         if method == "GET" and path == "account":
-            return self._send(200, _account(pid))
+            return self._send(200, {**_account(pid), **whatsapp.my_number(pid, "parent")})
+        if method == "POST" and path == "account/whatsapp":
+            self._check_post()
+            body = self._json()
+            try:
+                return self._send(200, whatsapp.set_my_number(pid, "parent", str(body.get("phone", "")),
+                                                              body.get("agreed") is True))
+            except whatsapp.Refused as exc:
+                raise Refused(400, str(exc)) from None
         m = re.fullmatch(r"family/child/(HT-\d{4})", path)
         if method == "GET" and m:
             try:
-                return self._send(200, family.child_view(pid, m.group(1)))
+                return self._send(200, {**family.child_view(pid, m.group(1)),
+                                        "teacher_whatsapp": whatsapp.teacher_contact(pid, m.group(1))["whatsapp"]})
             except GateBlocked as exc:
                 raise Refused(403, str(exc)) from None
+        m = re.fullmatch(r"family/child/(HT-\d{4})/whatsapp", path)
+        if method == "POST" and m:
+            self._check_post()
+            body = self._json()
+            try:
+                return self._send(200, whatsapp.to_teacher(pid, who["name"], m.group(1), text=str(body.get("text", "")),
+                                                           checked=body.get("checked")))
+            except whatsapp.Refused as exc:
+                raise Refused(400, str(exc)) from None
         m = re.fullmatch(r"evidence/([RA]-[A-Za-z0-9-]{1,40})", path)
         if method == "GET" and m:
             try:
@@ -449,7 +471,15 @@ class Handler(BaseHTTPRequestHandler):
                                     "calendar": school_calendar.summary(today), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
         if method == "GET" and path == "account":
-            return self._send(200, _account(tid))
+            return self._send(200, {**_account(tid), **whatsapp.my_number(tid, "teacher")})
+        if method == "POST" and path == "account/whatsapp":
+            self._check_post()
+            body = self._json()
+            try:
+                return self._send(200, whatsapp.set_my_number(tid, "teacher", str(body.get("phone", "")),
+                                                              body.get("agreed") is True))
+            except whatsapp.Refused as exc:
+                raise Refused(400, str(exc)) from None
         if method == "GET" and path == "notices":
             notify.check_missing(today)  # a file deleted from the drive is noticed here
             return self._send(200, {"notices": notify.for_teacher(tid, include_resolved=q.get("all") == "1")})
@@ -508,6 +538,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 if method == "GET" and not m.group(2):
                     return self._send(200, {"messages": whatsapp.options(tid, m.group(1)),
+                                            "recipients": whatsapp.recipients(m.group(1)),
                                             "max_chars": whatsapp.MAX_CHARS})
                 if method == "POST":
                     self._check_post()
@@ -516,7 +547,8 @@ class Handler(BaseHTTPRequestHandler):
                         return self._send(200, whatsapp.sent(tid, who["name"], m.group(1), str(body.get("key", ""))))
                     return self._send(200, whatsapp.prepare(
                         tid, who["name"], m.group(1), phone=str(body.get("phone", "")), text=str(body.get("text", "")),
-                        key=str(body.get("key", "")), checked=body.get("checked")))
+                        key=str(body.get("key", "")), checked=body.get("checked"),
+                        to=str(body.get("to", "")), save=body.get("save") is True))
             except whatsapp.Refused as exc:
                 raise Refused(400, str(exc)) from None
         m = re.fullmatch(r"learner/(HT-\d{4})/comment", path)

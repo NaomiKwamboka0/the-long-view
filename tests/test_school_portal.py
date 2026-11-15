@@ -909,3 +909,63 @@ def test_the_tutorial_video_is_served_in_pieces(portal):
     assert r.getheader("Content-Range", "").startswith("bytes 0-99/") and b"ftyp" in data
     assert "media-src 'self'" in r.getheader("Content-Security-Policy")
     assert call(portal, "GET", "/guide/../hatua/auth.mp4")[0] == 404
+
+
+def test_saved_numbers_pick_the_parent_by_name_and_go_with_the_account(school_home):
+    drive.decide(G6, login("M-6001"), "approve")
+    session = login("M-6001")
+    from hatua import family
+    out = family.add(session, "HT-0603", "Grace Wanjiku", "Mother")
+    pid = out["parent_id"]
+    people = whatsapp.recipients("HT-0603")
+    grace = next(p for p in people if p["parent_id"] == pid)
+    assert grace["name"] == "Grace Wanjiku" and grace["whatsapp"] is None
+    msg = whatsapp.options("M-6001", "HT-0603")[0]
+    send = {"text": msg["en"], "key": msg["key"], "checked": True, "to": pid}
+    with pytest.raises(whatsapp.Refused, match="Grace Wanjiku's WhatsApp number"):
+        whatsapp.prepare("M-6001", "Mary Njeri", "HT-0603", phone="", **send)
+    once = whatsapp.prepare("M-6001", "Mary Njeri", "HT-0603", phone="0712 345 678", **send)
+    assert once["name"] == "Grace Wanjiku" and once["relation"] == "Mother"
+    assert whatsapp.number_of("parents", pid) is None, "not kept without the teacher's tick"
+    whatsapp.prepare("M-6001", "Mary Njeri", "HT-0603", phone="0712 345 678", save=True, **send)
+    assert whatsapp.number_of("parents", pid) == "254712345678"
+    again = whatsapp.prepare("M-6001", "Mary Njeri", "HT-0603", phone="", **send)
+    assert "wa.me/254712345678" in again["url"], "next time the saved number is used, chosen by name"
+    with pytest.raises(whatsapp.Refused, match="cannot see this learner"):
+        whatsapp.prepare("M-6001", "Mary Njeri", "HT-0603", phone="", **{**send, "to": "P-100001"})
+    family.remove(login("M-6001"), "HT-0603", pid)
+    assert whatsapp.number_of("parents", pid) is None, "the number goes with the account"
+
+
+def test_a_parent_messages_the_class_teacher_only_when_the_teacher_shared_a_number(school_home):
+    assert whatsapp.teacher_contact("P-100003", "HT-0603") == {"name": "Mary Njeri", "whatsapp": None}
+    with pytest.raises(whatsapp.Refused, match="has not added a WhatsApp number"):
+        whatsapp.to_teacher("P-100003", "Samuel Mwangi", "HT-0603", text="Hello teacher, a question.", checked=True)
+    with pytest.raises(whatsapp.Refused, match="Tick the box to agree"):
+        whatsapp.set_my_number("M-6001", "teacher", "0711 222 333", agreed=False)
+    assert whatsapp.set_my_number("M-6001", "teacher", "0711 222 333", agreed=True) == {"whatsapp": "+254 711 222 333"}
+    assert whatsapp.teacher_contact("P-100003", "HT-0603")["whatsapp"] == "+254 711 222 333"
+    with pytest.raises(whatsapp.Refused, match="your own child"):
+        whatsapp.teacher_contact("P-100003", "HT-0001")
+    with pytest.raises(whatsapp.Refused, match="Tick the box"):
+        whatsapp.to_teacher("P-100003", "Samuel Mwangi", "HT-0603", text="Hello teacher, a question.", checked=False)
+    out = whatsapp.to_teacher("P-100003", "Samuel Mwangi", "HT-0603", text="Hello teacher, a question.", checked=True)
+    assert out["url"].startswith("https://wa.me/254711222333?text=Hello") and out["name"] == "Mary Njeri"
+    event = [e for e in audit.read_events() if e.get("tool") == "teacher.whatsapp"][-1]
+    assert event["actor"] == "P-100003" and "question" not in json.dumps(event), "the parent's words are not logged"
+    assert whatsapp.set_my_number("M-6001", "teacher", "", agreed=False) == {"whatsapp": None}
+
+
+def test_portal_my_number_and_message_the_teacher(portal):
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    st, _, out = call(portal, "POST", "/api/account/whatsapp", {"phone": "0711222333", "agreed": True}, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["whatsapp"] == "+254 711 222 333"
+    assert call(portal, "GET", "/api/account", cookie=cookie)[2]["whatsapp"] == "+254 711 222 333"
+    pc, pcsrf, _ = sign_in(portal, "P-100002")
+    child = call(portal, "GET", "/api/family/child/HT-0405", cookie=pc)[2]
+    assert child["teacher_whatsapp"] is None, "Lucy's children have other class teachers"
+    st, _, mine = call(portal, "POST", "/api/account/whatsapp", {"phone": "0722 000 111", "agreed": True}, cookie=pc, csrf=pcsrf)
+    assert st == 200 and mine["whatsapp"] == "+254 722 000 111"
+    st, _, bad = call(portal, "POST", "/api/family/child/HT-0405/whatsapp", {"text": "Hello there teacher", "checked": True},
+                      cookie=pc, csrf=pcsrf)
+    assert st == 400 and "has not added a WhatsApp number" in bad["error"]

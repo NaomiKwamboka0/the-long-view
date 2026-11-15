@@ -10,7 +10,7 @@
 
 **Purpose.** Help a class teacher notice multi-term strengths and difficulties in a learner's assessment record, early enough to talk with the family. The tool prepares cited drafts. A teacher decides what is saved or shared. It does not assign a pathway, label, score or rank.
 
-**Data subjects.** Learners in Grades 4-9 (children). Teachers (identity and approval records). Guardians appear only as recipients of messages a teacher chooses to send. Hatua sends nothing itself. For a WhatsApp message the teacher types the guardian's number each time; Hatua uses it once to build the link, does not store it, and logs only its last three digits. The message then travels through WhatsApp, outside the school's computer, under the teacher's own account.
+**Data subjects.** Learners in Grades 4-9 (children). Teachers (identity and approval records). Guardians appear only as recipients of messages a teacher chooses to send. Hatua sends nothing itself. For a WhatsApp message Hatua keeps a guardian's number only when the class teacher ticks that the guardian agreed, or when the guardian saves it; otherwise the number is used once and not stored. A teacher's own number is kept only when the teacher saves it, and only the parents of that teacher's learners see it. Saved numbers are deleted with the parent's account. The log keeps only the last three digits. The message then travels through WhatsApp, outside the school's computer, under the teacher's own account.
 
 | Data | Source | Notes |
 |---|---|---|

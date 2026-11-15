@@ -1,3 +1,11 @@
+# WhatsApp by name, in one press, and parents can message the teacher — 16 November 2026
+
+- **Choose the parent by name.** The message dialog asks **Who is it for?** and lists the parents who can see the learner. A card shows the name, who they are to the learner, and the number before the teacher ticks **Yes, this is the person I want**.
+- **Saved numbers** (`store/contacts.json`). A parent's number is kept only when the class teacher ticks that the parent agreed, or when the parent saves it in **My account**. A teacher saves their own number in My account. A number typed once without the tick is not kept. A parent's number is deleted with their account.
+- **One press.** **Send on WhatsApp** shows a turning circle while Hatua checks the message, then opens WhatsApp with it ready and shows a tick, or a cross and the reason (for example, a number that is too short). The teacher presses Send in WhatsApp; Hatua still sends nothing by itself.
+- **Parents message the class teacher.** When the teacher has shared a number, the parent's page shows **Message the teacher on WhatsApp**. The log keeps that a message went, not the parent's words.
+- **Not possible for free, so not built:** asking Safaricom or WhatsApp whose number it is, and a "delivered" tick. The name comes from Hatua's own records, and WhatsApp shows the chat's name before Send.
+
 # The video guide with Kwamboka, and the right Mac opening steps — 16 November 2026
 
 - **Video guide, two videos.** One is for teachers (10 steps) and one is for parents (8 steps). A teacher's page has a **Video guide** button that plays the teachers' video; a parent's page plays the parents' video. Both are at the top of the user guide, where they play one after the other, and the sign-in page links to them.

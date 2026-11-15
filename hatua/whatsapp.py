@@ -12,19 +12,31 @@ Hatua does not send anything itself and uses no paid service. It does three thin
    in WhatsApp with their own account.
 
 Sharing with a guardian cannot be undone, so it needs a signed-in class teacher who ticks
-that they checked the message and the number. That approval goes into the audit log with
-the teacher's name, the message and its records. The parent's number is NOT kept: only its
-last three digits are logged, so a wrong number can be traced without storing a contact.
+that this is the right person and that they checked the message. That approval goes into the
+audit log with the teacher's name, the message and its records, and the last three digits of
+the number.
+
+Saved numbers (store/contacts.json), so the teacher picks a person by name, not by number:
+
+* A parent's number is saved only when the class teacher ticks that the parent agreed, or when
+  the parent saves it in My account. A one-off number typed for one message is not kept.
+* A teacher saves their own number in My account. Then the parents who can see one of that
+  teacher's learners can press "Message the teacher". No one else sees it.
+* Removing a parent's access deletes their saved number with their account.
+
+Hatua cannot ask Safaricom or WhatsApp whose number it is: there is no free service for that.
+The name comes from Hatua's own records, and WhatsApp itself shows the chat's name before Send.
 
 Privacy note for the school: the message travels through WhatsApp, outside this computer.
-Keep it short and send it only to a parent who agreed to get WhatsApp messages.
+Keep it short and send it only to a person who agreed to get WhatsApp messages.
 """
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from urllib.parse import quote
 
-from . import audit, guard, notify, patterns, scope, store
+from . import audit, family, guard, notify, patterns, scope, store
 from .config import FAMILY_SW, LEVEL_NAMES, LEVEL_NAMES_SW
 
 MAX_CHARS = 700
@@ -63,6 +75,60 @@ def pretty(digits: str) -> str:
     if len(digits) == 12 and digits.startswith("254"):
         return f"+254 {digits[3:6]} {digits[6:9]} {digits[9:]}"
     return "+" + digits
+
+
+# ---------------------------------------------------------------- saved numbers
+def _contacts() -> dict:
+    c = store.load("contacts")
+    return c if isinstance(c, dict) else {}
+
+
+def number_of(kind: str, person_id: str) -> str | None:
+    """The saved WhatsApp number (digits) of a parent ("parents") or teacher ("teachers"), or None."""
+    return ((_contacts().get(kind) or {}).get(person_id) or {}).get("whatsapp")
+
+
+def save_number(kind: str, person_id: str, digits: str, by: str) -> None:
+    c = _contacts()
+    c.setdefault(kind, {})[person_id] = {"whatsapp": digits, "by": by,
+                                         "at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    store.save("contacts", c)
+
+
+def forget_number(kind: str, person_id: str) -> None:
+    c = _contacts()
+    if (c.get(kind) or {}).pop(person_id, None) is not None:
+        store.save("contacts", c)
+
+
+def my_number(person_id: str, role: str) -> dict:
+    digits = number_of("parents" if role == "parent" else "teachers", person_id)
+    return {"whatsapp": pretty(digits) if digits else None}
+
+
+def set_my_number(person_id: str, role: str, phone: str, agreed: bool) -> dict:
+    """A teacher or parent saves (or, with an empty number, removes) their own WhatsApp number."""
+    kind = "parents" if role == "parent" else "teachers"
+    if not str(phone or "").strip():
+        forget_number(kind, person_id)
+        audit.write_event({"tool": "whatsapp.number", "actor": person_id, "ok": True, "output": {"removed": True}})
+        return my_number(person_id, role)
+    if agreed is not True:
+        raise Refused("Tick the box to agree that Hatua keeps your number on this computer.")
+    digits = phone_digits(phone)
+    save_number(kind, person_id, digits, person_id)
+    audit.write_event({"tool": "whatsapp.number", "actor": person_id, "ok": True, "output": {"to_ending": digits[-3:]}})
+    return my_number(person_id, role)
+
+
+def recipients(learner_id: str) -> list[dict]:
+    """The parents who can see this learner, by name, with their saved number if there is one."""
+    out = []
+    for p in family.parents_of(learner_id):
+        digits = number_of("parents", p["parent_id"])
+        out.append({"parent_id": p["parent_id"], "name": p["name"], "relation": p["relation"],
+                    "whatsapp": pretty(digits) if digits else None})
+    return out
 
 
 def _good_news(learner_id: str, name: str) -> list[dict]:
@@ -116,28 +182,48 @@ def link(digits: str, text: str) -> str:
 
 
 def prepare(teacher_id: str, teacher_name: str, learner_id: str, *, phone: str, text: str, key: str,
-            checked: bool) -> dict:
-    """The named teacher's approval to share. Returns the WhatsApp link, and logs the approval."""
+            checked: bool, to: str = "", save: bool = False) -> dict:
+    """The named teacher's approval to share. Returns the WhatsApp link, and logs the approval.
+
+    `to` is a parent number (P-123456) from recipients(): their saved WhatsApp number is used
+    unless the teacher typed another one. `save` keeps the typed number for that parent.
+    Without `to`, the typed number is used once and not kept.
+    """
     choice = next((o for o in options(teacher_id, learner_id) if o["key"] == key), None)
     if choice is None:
         raise Refused("That message is no longer open. Close this and start again.")
     if checked is not True:
-        raise Refused("Tick the box to say you checked the message and the number.")
+        raise Refused("Tick the box to say this is the right person and you checked the message.")
     text = re.sub(r"[ \t]+\n", "\n", str(text or "")).strip()
     if len(text) < 10:
         raise Refused("The message is empty. Write a few words first.")
     if len(text) > MAX_CHARS:
         raise Refused(f"The message is too long for one WhatsApp note. Keep it under {MAX_CHARS} letters.")
-    digits = phone_digits(phone)
+    person = None
+    if to:
+        person = next((r for r in recipients(learner_id) if r["parent_id"] == to), None)
+        if person is None:
+            raise Refused("That parent cannot see this learner. Choose another person.")
+        typed = str(phone or "").strip()
+        digits = phone_digits(typed) if typed else number_of("parents", to)
+        if not digits:
+            raise Refused(f"Type {person['name']}'s WhatsApp number.")
+    else:
+        digits = phone_digits(phone)
     found = guard.labels_in(text)
     if found:
         raise Refused("Hatua cannot share this message. It must not rank or compare learners, and it must not "
                       f"give pathway or career advice. Please change: {', '.join(sorted(set(found))[:3])}.")
+    saved = bool(person and save and str(phone or "").strip())
+    if saved:
+        save_number("parents", to, digits, teacher_id)
     audit.write_event({"tool": "parent.whatsapp", "actor": teacher_id, "ok": True,
-                       "inputs": {"kwargs": {"learner_id": learner_id, "message": key, "evidence": choice["evidence"]}},
+                       "inputs": {"kwargs": {"learner_id": learner_id, "message": key, "evidence": choice["evidence"],
+                                             "to_parent": to or None}},
                        "output": {"approved_by": teacher_name, "to_ending": digits[-3:], "text": text,
-                                  "sent_by_hatua": False}})
-    return {"url": link(digits, text), "to": pretty(digits), "key": key}
+                                  "number_saved": saved, "sent_by_hatua": False}})
+    return {"url": link(digits, text), "to": pretty(digits), "key": key,
+            "name": person["name"] if person else None, "relation": person["relation"] if person else None}
 
 
 def sent(teacher_id: str, teacher_name: str, learner_id: str, key: str) -> dict:
@@ -153,3 +239,34 @@ def sent(teacher_id: str, teacher_name: str, learner_id: str, key: str) -> dict:
                        "inputs": {"kwargs": {"learner_id": learner_id, "message": key}},
                        "output": {"how": "By WhatsApp", "recorded_by": teacher_name, "notices": marked}})
     return {"ok": True, "notices": marked}
+
+
+# ---------------------------------------------------------------- a parent writes to the class teacher
+def teacher_contact(parent_id: str, learner_id: str) -> dict:
+    """Who the parent can message about this child, and whether that teacher shared a number."""
+    if not family.can_view(parent_id, learner_id):
+        raise Refused("You can only message the teacher of your own child.")
+    tid, tname = family._teacher_name(learner_id)
+    digits = number_of("teachers", tid) if tid else None
+    return {"name": tname, "whatsapp": pretty(digits) if digits else None}
+
+
+def to_teacher(parent_id: str, parent_name: str, learner_id: str, *, text: str, checked: bool) -> dict:
+    """A parent's message to their child's class teacher. Returns the WhatsApp link."""
+    contact = teacher_contact(parent_id, learner_id)
+    tid, _ = family._teacher_name(learner_id)
+    digits = number_of("teachers", tid) if tid else None
+    if not digits:
+        raise Refused(f"{contact['name']} has not added a WhatsApp number in Hatua yet. Talk to the school.")
+    if checked is not True:
+        raise Refused("Tick the box to say this is the right person and you checked the message.")
+    text = re.sub(r"[ \t]+\n", "\n", str(text or "")).strip()
+    if len(text) < 10:
+        raise Refused("The message is empty. Write a few words first.")
+    if len(text) > MAX_CHARS:
+        raise Refused(f"The message is too long for one WhatsApp note. Keep it under {MAX_CHARS} letters.")
+    # The parent's own words are theirs: Hatua logs that a message went, not what it said.
+    audit.write_event({"tool": "teacher.whatsapp", "actor": parent_id, "ok": True,
+                       "inputs": {"kwargs": {"learner_id": learner_id, "teacher_id": tid}},
+                       "output": {"by": parent_name, "to_ending": digits[-3:], "chars": len(text), "sent_by_hatua": False}})
+    return {"url": link(digits, text), "to": pretty(digits), "name": contact["name"]}

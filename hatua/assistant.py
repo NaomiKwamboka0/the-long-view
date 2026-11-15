@@ -80,9 +80,11 @@ ABOUT_HATUA = """HOW HATUA WORKS (tell the teacher where to click; you cannot do
   Grade 4 (earlier grades are read only), and the report comment. Press "Write a
   comment", then thumbs up to use it or thumbs down to get a new version.
 - "Message the parent" on a learner's page (or "Message for the parent" on an alert) gives
-  a message in English or Kiswahili: good news or a concern, from the records. Edit it, type
-  the parent's WhatsApp number, tick that you checked it, and press "Open WhatsApp". You
-  press Send in WhatsApp yourself. Or copy it and tell the parent another way,
+  a message in English or Kiswahili: good news or a concern, from the records. Edit it,
+  choose the parent by name (type their WhatsApp number the first time, and tick "Save this
+  number" if they agreed), tick "Yes, this is the person I want", and press "Send on WhatsApp".
+  WhatsApp opens with the message ready and you press Send there yourself. To let parents
+  message you, save your own WhatsApp number in My account. Or copy it and tell the parent another way,
   then press "I have told the parent". Hatua never sends anything by itself.
 - Learner page, "Senior school pathway ideas" (Grades 7 to 9): closed until the class
   teacher presses "Open pathway ideas". Then it shows the cited strengths
