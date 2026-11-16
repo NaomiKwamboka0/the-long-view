@@ -15,7 +15,7 @@ Built for the **Education: The Long View** track of the African Agentic AI Desig
 | **User guide**, with pictures, for teachers, parents and the school admin | [docs/USER_GUIDE.html](https://naomikwamboka0.github.io/the-long-view/guide/) |
 | **Video guide**, one for teachers and one for parents. Kwamboka shows each step on the real portal. | Press **Video guide** on the sign-in page, or open [docs/guide](docs/guide) |
 
-The app starts **empty**: the first person creates their account (school, name, TSC number, class, own PIN), adds their learners, then uploads a term's results. Nothing is made up. Its sign-in page also helps you install Ollama and then downloads Qwen for you (about 4.7 GB, once). To try Hatua with made-up people, use the practice website (teacher `M-6001`, parent `P-100001`, PIN `246810`), or start the app with `--practice`.
+The app starts **empty**: the first person is the **head teacher** (school, name, TSC number, own PIN). The head teacher creates a login for each class teacher on the Teachers tab and gives them a one-time PIN on a slip. Each class teacher chooses their own PIN, adds their learners and uploads a term's results. Nothing is made up. Its sign-in page also helps you install Ollama and then downloads Qwen for you (about 4.7 GB, once). To try Hatua with made-up people, use the practice website (teacher `M-6001`, parent `P-100001`, PIN `246810`), or start the app with `--practice`.
 
 The website runs the real portal code inside the browser with [Pyodide](https://pyodide.org) (`site_src/bridge.py`, built by `scripts/build_site.py`). The app is built with PyInstaller (`packaging/hatua.spec`, `.github/workflows/release.yml`).
 

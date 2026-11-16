@@ -130,6 +130,12 @@ def _did(e: dict) -> str | None:
         return f"Made a phone link for the parent ({kwargs.get('parent_id', '')}) of {child}"
     if tool == "parent.home_link_sent":
         return f"Sent a phone link on WhatsApp for {child} (number ending {out.get('to_ending', '')})"
+    if tool == "teacher.add":
+        return f"Created a login for a class teacher ({kwargs.get('teacher_id', '')}) for class {kwargs.get('class', '')}"
+    if tool == "teacher.new_pin":
+        return f"Gave a teacher ({kwargs.get('teacher_id', '')}) a new one-time PIN"
+    if tool == "teacher.remove":
+        return f"Removed a teacher's login ({kwargs.get('teacher_id', '')})"
     if tool == "family.view":
         return f"Opened {learner.get('first_name', '')}'s page"
     if tool == "assistant.ask" and out.get("step") == "answer":
@@ -427,6 +433,29 @@ class Handler(BaseHTTPRequestHandler):
                 raise Refused(404, str(exc)) from None
         raise Refused(403, "This page is for teachers. Parents see their own child's page only.")
 
+    def _head(self, method: str, path: str, who: dict):
+        """The head teacher's account pages. Everyone else is refused."""
+        tid = who["teacher_id"]
+        if not onboard.is_head(tid):
+            raise Refused(403, "Only the head teacher can do this.")
+        try:
+            if method == "GET" and path == "head/teachers":
+                return self._send(200, {"teachers": onboard.teachers(tid), "school": onboard.school_name()})
+            self._check_post()
+            if method == "POST" and path == "head/teachers":
+                b = self._json()
+                return self._send(200, onboard.add_teacher(self._session(), str(b.get("name", "")), str(b.get("member_no", "")),
+                                                           str(b.get("class", ""))))
+            m = re.fullmatch(r"head/teachers/([A-Za-z0-9_-]{3,24})/(new-pin|remove)", path)
+            if method == "POST" and m:
+                fn = onboard.new_pin if m.group(2) == "new-pin" else onboard.remove_teacher
+                return self._send(200, fn(self._session(), m.group(1)))
+        except GateBlocked as exc:
+            raise Refused(403, str(exc)) from None
+        except ValueError as exc:
+            raise Refused(400, str(exc)) from None
+        raise Refused(404, "Not found.")
+
     # ---------------------------------------------------------------- API
     def _api(self, method: str, path: str, q: dict):  # noqa: C901 - one flat table of routes
         today = config.today()
@@ -434,7 +463,7 @@ class Handler(BaseHTTPRequestHandler):
             demo = _demo()
             learners = store.load("learners")
             return self._send(200, {"school": onboard.school_name() or (learners[0]["school"] if learners else ""),
-                                    "setup": onboard.first_run(), "signup": onboard.signup_open(),
+                                    "setup": onboard.first_run(),
                                     "calendar": school_calendar.term_on(today)["text"], "today": today.isoformat(),
                                     "practice": ({"pin": demo["pin"], "teachers": demo["teachers"],
                                                   "parents": demo.get("parents", []),
@@ -473,9 +502,9 @@ class Handler(BaseHTTPRequestHandler):
             if parent and not family.children_of(out["teacher_id"]):
                 auth.logout(out["session"])
                 raise Refused(403, "This parent number is not linked to a child any more. Ask the class teacher.")
-            if not parent and not school.streams_of(out["teacher_id"]):
+            if not parent and not school.streams_of(out["teacher_id"]) and not onboard.is_head(out["teacher_id"]):
                 auth.logout(out["session"])
-                raise Refused(403, "You are registered, but no class is assigned to you yet. Ask the school's Hatua admin.")
+                raise Refused(403, "You are registered, but no class is assigned to you yet. Ask your head teacher.")
             ended = auth.end_other_sessions(out["session"])
             _auth_event("sign_in", out["teacher_id"], True, one_time_pin=out["must_change"], other_sign_ins_ended=ended)
             cookie = f"{COOKIE}={out['session']}; HttpOnly; SameSite=Strict; Path=/; Max-Age={8 * 3600}"
@@ -533,7 +562,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._family(method, path, who)
         tid = who["teacher_id"]
         if method == "GET" and path == "me":
-            return self._send(200, {"role": "teacher", "me": school.profile(tid), "csrf": auth.new_csrf(self._session()),
+            return self._send(200, {"role": "teacher", "me": {**school.profile(tid), "head": onboard.is_head(tid),
+                                                              "school": onboard.school_name()},
+                                    "csrf": auth.new_csrf(self._session()),
                                     "privacy_needed": not privacy.accepted(tid),
                                     "calendar": school_calendar.summary(today), "model": comments.model_name(),
                                     "idle_minutes": auth.SESSION_MINUTES})
@@ -569,6 +600,8 @@ class Handler(BaseHTTPRequestHandler):
                                    "inputs": {"kwargs": {"learner_id": n["learner_id"], "notice": n["notice_id"]}},
                                    "output": {"how": n["told_parent"]["how"], "recorded_by": who["name"]}})
             return self._send(200, {"notice": n})
+        if path == "head/teachers" or path.startswith("head/teachers/"):
+            return self._head(method, path, who)
         if method == "POST" and path == "class/learners":
             self._check_post()
             try:

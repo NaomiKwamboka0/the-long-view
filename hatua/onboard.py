@@ -1,12 +1,17 @@
-"""A new school starts empty: someone creates an account, then adds their own learners.
+"""A new school starts empty: the head teacher sets it up, then creates every class teacher's login.
 
 No practice people, no demo data. Everything stays on this computer (hatua.store, hatua.auth).
 
-* `create_account` registers a class teacher for ONE class (a stream such as 6A). The first account on
-  a computer also names the school. After that, each further teacher creates their own account for a
-  class that has no class teacher yet, so nobody can claim a class that someone already teaches: what a
-  teacher sees is decided only by hatua.scope, from the class they were assigned here.
-* `add_learners` lets the class teacher type their learners: first names, and an admission number if they
+* The FIRST account on a computer is the head teacher's. It names the school. The head teacher may also
+  teach a class (optional).
+* Nobody else can create an account for themselves. The head teacher adds each class teacher: name, TSC
+  number and class (a stream such as 6A). Hatua makes a ONE-TIME PIN, shown once to print or write down; the
+  class teacher chooses their own PIN at the first sign-in (hatua.auth). The head teacher can give a new
+  one-time PIN to a teacher who forgot theirs, and remove a teacher (the class is then free to give to
+  someone else; its learners stay).
+* The head teacher manages ACCOUNTS. Seeing a class's learners is still decided only by hatua.scope: the
+  class teacher of that class sees it, and a head teacher sees a class only if they teach it too.
+* `add_learners` lets a class teacher type their learners: first names, and an admission number if they
   like. Hatua gives each learner its own HT-number, which is what results files use.
 * `results_template` makes the Excel sheet to fill in for a term, with one row per learner and learning area.
 
@@ -51,53 +56,144 @@ def is_practice() -> bool:
 
 
 def first_run() -> bool:
-    """True until the first account exists on this computer."""
+    """True until the first account (the head teacher's) exists on this computer."""
     return not is_practice() and not auth.teachers() and not settings().get("school")
 
 
-def signup_open() -> bool:
-    return not is_practice() and len(auth.teachers()) < MAX_TEACHERS
+def is_head(teacher_id: str) -> bool:
+    return bool(teacher_id) and settings().get("head") == teacher_id
+
+
+def _assignments() -> dict:
+    a = store.load("assignments")
+    return a if isinstance(a, dict) else {}
+
+
+def _check_account(name: str, member_no: str, stream: str, *, stream_required: bool) -> tuple[str, str, str]:
+    """The same rules for every new account. Returns the cleaned (name, member number, stream)."""
+    name = re.sub(r"\s+", " ", (name or "").strip())
+    if len(name) < auth.MIN_NAME or len(name) > 60:
+        raise ValueError("Type the full name.")
+    member_no = (member_no or "").strip().upper()
+    if not config.TEACHER_ID.match(member_no):
+        raise ValueError("The member number (TSC number) must be 3 to 24 letters, numbers, '-' or '_'.")
+    if auth.role_of(member_no):
+        raise ValueError("That member number already has an account here.")
+    stream = (stream or "").strip().upper()
+    if not stream and not stream_required:
+        return name, member_no, ""
+    if not STREAM.match(stream):
+        raise ValueError("Type the class like 6A, or just 6: a grade from 4 to 9, then the stream letter if there is one.")
+    if any(stream in (a.get("streams") or []) for a in _assignments().values() if isinstance(a, dict)):
+        raise ValueError(f"Class {stream} already has a class teacher on this computer.")
+    return name, member_no, stream
 
 
 def create_account(school: str, name: str, member_no: str, stream: str, pin: str, pin_again: str) -> dict:
-    """Make a class teacher's account for their class. Raises ValueError with a sentence the person can act on."""
-    if not signup_open():
-        raise ValueError("New accounts are not opened on this computer.")
-    first = first_run()
+    """Set the school up: the FIRST account, the head teacher's, with a PIN of their own.
+    `stream` is optional: the class the head teacher also teaches. Raises ValueError with a sentence to act on."""
+    if is_practice():
+        raise ValueError("This is the practice school: its accounts are made up and new ones cannot be created.")
+    if not first_run():
+        raise ValueError("Hatua is already set up on this computer. Ask your head teacher for an account.")
     school = re.sub(r"\s+", " ", (school or "").strip())
-    if first:
-        if not 3 <= len(school) <= 80:
-            raise ValueError("Type your school's name (3 to 80 letters).")
-    else:
-        school = school_name()
-    name = re.sub(r"\s+", " ", (name or "").strip())
-    if len(name) < auth.MIN_NAME or len(name) > 60:
-        raise ValueError("Type your full name.")
-    member_no = (member_no or "").strip().upper()
-    if not config.TEACHER_ID.match(member_no):
-        raise ValueError("Your member number (TSC number) must be 3 to 24 letters, numbers, '-' or '_'.")
-    if auth.role_of(member_no):
-        raise ValueError("That member number already has an account here. Sign in instead.")
-    stream = (stream or "").strip().upper()
-    if not STREAM.match(stream):
-        raise ValueError("Type your class like 6A, or just 6: a grade from 4 to 9, then your stream letter if you have one.")
-    assignments = store.load("assignments")
-    assignments = assignments if isinstance(assignments, dict) else {}
-    if any(stream in (a.get("streams") or []) for a in assignments.values() if isinstance(a, dict)):
-        raise ValueError(f"Class {stream} already has a class teacher on this computer.")
+    if not 3 <= len(school) <= 80:
+        raise ValueError("Type your school's name (3 to 80 letters).")
+    name, member_no, stream = _check_account(name, member_no, stream, stream_required=False)
     if pin != pin_again:
         raise ValueError("The two PINs are not the same. Type them again.")
     problem = auth.pin_problem(pin, member_no)
     if problem:
         raise ValueError(problem)
-    auth.register(member_no, name, pin)          # the person's own PIN: nothing is "one-time" here
-    assignments[member_no] = {"role": "class_teacher", "streams": [stream], "subjects": []}
-    store.save("assignments", assignments)
-    if first:
-        store.save("settings", {**settings(), "school": school})
+    auth.register(member_no, name, pin)          # the head teacher's own PIN: nothing is "one-time" here
+    if stream:
+        store.save("assignments", {**_assignments(), member_no: {"role": "class_teacher", "streams": [stream], "subjects": []}})
+    store.save("settings", {**settings(), "school": school, "head": member_no})
     audit.write_event({"tool": "account.create", "actor": member_no, "ok": True,
-                       "inputs": {"kwargs": {"class": stream}}, "output": {"first_account": first}})
+                       "inputs": {"kwargs": {"class": stream or None}}, "output": {"head_teacher": True}})
     return {"teacher_id": member_no, "name": name, "class": stream, "school": school_name()}
+
+
+# ---------------------------------------------------------------- the head teacher's accounts
+def _head(session: str | None, action: str) -> dict:
+    who = auth.resolve(session, kind="human", action=action)
+    if who.get("role", "teacher") != "teacher" or not is_head(who["teacher_id"]):
+        raise GateBlocked("Only the head teacher can do this.")
+    return who
+
+
+def teachers(head_id: str) -> list[dict]:
+    """Every teacher account, for the head teacher: who, which class, and whether they have signed in. No PIN material."""
+    if not is_head(head_id):
+        raise GateBlocked("Only the head teacher can do this.")
+    registry = auth._read(auth._path("teachers"), {})
+    out = []
+    for t in auth.teachers():
+        acc = registry.get(t["teacher_id"], {})
+        streams = school.streams_of(t["teacher_id"])
+        out.append({"teacher_id": t["teacher_id"], "name": t["name"], "head": is_head(t["teacher_id"]), "classes": streams,
+                    "learners": len(school.learners_of(t["teacher_id"])),
+                    "waiting_first_sign_in": bool(acc.get("must_change")), "last_login": acc.get("last_login")})
+    # classes that have learners but no class teacher (a teacher was removed): shown so the head teacher can assign one
+    learners = [l for l in store.load("learners") if isinstance(l, dict)]
+    taken = {c for t in out for c in t["classes"]}
+    for c in sorted({l.get("stream") for l in learners} - taken - {None}):
+        out.append({"teacher_id": None, "name": None, "head": False, "classes": [c], "waiting_first_sign_in": False,
+                    "last_login": None, "learners": sum(1 for l in learners if l.get("stream") == c)})
+    return out
+
+
+def add_teacher(session: str | None, name: str, member_no: str, stream: str) -> dict:
+    """The head teacher makes a class teacher's login for one class. Returns the ONE-TIME PIN, shown once."""
+    from . import family
+    who = _head(session, "create a teacher account")
+    if len(auth.teachers()) >= MAX_TEACHERS:
+        raise ValueError(f"A school can have at most {MAX_TEACHERS} teacher accounts here.")
+    name, member_no, stream = _check_account(name, member_no, stream, stream_required=True)
+    pin = family._one_time_pin()
+    auth.register(member_no, name, pin, must_change=True)
+    store.save("assignments", {**_assignments(), member_no: {"role": "class_teacher", "streams": [stream], "subjects": []}})
+    audit.write_event({"tool": "teacher.add", "actor": who["teacher_id"], "ok": True,
+                       "inputs": {"kwargs": {"teacher_id": member_no, "class": stream}}, "output": {"added_by": who["name"]}})
+    return {"teacher_id": member_no, "name": name, "class": stream, "one_time_pin": pin, "school": school_name(), "by": who["name"]}
+
+
+def new_pin(session: str | None, teacher_id: str) -> dict:
+    """A teacher forgot their PIN: the head teacher gives a new ONE-TIME PIN and ends their sign-ins."""
+    from . import family
+    who = _head(session, "give a teacher a new PIN")
+    if auth.role_of(teacher_id) != "teacher":
+        raise ValueError("That teacher is not on this computer.")
+    if is_head(teacher_id):
+        raise ValueError("Change your own PIN from My account. Nobody can reset the head teacher's PIN from here.")
+    registry = auth._read(auth._path("teachers"), {})
+    pin = family._one_time_pin()
+    auth.register(teacher_id, registry.get(teacher_id, {}).get("name", ""), pin, must_change=True)
+    auth.remove_sessions(teacher_id)
+    audit.write_event({"tool": "teacher.new_pin", "actor": who["teacher_id"], "ok": True,
+                       "inputs": {"kwargs": {"teacher_id": teacher_id}}, "output": {"by": who["name"]}})
+    classes = school.streams_of(teacher_id)
+    return {"teacher_id": teacher_id, "name": registry.get(teacher_id, {}).get("name", ""), "class": ", ".join(classes),
+            "one_time_pin": pin, "school": school_name(), "by": who["name"]}
+
+
+def remove_teacher(session: str | None, teacher_id: str) -> dict:
+    """The head teacher removes a teacher's login. The class is free for someone else; its learners stay."""
+    from . import whatsapp
+    who = _head(session, "remove a teacher account")
+    if auth.role_of(teacher_id) != "teacher":
+        raise ValueError("That teacher is not on this computer.")
+    if is_head(teacher_id):
+        raise ValueError("The head teacher's account cannot be removed.")
+    classes = school.streams_of(teacher_id)
+    auth.remove(teacher_id)
+    assignments = _assignments()
+    assignments.pop(teacher_id, None)
+    store.save("assignments", assignments)
+    whatsapp.forget_number("teachers", teacher_id)
+    audit.write_event({"tool": "teacher.remove", "actor": who["teacher_id"], "ok": True,
+                       "inputs": {"kwargs": {"teacher_id": teacher_id, "class": classes}}, "output": {"removed_by": who["name"]}})
+    return {"ok": True, "classes_now_without_teacher": classes}
 
 
 def _own_stream(teacher_id: str) -> str:

@@ -18,16 +18,21 @@ send a parent a WhatsApp message.
 2. A SMALL HATUA WINDOW OPENS, AND HATUA OPENS IN YOUR WEB BROWSER.
    The first time it makes a practice school with made-up people (20 seconds).
 
-3. CREATE YOUR ACCOUNT (the first time)
-   Hatua starts empty: there are no practice people. The sign-in page asks for
-   your school's name, your name, your TSC member number, your class (for
-   example 6A) and a PIN of your own. Then:
-     - press "Add your learners" and type their first names, one on each line;
-     - on the School drive tab, download the results sheet for a term, fill in
-       each learner's level (EE, ME, AE or BE), and upload it;
-     - check the file and press Approve. Hatua then shows each learner's long view.
-   Another teacher at the same computer presses "I am a teacher and I do not have
-   an account" on the sign-in page and creates their own account for their own class.
+3. SET UP YOUR SCHOOL (the first time)
+   Hatua starts empty: there are no practice people. The first person to open it
+   is the HEAD TEACHER. The sign-in page asks for the school's name, your name,
+   your TSC member number and a PIN of your own.
+   Then, on the Teachers tab, press "Add a class teacher" for each class: type their
+   name, TSC number and class (for example 6A). Hatua makes a one-time PIN. Print the
+   slip and give it to the teacher. They sign in with it and choose their own PIN.
+   Each class teacher then:
+     - presses "Add your learners" and types their first names, one on each line;
+     - on the School drive tab, downloads the results sheet for a term, fills in
+       each learner's level (EE, ME, AE or BE), and uploads it;
+     - checks the file and presses Approve. Hatua then shows each learner's long view.
+   The head teacher manages accounts. A class teacher sees only their own class,
+   and the head teacher sees a class only if they teach it too.
+   A teacher who forgets their PIN: the head teacher presses "New PIN".
    Everything stays on this computer. To look around with made-up people first, use
    the practice website below.
 
