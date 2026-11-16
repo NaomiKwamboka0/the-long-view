@@ -378,6 +378,20 @@ a.btn { text-decoration: none; display: inline-block; }
         <p class="error small" id="si-error" role="alert" hidden></p>
         <button class="btn" type="submit" id="si-go">Sign in</button>
       </form>
+      <button class="link small" type="button" id="si-new" hidden>I am a teacher and I do not have an account: create one</button>
+      <form id="su-form" hidden autocomplete="off">
+        <p class="small soft" id="su-intro"></p>
+        <label id="su-school-row">School name<input type="text" id="su-school" maxlength="80" autocomplete="organization"></label>
+        <label>Your full name<input type="text" id="su-name" maxlength="60" autocomplete="name" required></label>
+        <label>Your member number (TSC number)<input type="text" id="su-id" autocapitalize="characters" autocomplete="off" required></label>
+        <label>Your class<input type="text" id="su-class" maxlength="4" autocapitalize="characters" placeholder="For example 6A" autocomplete="off" required></label>
+        <label>Choose your PIN<input type="password" id="su-pin" autocomplete="new-password" required></label>
+        <label>PIN again<input type="password" id="su-pin2" autocomplete="new-password" required></label>
+        <ul class="rules small soft"><li>6 or more numbers or letters</li><li>Not numbers in order, like 123456</li><li>Not the same number again and again</li><li>Not your member number</li></ul>
+        <p class="error small" id="su-error" role="alert" hidden></p>
+        <button class="btn" type="submit" id="su-go">Create my account</button>
+        <button class="link small" type="button" id="su-back">I already have an account</button>
+      </form>
       <form id="np-form" hidden>
         <p id="np-hello"></p>
         <label>New PIN<input type="password" id="np-new" autocomplete="new-password" required></label>
@@ -464,6 +478,7 @@ a.btn { text-decoration: none; display: inline-block; }
         <button class="btn" type="submit">Upload to the drive</button>
       </form>
       <p class="small" id="up-msg" role="status"></p>
+      <p class="small"><a id="up-sheet" href="#">Download the results sheet for this term</a> <span class="soft">(one row for each learner and learning area, ready to fill in)</span></p>
     </div>
     <form class="search" id="f-drive" role="search"><input type="search" id="q-drive" placeholder="File name" aria-label="Search files"><button class="btn" type="submit">Search</button></form>
     <div class="filters"><label>Status<select id="fd-status"><option value="">Any</option><option value="waiting">Waiting for me</option><option value="approve">In Hatua</option><option value="reject">Rejected</option></select></label></div>
@@ -484,6 +499,7 @@ a.btn { text-decoration: none; display: inline-block; }
         <div class="count-line"><span id="r-class"></span><button class="link" type="button" id="clear-class">Clear</button></div>
         <ul class="people" id="people"></ul>
         <p class="small soft" style="margin-top:10px">Listed by admission number, never by marks.</p>
+        <button class="btn quiet" type="button" id="add-learners" style="margin-top:10px;width:100%">Add learners</button>
         <button class="btn quiet" type="button" id="ps-open" style="margin-top:10px;width:100%">Parent slips and phone links</button>
       </aside>
       <main class="panel" id="learner" aria-live="polite"></main>
@@ -539,6 +555,20 @@ a.btn { text-decoration: none; display: inline-block; }
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
+/* Inside the Hatua app's own window there are no browser tabs: a link that would open a new tab asks the
+   app instead (hatua/app.py): its own guide opens in a Hatua window, WhatsApp opens WhatsApp. */
+window.addEventListener("pywebviewready", () => {
+  const go = u => { try { return window.pywebview.api.open_external(new URL(u, location.href).href); } catch (e) { return false; } };
+  window.open = u => {
+    if (u) go(u);
+    return { closed: false, opener: null, close() {}, document: { title: "", body: { innerHTML: "" } },
+             location: { set href(v) { go(v); } } };
+  };
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a[target=_blank]");
+    if (a) { e.preventDefault(); go(a.href); }
+  });
+});
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 /* ---------- the look: light, dark, or the same as this computer. Kept in this browser only ---------- */
 const LOOKS = [["system", "Same as computer"], ["light", "Light"], ["dark", "Dark"]];
@@ -559,7 +589,7 @@ const lv = l => `<span class="lv ${l}" title="${LEVEL[l] || l}">${l}</span>`;
 const fmt = d => new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 let CSRF = null, ME = null, NOTICES = [], CLASS = [], DRIVE = [], TERMS = [], CAL = null, selected = null, MODEL = null;
 let IDLE_MIN = 15, lastActive = Date.now(), ONE_TIME = null, SIGNIN_NOTE = null;
-let ROLE = "teacher", FAM = null, CHILD = null, SIGNIN_AS = "teacher";
+let ROLE = "teacher", FAM = null, CHILD = null, SIGNIN_AS = "teacher", PUB = {};
 const signedIn = () => !$("app").hidden || !$("family").hidden;
 const when = iso => iso ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
@@ -581,12 +611,14 @@ async function showSignin(message) {
   ME = null; FAM = null; CHILD = null; NOTICES = []; CLASS = []; DRIVE = []; TERMS = []; selected = null; L = null; knownFiles = null;
   $("ask").hidden = true; $("ask-launch").hidden = true; if ($("dlg").open) $("dlg").close();
   for (const id of ["today", "drive", "people", "learner", "calendar", "ask-log", "kids", "child", "f-who"]) $(id).innerHTML = "";  // leave nothing on screen
-  $("si-form").hidden = false; $("np-form").hidden = true; $("si-facts").hidden = false; $("si-role").hidden = false;
+  $("si-form").hidden = false; $("np-form").hidden = true; $("su-form").hidden = true; $("si-facts").hidden = false; $("si-role").hidden = false;
   $("si-title").textContent = "Sign in to Hatua"; setSigninRole(SIGNIN_AS);
   $("si-error").hidden = !message; $("si-error").textContent = message || "";
   try {
-    const pub = await api("public");
+    const pub = await api("public"); PUB = pub;
     $("si-school").textContent = pub.school;
+    if (pub.setup) showSignup(true);          // nobody has an account here yet: start by creating one
+    $("si-new").hidden = !pub.signup || pub.setup || SIGNIN_AS !== "teacher";
     if (pub.practice) {
       $("practice").hidden = false; $("pr-pin").textContent = pub.practice.pin;
       $("pr-rows").innerHTML = pub.practice.teachers.map(t => `<tr><td>Grade ${esc(t.stream)}</td><td>${esc(t.name)}${(pub.practice.one_time || []).includes(t.teacher_id) ? ` <span class="pill">one-time PIN</span>` : ""}</td><td><button class="link" type="button" data-fill="${esc(t.teacher_id)}">${esc(t.teacher_id)}</button></td></tr>`).join("");
@@ -597,6 +629,34 @@ async function showSignin(message) {
   aiRefresh();
   $("si-id").focus();
 }
+
+/* ---------- creating an account: the first person names the school; every teacher makes their own ---------- */
+function showSignup(on) {
+  $("su-form").hidden = !on; $("si-form").hidden = on; $("si-role").hidden = on; $("si-facts").hidden = on; $("si-new").hidden = on || !PUB.signup;
+  $("practice").hidden = true;
+  if (!on) { $("si-title").textContent = "Sign in to Hatua"; $("si-id").focus(); return; }
+  const first = PUB.setup;
+  $("si-title").textContent = first ? "Set up Hatua for your school" : "Create your account";
+  $("su-intro").textContent = first ? "Hatua is empty. Tell it who you are and which class you teach. You will add your learners next. Everything stays on this computer."
+    : `Create your account for ${PUB.school || "this school"}. You will see only your own class.`;
+  $("su-school-row").hidden = !first; $("su-school").required = first; $("su-error").hidden = true;
+  (first ? $("su-school") : $("su-name")).focus();
+}
+$("si-new").addEventListener("click", () => showSignup(true));
+$("su-back").addEventListener("click", () => showSignup(false));
+$("su-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("su-go").disabled = true; $("su-error").hidden = true;
+  try {
+    await api("signup", { method: "POST", json: { school: $("su-school").value, name: $("su-name").value, member_no: $("su-id").value,
+      class: $("su-class").value, pin: $("su-pin").value, pin_again: $("su-pin2").value } });
+    $("si-id").value = $("su-id").value.trim().toUpperCase(); $("si-pin").value = $("su-pin").value;
+    for (const id of ["su-pin", "su-pin2"]) $(id).value = "";
+    PUB.setup = false; setSigninRole("teacher"); showSignup(false);
+    $("si-form").requestSubmit();               // signs the new teacher in
+  } catch (err) { $("su-error").hidden = false; $("su-error").textContent = err.message; }
+  finally { $("su-go").disabled = false; }
+});
 /* ---------- Qwen on this computer: install help and download, on the sign-in page ---------- */
 let aiTimer = null;
 async function aiRefresh() {
@@ -627,6 +687,7 @@ function setSigninRole(r) {
   SIGNIN_AS = r;
   $("si-role").querySelectorAll("[data-role]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.role === r)));
   $("si-id-label").textContent = r === "parent" ? "Parent number" : "Member number";
+  if (PUB.signup && !PUB.setup) $("si-new").hidden = r !== "teacher";
   $("si-id").placeholder = r === "parent" ? "For example P-100001" : "For example M-6001";
 }
 $("si-role").querySelectorAll("[data-role]").forEach(b => b.addEventListener("click", () => { setSigninRole(b.dataset.role); $("si-id").value = ""; $("si-id").focus(); }));
@@ -843,6 +904,11 @@ function renderToday() {
   $("r-today").textContent = `${people.length} learner${people.length === 1 ? "" : "s"} to watch, ${U.length} about results files`;
   const learnerName = id => (CLASS.find(c => c.id === id) || NOTICES.find(n => n.learner_id === id && n.name) || {}).name || id;
   $("today").innerHTML = `
+    ${!CLASS.length ? `<div class="card task" style="margin-bottom:14px"><h3>Welcome to Hatua</h3>
+      <ol class="small" style="margin:6px 0 10px;padding-left:20px;display:grid;gap:4px"><li><b>Add your learners</b>: type their names, one on each line.</li>
+      <li><b>Get the results sheet</b> for a term on the School drive tab, fill in each learner's level (EE, ME, AE or BE), and upload it.</li>
+      <li><b>Approve it.</b> Hatua then shows each learner's long view, and tells you early when someone needs a closer look.</li></ol>
+      <div class="row"><button class="btn small" type="button" id="wl-add">Add your learners</button></div></div>` : ""}
     ${U.length ? `<div class="section"><h3>Results files</h3><div class="cards">${U.map(n => `
       <article class="card ${n.kind === "waiting_approval" ? "task" : "watch"}"><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p>
         <div class="row"><button class="btn small" type="button" data-go-drive>${n.kind === "waiting_approval" ? "Check the file" : "Go to the school drive"}</button></div></article>`).join("")}</div></div>` : ""}
@@ -864,6 +930,7 @@ function wireCommon(el) {
   el.querySelectorAll("[data-go-drive]").forEach(b => b.addEventListener("click", () => setTab("drive")));
   el.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => { setTab("class"); select(b.dataset.open); }));
   el.querySelectorAll("[data-parent]").forEach(b => b.addEventListener("click", () => parentDialog(b.dataset.parent)));
+  $("wl-add")?.addEventListener("click", () => { setTab("class"); addLearnersDialog(); });
   el.querySelectorAll("[data-ev]").forEach(b => b.addEventListener("click", () => evidence(b.dataset.ev)));
 }
 
@@ -1080,7 +1147,33 @@ function renderClass() {
     || `<li class="empty">Nobody matches. Try Clear.</li>`;
   $("people").querySelectorAll("[data-lid]").forEach(b => b.addEventListener("click", () => select(b.dataset.lid)));
   if (!selected && CLASS.length) { selected = (CLASS.find(l => l.alerts) || CLASS[0]).id; renderLearnerSoon(); }
+  if (!CLASS.length) { $("learner").innerHTML = emptyClass(); $("learner").querySelector("[data-add]")?.addEventListener("click", addLearnersDialog); }
 }
+const sheetLink = () => { const t = $("up-term").value; $("up-sheet").href = `/api/drive/template?term=${encodeURIComponent(t)}&year=${new Date().getFullYear()}`; };
+$("up-term").addEventListener("change", sheetLink); sheetLink();
+const emptyClass = () => `<div class="section" style="max-width:60ch"><h2>Your class is empty</h2>
+  <p class="soft">Add your learners to begin. Type each one's first name on a new line. An admission number after a comma is optional. They stay on this computer.</p>
+  <div><button class="btn" type="button" data-add>Add your learners</button></div></div>`;
+function addLearnersDialog() {
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Add learners to ${esc(ME.class_label || "your class")}</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="small soft">One learner on each line: the first name, then a comma and the admission number if you like. Hatua gives each learner a number (like HT-0001) to use in results files.</p>
+    <form class="form-grid" id="al-form"><label>Learners<textarea id="al-text" rows="9" placeholder="Wanjiku, 1042&#10;Kamau, 1043&#10;Achieng" required style="width:100%;font:inherit;padding:10px;border-radius:12px"></textarea></label>
+      <p class="error small" id="al-error" role="alert" hidden></p>
+      <div><button class="btn" type="submit" id="al-go">Add these learners</button></div></form>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  $("al-form").onsubmit = async e => {
+    e.preventDefault(); $("al-go").disabled = true; $("al-error").hidden = true;
+    try {
+      const out = await api("class/learners", { method: "POST", json: { names: $("al-text").value } });
+      ME.learners = out.total; $("who").innerHTML = `<b>${esc(ME.name)}</b><br>${esc(ME.class_label)} class teacher, ${ME.learners} learners, member number ${esc(ME.teacher_id)}`;
+      await loadClass(); $("dlg").close();
+      toast(`Added ${out.added.length} learner${out.added.length === 1 ? "" : "s"}.${out.skipped.length ? " Skipped " + out.skipped.length + " already in the class." : ""}${out.refused.length ? " Could not read " + out.refused.length + " line(s)." : ""}`);
+    } catch (err) { $("al-error").hidden = false; $("al-error").textContent = err.message; $("al-go").disabled = false; }
+  };
+  if (!$("dlg").open) $("dlg").showModal();
+  $("al-text").focus();
+}
+$("add-learners").addEventListener("click", addLearnersDialog);
 let pending = null;
 function renderLearnerSoon() { clearTimeout(pending); pending = setTimeout(() => select(selected), 0); }
 

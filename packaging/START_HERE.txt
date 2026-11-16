@@ -18,8 +18,18 @@ send a parent a WhatsApp message.
 2. A SMALL HATUA WINDOW OPENS, AND HATUA OPENS IN YOUR WEB BROWSER.
    The first time it makes a practice school with made-up people (20 seconds).
 
-3. SIGN IN WITH A PRACTICE ACCOUNT
-   Teacher: M-6001    Parent: P-100001    PIN: 246810
+3. CREATE YOUR ACCOUNT (the first time)
+   Hatua starts empty: there are no practice people. The sign-in page asks for
+   your school's name, your name, your TSC member number, your class (for
+   example 6A) and a PIN of your own. Then:
+     - press "Add your learners" and type their first names, one on each line;
+     - on the School drive tab, download the results sheet for a term, fill in
+       each learner's level (EE, ME, AE or BE), and upload it;
+     - check the file and press Approve. Hatua then shows each learner's long view.
+   Another teacher at the same computer presses "I am a teacher and I do not have
+   an account" on the sign-in page and creates their own account for their own class.
+   Everything stays on this computer. To look around with made-up people first, use
+   the practice website below.
 
 4. THE AI HELPER (QWEN) - OPTIONAL
    On the sign-in page, follow the steps in the box "Add the AI helper".
@@ -29,9 +39,9 @@ send a parent a WhatsApp message.
 5. WATCH THE VIDEO AND READ THE GUIDE
    Open "User guide.html" in this folder, or press Help inside Hatua.
    The two short videos at the top show every step: one for teachers,
-   one for parents.
+   one for parents. (They show the practice school, so the first screens differ.)
 
 To stop Hatua, close the small Hatua window.
 
-Try Hatua online first: https://naomikwamboka0.github.io/the-long-view/
+Try Hatua with made-up people first: https://naomikwamboka0.github.io/the-long-view/try/
 Source code (free, MIT licence): https://github.com/NaomiKwamboka0/the-long-view

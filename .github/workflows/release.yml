@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "macOS" ]; then APP=dist/Hatua.app/Contents/MacOS/Hatua; else APP=dist/Hatua/Hatua.exe; fi
-          HATUA_APP_HOME="$RUNNER_TEMP/apphome" "$APP" --no-window &
+          HATUA_APP_HOME="$RUNNER_TEMP/apphome" "$APP" --practice --no-window &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8765/api/public >/dev/null && break; sleep 2; done
           curl -sf http://127.0.0.1:8765/api/public | grep -q "fictional"
           curl -sf -o /dev/null http://127.0.0.1:8765/guide

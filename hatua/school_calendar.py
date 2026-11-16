@@ -6,6 +6,7 @@ them without touching code. Nothing here makes a network call.
 from __future__ import annotations
 
 import json
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -13,7 +14,12 @@ from . import config
 
 
 def _file(year: int) -> Path:
-    return config.DATA / "calendar" / f"kenya_{year}.json"
+    """The school's own file wins (a school may correct the dates); otherwise the one that ships with Hatua."""
+    own = config.DATA / "calendar" / f"kenya_{year}.json"
+    if own.exists():
+        return own
+    shipped = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent)) / "data" / "calendar"
+    return shipped / f"kenya_{year}.json"
 
 
 def load(year: int) -> dict | None:

@@ -44,6 +44,7 @@ from . import (
     family,
     homelink,
     notify,
+    onboard,
     pathways,
     patterns,
     privacy,
@@ -432,11 +433,21 @@ class Handler(BaseHTTPRequestHandler):
         if method == "GET" and path == "public":
             demo = _demo()
             learners = store.load("learners")
-            return self._send(200, {"school": (learners[0]["school"] if learners else ""),
+            return self._send(200, {"school": onboard.school_name() or (learners[0]["school"] if learners else ""),
+                                    "setup": onboard.first_run(), "signup": onboard.signup_open(),
                                     "calendar": school_calendar.term_on(today)["text"], "today": today.isoformat(),
                                     "practice": ({"pin": demo["pin"], "teachers": demo["teachers"],
                                                   "parents": demo.get("parents", []),
                                                   "one_time": demo.get("first_sign_in", [])} if demo else None)})
+        if method == "POST" and path == "signup":
+            self._check_post(need_csrf=False)
+            b = self._json()
+            try:
+                out = onboard.create_account(str(b.get("school", "")), str(b.get("name", "")), str(b.get("member_no", "")),
+                                             str(b.get("class", "")), str(b.get("pin", "")), str(b.get("pin_again", "")))
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+            return self._send(200, out)
         if method == "GET" and path == "ai":
             return self._send(200, ai_setup.status())
         if method == "POST" and path in ("ai/start", "ai/qwen"):
@@ -558,6 +569,23 @@ class Handler(BaseHTTPRequestHandler):
                                    "inputs": {"kwargs": {"learner_id": n["learner_id"], "notice": n["notice_id"]}},
                                    "output": {"how": n["told_parent"]["how"], "recorded_by": who["name"]}})
             return self._send(200, {"notice": n})
+        if method == "POST" and path == "class/learners":
+            self._check_post()
+            try:
+                return self._send(200, onboard.add_learners(tid, str(self._json().get("names", ""))))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+        if method == "GET" and path == "drive/template":
+            try:
+                data = onboard.results_template(tid, int(q.get("year", today.year)), int(q.get("term", 1)))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+            return self._send(200, data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                              extra={"Content-Disposition": f'attachment; filename="results-term-{int(q.get("term", 1))}.xlsx"'})
         if method == "GET" and path == "class":
             notices = notify.for_teacher(tid, include_resolved=True)
             return self._send(200, {"learners": [_learner_card(l, notices) for l in school.learners_of(tid)]})

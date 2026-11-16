@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from . import config
@@ -12,8 +13,8 @@ from .normalize import clean_record, flag, parse_date
 from .normalize import learner_id as clean_id
 
 FILES = ("learners", "records", "attendance", "notes", "flags", "drafts", "ingested", "assignments",
-         "drive", "notices", "comments", "pathway_gate", "guardians", "contacts", "consents")
-DICT_FILES = {"ingested", "assignments", "drive", "pathway_gate", "guardians", "contacts", "consents"}  # stored as one JSON object, not a list
+         "drive", "notices", "comments", "pathway_gate", "guardians", "contacts", "consents", "settings")
+DICT_FILES = {"ingested", "assignments", "drive", "pathway_gate", "guardians", "contacts", "consents", "settings"}  # stored as one JSON object, not a list
 
 
 def _path(name: str) -> Path:
@@ -141,7 +142,13 @@ def ingest_records(path: Path) -> dict:
     all_flags: list[dict] = load("flags")  # type: ignore[assignment]
     new_flags: list[dict] = []
     added = rejected = dup = 0
+    # A teacher's own sheet has no record numbers: Hatua gives each result one (R-00001...), after the highest in use.
+    taken = [int(m.group(1)) for r in records if (m := re.fullmatch(r"R-(\d+)", r.get("record_id", "")))]
+    next_no = max(taken, default=0) + 1
     for row in read_csv(path):
+        if not (row.get("record_id") or "").strip():
+            row = {**row, "record_id": f"R-{next_no:05d}"}
+            next_no += 1
         rec, flags = clean_record(row, known)
         if rec is None:
             rejected += 1

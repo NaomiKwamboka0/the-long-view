@@ -1,18 +1,24 @@
 """The Hatua app: double-click to start. Used by the Mac and Windows downloads.
 
-    Hatua                         open the practice school (made-up people)
-    Hatua --school "D:/Our School" open a real school's Hatua folder
+    Hatua                         start your own school: empty, you create your account and add your learners
+    Hatua --practice              open the practice school (made-up people, for trying Hatua out)
+    Hatua --school "D:/Our School" open a school's Hatua folder someone else prepared
     Hatua cli teacher-list        run any `python -m hatua` command (for the school's Hatua admin)
 
 What it does:
 
-1. Picks the Hatua folder. The practice school lives in <home>/Hatua/Practice school
-   and is made the first time (about 20 seconds). Nothing in it is real.
+1. Picks the Hatua folder: <home>/Hatua/My school, empty at first (the sign-in page asks the person to
+   create their account). With --practice it is <home>/Hatua/Practice school, made the first time
+   (about 20 seconds); nothing in that one is real.
 2. Starts Ollama if it is installed, so Qwen can answer. Downloading Qwen is a button
    on the sign-in page (hatua.ai_setup).
 3. Starts the portal on 127.0.0.1 and opens it in the web browser.
 4. Shows a small window with "Open Hatua", "User guide" and "Stop Hatua". If the
    computer has no window toolkit, it runs in the terminal instead.
+
+EXPERIMENTAL: `Hatua --native` (needs `pip install pywebview`) shows Hatua in its own window with the
+computer's built-in web view instead of a browser. The page loads there, but the links that open a new
+tab (the user guide, WhatsApp) are not verified yet, so it is not the default.
 
 The HATUA_* settings must be in place before hatua.config is imported, so this module
 imports the rest of Hatua only inside main().
@@ -44,19 +50,25 @@ def _bundle_root() -> Path:
     return Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
 
 
-def _prepare(argv: list[str]) -> tuple[Path, bool]:
-    """Set HATUA_HOME (and the practice school's date) before Hatua is imported."""
+def _prepare(argv: list[str]) -> tuple[Path, str]:
+    """Set HATUA_HOME (and the practice school's date) before Hatua is imported.
+    Returns the folder and the mode: "mine" (a new, empty school), "practice" or "school"."""
     if "--school" in argv:
         i = argv.index("--school")
         if i + 1 >= len(argv):
             raise SystemExit("Give the school's Hatua folder after --school.")
         home = Path(argv[i + 1]).expanduser().resolve()
         os.environ["HATUA_HOME"] = str(home)
-        return home, False
-    home = Path(os.environ.get("HATUA_APP_HOME", Path.home() / "Hatua")) / "Practice school"
+        return home, "school"
+    base = Path(os.environ.get("HATUA_APP_HOME", Path.home() / "Hatua"))
+    if "--practice" in argv:
+        home = base / "Practice school"
+        os.environ["HATUA_HOME"] = str(home)
+        os.environ.setdefault("HATUA_TODAY", PRACTICE_TODAY)
+        return home, "practice"
+    home = base / "My school"
     os.environ["HATUA_HOME"] = str(home)
-    os.environ.setdefault("HATUA_TODAY", PRACTICE_TODAY)
-    return home, True
+    return home, "mine"
 
 
 def _make_practice(home: Path) -> None:
@@ -112,10 +124,12 @@ class _Window:
         self.root.destroy()
 
 
-def _start(home: Path, practice: bool):
-    """Make the practice school if needed, start Ollama and the portal. Returns (url, guide, stop)."""
-    if practice and not (home / "store" / "learners.json").exists():
+def _start(home: Path, mode: str, open_browser: bool = True):
+    """Make the practice school or an empty school if needed, start Ollama and the portal. Returns (url, guide, stop)."""
+    if mode == "practice" and not (home / "store" / "learners.json").exists():
         _make_practice(home)
+    if mode == "mine":
+        (home / "store").mkdir(parents=True, exist_ok=True)   # empty: the sign-in page creates the first account
     if not (home / "store").exists():
         raise SystemExit(f"There is no Hatua school in {home}. Ask the school's Hatua admin.")
     from . import ai_setup, portal
@@ -126,8 +140,62 @@ def _start(home: Path, practice: bool):
     threading.Thread(target=httpd.serve_forever, daemon=True, name="hatua-portal").start()
     url = f"http://127.0.0.1:{port}"
     print(f"Hatua is running: {url}\nSchool folder: {home}\nThe school drive (Excel folders): {home / 'school_drive'}")
-    webbrowser.open(url)
+    if open_browser:
+        webbrowser.open(url)
     return url, url + "/guide", httpd.shutdown
+
+
+LOADING = """<!doctype html><meta charset="utf-8"><title>Hatua</title>
+<body style="margin:0;display:grid;place-items:center;height:100vh;background:#eef2ee;color:#213029;font:17px -apple-system,system-ui,sans-serif;text-align:center">
+<div><b style="font-size:1.4rem">Getting Hatua ready...</b><p style="color:#5b6a63">The first time, this takes about 20 seconds.</p></div>"""
+
+
+class _NativeApi:
+    """What the page may ask the app to do. Pages inside Hatua open in Hatua's own windows;
+    only outside links (WhatsApp) go to the computer's own browser or WhatsApp app."""
+
+    def __init__(self, base: str):
+        self.base = base
+
+    def open_external(self, url: str) -> bool:
+        import webview
+        url = str(url or "")
+        if url.startswith(self.base + "/"):                      # the user guide, the video guide
+            webview.create_window("Hatua", url, width=1000, height=760)
+            return True
+        if url.startswith(("https://wa.me/", "https://api.whatsapp.com/")):   # a WhatsApp chat, never anything else
+            webbrowser.open(url)
+            return True
+        return False
+
+
+def _run_native(home: Path, mode: str, check=None) -> int | None:
+    """Show Hatua in its own window. Returns None when this computer has no built-in web view."""
+    try:
+        import webview
+    except Exception:
+        return None
+    window = webview.create_window("Hatua", html=LOADING, width=1240, height=860, min_size=(420, 600))
+    state: dict = {}
+
+    def work():
+        try:
+            url, _guide, stop = _start(home, mode, open_browser=False)
+            state["stop"] = stop
+            window.expose(_NativeApi(url.rstrip("/")).open_external)
+            window.load_url(url)
+            if check:
+                check(window, url)
+        except BaseException as exc:
+            window.load_html(f"<body style='font:17px system-ui;padding:40px'><h2>Hatua could not start</h2><p>{exc or exc.__class__.__name__}</p>")
+
+    try:
+        webview.start(work)
+    except Exception:
+        return None
+    if state.get("stop"):
+        state["stop"]()
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -136,13 +204,17 @@ def main(argv: list[str] | None = None) -> int:
         os.environ.setdefault("HATUA_HOME", str(Path.home() / "Hatua" / "School"))
         from .cli import main as cli_main
         return cli_main(argv[1:])
-    home, practice = _prepare(argv)
+    home, mode = _prepare(argv)
+    if "--native" in argv:
+        code = _run_native(home, mode)
+        if code is not None:
+            return code
     try:
         win = None if "--no-window" in argv else _Window()
     except Exception:
         win = None  # no window toolkit on this computer: run in the terminal
     if win is None:
-        _url, _guide, stop = _start(home, practice)
+        _url, _guide, stop = _start(home, mode)
         print("Press Ctrl+C to stop Hatua.")
         try:
             threading.Event().wait()
@@ -155,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
 
     def work():
         try:
-            result["ok"] = _start(home, practice)
+            result["ok"] = _start(home, mode)
         except BaseException as exc:  # show it in the window instead of vanishing
             result["error"] = str(exc) or exc.__class__.__name__
 

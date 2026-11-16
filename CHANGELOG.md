@@ -1,3 +1,14 @@
+# A new school starts empty: create an account, add your learners — 16 November 2026
+
+- **No practice data for a new user.** The app now opens `~/Hatua/My school`, which is empty. The sign-in page says **Set up Hatua for your school**: school name, the teacher's name, TSC member number, class (for example 6A) and their own PIN. They are signed in at once. The practice school is still there for trying Hatua out: `Hatua --practice`, and the practice website. A practice school never opens accounts.
+- **More teachers.** On the sign-in page, **I am a teacher and I do not have an account** makes an account for a class that has no class teacher yet. Nobody can take a class someone already teaches, and each teacher sees only their own class (`hatua/scope.py` is unchanged). Parents still get their access from the class teacher.
+- **Add your learners** (`hatua/onboard.py`). Type first names, one per line, with an optional admission number after a comma. Hatua numbers them HT-0001, HT-0002... and keeps them on this computer. The My class tab and the Today tab show a welcome with these steps while the class is empty.
+- **Results sheet.** The School drive tab downloads an Excel sheet for a term: one row for each learner and each learning area for that grade, with the level left to fill in. It is uploaded and approved like any results file.
+- **Fixed:** a results file with no `record_id` column (which is what a teacher's own sheet is) had every row after the first dropped as a "duplicate". Hatua now numbers such results itself (R-00001...).
+- **Fixed:** a new school's folder had no school calendar, so the header said "No school calendar file for 2026". Hatua now falls back to the calendar that ships with it.
+- **Tests:** `tests/test_onboard.py` (7): account rules, one teacher per class, practice schools stay closed, adding learners, sheet → upload → approval end to end, and the whole flow over HTTP. Also checked in a real browser from an empty folder.
+- **Not done:** correcting a mistyped learner name (add the learner again with the right name for now); a head teacher or admin who manages every teacher. `Hatua --native` (the app's own window instead of a browser) is experimental and off by default: WhatsApp and guide links inside it are not verified.
+
 # Parents at home, on their phone, and parent slips for the whole class — 16 November 2026
 
 - **Phone page for parents** (`site_src/home/`, published at `/home/`). It works on any phone, Android or iPhone, with no app to install. The class teacher sends a link on WhatsApp; the parent opens it and types the 8-letter **home code** from their paper slip. Labels come in English and Kiswahili. It can be added to the home screen and opens offline after the first visit (web manifest and service worker). It loads nothing from outside, and it has light and dark looks.
