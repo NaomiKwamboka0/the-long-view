@@ -157,6 +157,9 @@ def remove(session: str | None, learner_id: str, parent_id: str) -> dict:
         contacts = store.load("contacts")  # their saved WhatsApp number goes with the account
         if isinstance(contacts, dict) and (contacts.get("parents") or {}).pop(parent_id, None) is not None:
             store.save("contacts", contacts)
+        codes = store.load("homecodes")  # and their home code for the phone page
+        if isinstance(codes, dict) and codes.pop(parent_id, None) is not None:
+            store.save("homecodes", codes)
     store.save("guardians", links)
     audit.write_event({"tool": "parent.remove", "actor": who["teacher_id"], "ok": True,
                        "inputs": {"kwargs": {"learner_id": learner_id, "parent_id": parent_id}},

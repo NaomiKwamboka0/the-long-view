@@ -62,6 +62,12 @@ A class teacher can give a parent access to one learner. The parent gets a paren
 
 The first time a teacher or parent signs in, Hatua shows a short privacy notice written for their role (`hatua/privacy.py`). Nothing opens until they tick that they have read it and agree. Hatua keeps who agreed, to which version and when in `store/consents.json`, and in the activity log. When the notice changes, everyone is asked again.
 
+## The phone page for parents
+
+A class teacher can send a parent a link to their child's page, to open at home on their phone. Before the link leaves, the teacher's browser locks the page with the parent's **home code** (8 letters and numbers on the printed slip). The locked page is inside the link, after the `#` sign. Web browsers never send that part to a website, so the website that shows the phone page (GitHub Pages) does not receive the child's page; it only sends the empty page that unlocks it.
+
+The page holds only what the teacher approved: results with their record numbers, days in school, the approved report comment, messages marked as told, and pathway ideas the teacher opened. Never teacher notes or other children. The teacher ticks that they checked the phone number, and Hatua logs the share with the teacher's name. Anyone who has both the link and the home code can open the page, so the code should stay on paper. A parent can choose to keep the locked page on their phone; it stays locked, and **Remove from this phone** deletes it. Home codes are kept in `store/homecodes.json` on the school's computer and are deleted with the parent's account.
+
 ## WhatsApp messages to a parent
 
 A class teacher can send a parent a short message by WhatsApp. Hatua does not send it. Hatua drafts the message, the teacher edits it, types the parent's number and ticks that they checked both. Hatua then opens WhatsApp with the message ready, and the teacher presses Send with their own WhatsApp account.

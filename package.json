@@ -2,7 +2,7 @@
   "name": "hatua-ui-checks",
   "private": true,
   "scripts": {
-    "test:ui": "node tests/test_ui.cjs"
+    "test:ui": "node tests/test_ui.cjs && node tests/test_homelink.cjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0",

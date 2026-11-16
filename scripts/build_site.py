@@ -7,6 +7,7 @@ site_out/
     index.html        the landing page (site_src/index.html)
     try/              the real Hatua portal, running in the visitor's browser with Pyodide
     guide/            the user guide, with its pictures
+    home/             the parents' phone page: opens a sealed link with the home code (site_src/home/)
     teacher-page/     the older single-file teacher page (scripts/package_teacher_demo.py)
 
 Only made-up data is used: the practice school from scripts/make_school_demo.py. Nothing
@@ -125,6 +126,7 @@ def main() -> None:
     shutil.copy2(REPO / "docs" / "USER_GUIDE.html", OUT / "guide" / "index.html")
     shutil.copytree(REPO / "docs" / "guide", OUT / "guide" / "guide")
     shutil.copy2(REPO / "site_src" / "index.html", OUT / "index.html")
+    shutil.copytree(REPO / "site_src" / "home", OUT / "home")
     for f in (REPO / "site_src").glob("*.png"):
         shutil.copy2(f, OUT / f.name)
     subprocess.run([sys.executable, "scripts/package_teacher_demo.py"], cwd=REPO, check=True)

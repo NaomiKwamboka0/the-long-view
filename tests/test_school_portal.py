@@ -1044,3 +1044,83 @@ def test_portal_rewrite_is_for_your_own_class_or_child(portal):
     assert call(portal, "POST", "/api/family/child/HT-0001/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 200
     assert call(portal, "POST", "/api/family/child/HT-0603/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 403
     assert call(portal, "POST", "/api/learner/HT-0001/whatsapp/rewrite", body, cookie=pc, csrf=pcsrf)[0] == 403
+
+
+# ---------------------------------------------------------------- parents at home: slips and phone links
+def test_slips_for_ticked_parents_make_new_pins_only_for_parents_not_signed_in(portal):
+    from hatua import family, homelink
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    st, _, listing = call(portal, "GET", "/api/class/parents", cookie=cookie)
+    assert st == 200 and listing["home_url"].endswith("/home/")
+    mine = {l["learner_id"] for l in school.learners_of("M-6001")}
+    assert {r["learner_id"] for r in listing["rows"]} == mine, "only this teacher's class"
+    assert [r["learner_id"] for r in listing["rows"]] == sorted(r["learner_id"] for r in listing["rows"]), "by admission number"
+    grace = family.add(login("M-6001"), "HT-0601", "Grace Wanjiku", "Mother")
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    pairs = [["HT-0603", "P-100003"], ["HT-0601", grace["parent_id"]]]
+    st, _, out = call(portal, "POST", "/api/class/parents/slips", {"pairs": pairs}, cookie=cookie, csrf=csrf)
+    assert st == 200 and len(out["slips"]) == 2
+    by = {s["parent_id"]: s for s in out["slips"]}
+    assert len(by["P-100003"]["one_time_pin"]) == 8, "not signed in yet: a new one-time PIN"
+    with pytest.raises(GateBlocked):
+        auth.login(grace["parent_id"], grace["one_time_pin"])  # the old slip stops working
+    for s in out["slips"]:
+        code = s["home_code"].replace("-", "")
+        assert len(code) == 8 and set(code) <= set(homelink.ALPHABET)
+    again = call(portal, "POST", "/api/class/parents/slips", {"pairs": pairs[:1]}, cookie=cookie, csrf=csrf)[2]
+    assert again["slips"][0]["home_code"] == by["P-100003"]["home_code"], "the home code stays the same"
+    st, _, _ = call(portal, "POST", "/api/class/parents/slips", {"pairs": [["HT-0001", "P-100001"]]}, cookie=cookie, csrf=csrf)
+    assert st == 403, "a parent in another class"
+    assert call(portal, "POST", "/api/class/parents/slips", {"pairs": []}, cookie=cookie, csrf=csrf)[0] == 400
+    assert call(portal, "POST", "/api/class/parents/slips", {"pairs": pairs}, cookie=cookie)[0] == 403, "CSRF needed"
+    parent, _, _ = sign_in(portal, "P-100001")
+    assert call(portal, "GET", "/api/class/parents", cookie=parent)[0] == 403
+    events = [e for e in audit.read_events() if e["tool"] == "parent.slips"]
+    assert events[-1]["output"]["printed_by"] == "Mary Njeri"
+    logged = json.dumps(audit.read_events())
+    assert all(s["one_time_pin"] not in logged for s in out["slips"] if s["one_time_pin"]), "PINs are never logged"
+
+
+def test_a_phone_link_holds_only_what_the_teacher_approved_and_every_result_is_cited(portal):
+    from hatua import homelink
+    drive.decide(G6, login("M-6001"), "approve")
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    st, _, out = call(portal, "POST", "/api/learner/HT-0603/parents/P-100003/home-link", {}, cookie=cookie, csrf=csrf)
+    assert st == 200 and len(out["code"]) == 8 and out["rounds"] == homelink.ROUNDS
+    page = out["page"]
+    text = json.dumps(page)
+    assert page["child"] == "Kamau" and page["latest"], "the newest results"
+    for r in page["latest"]:
+        rec = store.get_record(r["id"])
+        assert rec["learner_id"] == "HT-0603" and rec["level"] == r["level"], "each result cites its own record"
+    for n in store.load("notes"):
+        assert n["text"] not in text, "teacher notes never go on a phone"
+    other = {l["first_name"] for l in school.learners_of("M-6001")} - {"Kamau"}
+    assert not any(f'"{name}"' in text for name in other), "no other child"
+    assert page["comment"] is None, "no comment before the teacher approves one"
+    assert call(portal, "POST", "/api/learner/HT-0001/parents/P-100001/home-link", {}, cookie=cookie, csrf=csrf)[0] == 403
+    assert call(portal, "POST", "/api/learner/HT-0603/parents/P-100001/home-link", {}, cookie=cookie, csrf=csrf)[0] == 400
+    ev = [e for e in audit.read_events() if e["tool"] == "parent.home_link"][-1]
+    assert ev["output"]["approved_by"] == "Mary Njeri" and ev["inputs"]["kwargs"]["evidence"]
+    assert out["code"] not in json.dumps(audit.read_events()), "the code is not written to the log"
+
+
+def test_sending_a_phone_link_needs_the_tick_and_a_real_number(portal):
+    from hatua import homelink
+    cookie, csrf, _ = sign_in(portal, "M-6001")
+    url = "/api/learner/HT-0603/parents/P-100003/home-link/send"
+    st, _, out = call(portal, "POST", url, {"phone": "0712 345 678"}, cookie=cookie, csrf=csrf)
+    assert st == 400 and "Tick" in out["error"]
+    assert call(portal, "POST", url, {"phone": "12", "checked": True}, cookie=cookie, csrf=csrf)[0] == 400
+    st, _, out = call(portal, "POST", url, {"phone": "0712 345 678", "checked": True}, cookie=cookie, csrf=csrf)
+    assert st == 200 and out["digits"] == "254712345678"
+    assert whatsapp.number_of("parents", "P-100003") is None, "not kept without the teacher's tick"
+    call(portal, "POST", url, {"phone": "0712 345 678", "checked": True, "save": True}, cookie=cookie, csrf=csrf)
+    assert call(portal, "POST", url, {"checked": True}, cookie=cookie, csrf=csrf)[2]["digits"] == "254712345678"
+    ev = [e for e in audit.read_events() if e["tool"] == "parent.home_link_sent"][-1]
+    assert ev["output"]["to_ending"] == "678" and ev["output"]["sent_by_hatua"] is False
+    from hatua import family
+    code = homelink.code_for("P-100003", "test")
+    family.remove(login("M-6001"), "HT-0603", "P-100003")
+    assert "P-100003" not in store.load("homecodes"), "the home code goes with the account"
+    assert code

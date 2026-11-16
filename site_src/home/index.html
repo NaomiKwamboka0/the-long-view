@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hatua">
+<meta name="description" content="Your child's school page from Hatua, sealed with your home code.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Hatua for parents</title>
+<style>
+/* Design tokens follow shadcn/ui (zinc). Written as plain CSS so the page needs no build
+   step and loads nothing from outside: it must open offline, on any phone. */
+:root {
+  --background: #ffffff; --foreground: #09090b;
+  --card: #ffffff; --muted: #f4f4f5; --muted-foreground: #71717a;
+  --border: #e4e4e7; --input: #e4e4e7; --ring: #a1a1aa;
+  --primary: #18181b; --primary-foreground: #fafafa;
+  --secondary: #f4f4f5; --secondary-foreground: #18181b;
+  --destructive: #dc2626; --success: #16a34a; --warn: #d97706;
+  --radius: .5rem;
+  --ee: #15803d; --ee-bg: #f0fdf4; --ee-bd: #bbf7d0;
+  --me: #0369a1; --me-bg: #f0f9ff; --me-bd: #bae6fd;
+  --ae: #b45309; --ae-bg: #fffbeb; --ae-bd: #fde68a;
+  --be: #be123c; --be-bg: #fff1f2; --be-bd: #fecdd3;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background: #09090b; --foreground: #fafafa; --card: #09090b; --muted: #18181b; --muted-foreground: #a1a1aa;
+  --border: #27272a; --input: #27272a; --ring: #52525b; --primary: #fafafa; --primary-foreground: #18181b;
+  --secondary: #27272a; --secondary-foreground: #fafafa;
+  --ee: #4ade80; --ee-bg: #052e16; --ee-bd: #14532d; --me: #38bdf8; --me-bg: #082f49; --me-bd: #0c4a6e;
+  --ae: #fbbf24; --ae-bg: #2a1a05; --ae-bd: #78350f; --be: #fb7185; --be-bg: #2a0a12; --be-bd: #881337;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --background: #09090b; --foreground: #fafafa; --card: #09090b; --muted: #18181b; --muted-foreground: #a1a1aa;
+  --border: #27272a; --input: #27272a; --ring: #52525b; --primary: #fafafa; --primary-foreground: #18181b;
+  --secondary: #27272a; --secondary-foreground: #fafafa;
+  --ee: #4ade80; --ee-bg: #052e16; --ee-bd: #14532d; --me: #38bdf8; --me-bg: #082f49; --me-bd: #0c4a6e;
+  --ae: #fbbf24; --ae-bg: #2a1a05; --ae-bd: #78350f; --be: #fb7185; --be-bg: #2a0a12; --be-bd: #881337;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; background: var(--background); color: var(--foreground);
+  font: 16px/1.5 "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+.shell { width: min(560px, 100%); margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); display: grid; gap: 16px; }
+header.bar { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -.01em; }
+.logo svg { display: block; }
+.grow { flex: 1; }
+h1 { font-size: 1.5rem; line-height: 1.2; letter-spacing: -.025em; font-weight: 600; margin: 0; }
+h2 { font-size: 1rem; line-height: 1.4; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+p { margin: 0; }
+.muted { color: var(--muted-foreground); }
+.sm { font-size: .875rem; line-height: 1.45; }
+.xs { font-size: .75rem; line-height: 1.4; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.card-h { padding: 16px 16px 0; display: grid; gap: 4px; }
+.card-c { padding: 16px; display: grid; gap: 12px; }
+.sep { height: 1px; background: var(--border); margin: 0; border: 0; }
+.btn { appearance: none; border: 1px solid transparent; border-radius: var(--radius); min-height: 44px; padding: 0 16px; font: inherit; font-size: .9375rem; font-weight: 500;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; text-decoration: none; transition: background-color .15s, border-color .15s, opacity .15s; -webkit-tap-highlight-color: transparent; }
+.btn-primary { background: var(--primary); color: var(--primary-foreground); }
+.btn-primary:hover { opacity: .9; }
+.btn-outline { background: var(--background); color: var(--foreground); border-color: var(--input); }
+.btn-outline:hover, .btn-ghost:hover { background: var(--muted); }
+.btn-ghost { background: transparent; color: var(--foreground); min-height: 36px; padding: 0 10px; font-size: .875rem; }
+.btn[disabled] { opacity: .5; pointer-events: none; }
+.btn-block { width: 100%; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+label.field { display: grid; gap: 6px; font-size: .875rem; font-weight: 500; }
+.input { width: 100%; min-height: 48px; border: 1px solid var(--input); border-radius: var(--radius); background: transparent; color: var(--foreground);
+  padding: 0 12px; font: inherit; font-size: 1.25rem; letter-spacing: .18em; text-transform: uppercase; font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.input::placeholder { color: var(--muted-foreground); letter-spacing: .12em; }
+.input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 35%, transparent); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .875rem; }
+.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--primary); flex: none; }
+.alert { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; font-size: .875rem; }
+.alert.err { border-color: color-mix(in srgb, var(--destructive) 45%, var(--border)); color: var(--destructive); }
+.alert b { font-weight: 600; }
+.badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 1px solid var(--bd, var(--border)); background: var(--bg, transparent); color: var(--fg, var(--foreground));
+  padding: 2px 10px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.badge.EE { --fg: var(--ee); --bg: var(--ee-bg); --bd: var(--ee-bd); } .badge.ME { --fg: var(--me); --bg: var(--me-bg); --bd: var(--me-bd); }
+.badge.AE { --fg: var(--ae); --bg: var(--ae-bg); --bd: var(--ae-bd); } .badge.BE { --fg: var(--be); --bg: var(--be-bg); --bd: var(--be-bd); }
+.list { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; border-top: 1px solid var(--border); align-items: center; }
+.row:first-child { border-top: 0; padding-top: 0; }
+.row .nm { font-weight: 500; }
+.row .sub { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.cite { font: 500 .6875rem/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--muted-foreground); border: 1px solid var(--border); border-radius: 4px; padding: 3px 5px; }
+.up { color: var(--success); } .down { color: var(--warn); }
+.stat { display: flex; align-items: baseline; gap: 8px; }
+.stat b { font-size: 1.875rem; font-weight: 600; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.meter { height: 6px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
+blockquote { margin: 0; padding-left: 12px; border-left: 2px solid var(--border); }
+.tabs { display: inline-grid; grid-auto-flow: column; background: var(--muted); border-radius: var(--radius); padding: 3px; gap: 2px; }
+.tabs button { border: 0; background: transparent; color: var(--muted-foreground); font: inherit; font-size: .8125rem; font-weight: 500; border-radius: calc(var(--radius) - 2px); padding: 6px 10px; min-height: 32px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.terms { display: grid; gap: 8px; }
+.term { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; font-size: .875rem; }
+.term b { font-weight: 600; }
+.idea { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: grid; gap: 6px; }
+.idea ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .875rem; }
+.foot { display: flex; gap: 10px; align-items: flex-start; }
+.foot svg { flex: none; margin-top: 2px; color: var(--muted-foreground); }
+.spinner { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } * { transition: none !important; } }
+[hidden] { display: none !important; }
+.center { min-height: calc(100dvh - 140px); display: grid; align-content: center; gap: 16px; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .875rem; color: var(--muted-foreground); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="bar">
+    <div class="logo"><svg width="22" height="22" viewBox="0 0 30 30" aria-hidden="true"><circle cx="6" cy="22" r="4" fill="currentColor" opacity=".35"/><circle cx="15" cy="15" r="4.5" fill="currentColor" opacity=".65"/><circle cx="24" cy="7" r="5" fill="currentColor"/></svg>Hatua</div>
+    <span class="grow"></span>
+    <div class="tabs" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="sw" aria-pressed="false">Kiswahili</button></div>
+  </header>
+
+  <!-- 1. Unlock: type the home code -->
+  <main id="unlock" class="center" hidden>
+    <div style="display:grid;gap:6px">
+      <h1 data-t="unlockTitle"></h1>
+      <p class="muted" data-t="unlockBody"></p>
+    </div>
+    <form id="code-form" class="card" autocomplete="off">
+      <div class="card-c">
+        <label class="field"><span data-t="codeLabel"></span>
+          <input class="input" id="code" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="11" placeholder="XXXX-XXXX" aria-describedby="code-help" required></label>
+        <p class="xs muted" id="code-help" data-t="codeHelp"></p>
+        <label class="check"><input type="checkbox" id="keep" checked><span data-t="keep"></span></label>
+        <div class="alert err" id="err" role="alert" hidden></div>
+        <button class="btn btn-primary btn-block" type="submit" id="open"><span data-t="open"></span></button>
+      </div>
+    </form>
+  </main>
+
+  <!-- 2. No link: explain how to get one -->
+  <main id="nolink" class="center" hidden>
+    <div style="display:grid;gap:6px"><h1 data-t="noTitle"></h1><p class="muted" data-t="noBody"></p></div>
+    <div class="card"><div class="card-c"><ol class="steps"><li data-t="no1"></li><li data-t="no2"></li><li data-t="no3"></li></ol></div></div>
+  </main>
+
+  <!-- 3. The child's page -->
+  <main id="page" hidden style="display:grid;gap:16px"></main>
+
+  <p class="xs muted" style="text-align:center"><span data-t="privacy"></span></p>
+</div>
+
+<script>
+"use strict";
+/* SEAL-START: the same code is in ui/portal.html (it seals) and here (it opens).
+   Link part after "#": <format>.<salt>.<iv>.<sealed>, base64url. format 1 = deflated JSON.
+   Key: PBKDF2-SHA256(home code, salt, ROUNDS) -> AES-256-GCM. */
+const HOME_ROUNDS = 310000;
+const b64u = {
+  enc: bytes => { let s = ""; const b = new Uint8Array(bytes); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); },
+  dec: str => { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4)); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; },
+};
+const cleanCode = code => String(code || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+async function homeKey(code, salt, rounds) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(cleanCode(code)), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: rounds || HOME_ROUNDS }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function squeeze(bytes, way) {
+  const S = way === "in" ? globalThis.CompressionStream : globalThis.DecompressionStream;
+  if (!S) return null;
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new S("deflate-raw"))).arrayBuffer());
+}
+async function sealPage(obj, code, rounds) {
+  const raw = new TextEncoder().encode(JSON.stringify(obj));
+  const small = await squeeze(raw, "in");
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await homeKey(code, salt, rounds);
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, small || raw);
+  return [small ? "1" : "0", b64u.enc(salt), b64u.enc(iv), b64u.enc(ct)].join(".");
+}
+async function openPage(sealed, code, rounds) {
+  const [fmt, salt, iv, ct] = String(sealed).split(".");
+  if (!ct || !/^[01]$/.test(fmt)) throw new Error("bad-link");
+  const key = await homeKey(code, b64u.dec(salt), rounds);
+  let plain;
+  try { plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64u.dec(iv) }, key, b64u.dec(ct))); }
+  catch (e) { throw new Error("wrong-code"); }
+  if (fmt === "1") { plain = await squeeze(plain, "out"); if (!plain) throw new Error("old-browser"); }
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+/* SEAL-END */
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const T = {
+  en: {
+    unlockTitle: "Your child's school page", unlockBody: "The class teacher sent you this page. Type the home code from the paper slip to open it.",
+    codeLabel: "Home code", codeHelp: "8 letters and numbers, for example K7PM-3QXD. Capital or small letters both work.",
+    keep: "Keep this page on my phone, so I can open it without the link. It stays locked with the code.",
+    open: "Open", opening: "Opening...",
+    wrong: "That code does not open this page. Check the slip and try again.", badLink: "This link is not complete. Ask the class teacher to send it again.",
+    oldBrowser: "This phone's browser is too old to open the page. Update Chrome or Safari, then open the link again.", noCrypto: "This browser cannot open sealed pages. Open the link in Chrome or Safari.",
+    noTitle: "Hatua for parents", noBody: "This page shows your child's school progress, from the class teacher's records.",
+    no1: "Ask your child's class teacher to send you your Hatua link on WhatsApp.", no2: "Open the link on this phone.", no3: "Type the home code from the paper slip.",
+    privacy: "The page is locked with your home code. The website never receives your child's page: it travels inside the link, after the # sign.",
+    grade: g => `Grade ${g}`, teacherIs: n => `Class teacher: ${n}`, made: (d, n) => `Shared by ${n} on ${d}. The teacher sends a new link when there are new results.`,
+    results: "Newest results", resultsHelp: "Each learning area's newest term. The record number shows where the result comes from.",
+    first: "First result", same: "Same as the term before", up: b => `Up from ${b}`, down: b => `Down from ${b}`,
+    days: "Days in school", daysOf: (p, o, w) => [`${p} of ${o}`, `days in ${w}`], lowDays: n => `That is less than three days in four. Talk to the class teacher if something is keeping ${n} at home.`, goodDays: "Every day in school counts.",
+    fromTeacher: "From the class teacher", comment: "Report comment", message: d => `Message, ${d}`, nothing: "Nothing yet. When the class teacher shares a report comment or a message, it appears here.",
+    msgTeacher: n => `Message ${n} on WhatsApp`, pathways: "Senior school pathway ideas", toBuild: "to keep building",
+    dates: "School dates", term: n => `Term ${n}`, opens: "opens", closes: "closes", lock: "Lock", forget: "Remove from this phone",
+    promise: "You see only your own child, and only what the class teacher approved. Hatua never ranks children or shows other children's results.",
+    none: "No results approved yet.", hello: n => `Hello. I am ${n}'s parent. `,
+    levels: { EE: "Exceeding Expectations", ME: "Meeting Expectations", AE: "Approaching Expectations", BE: "Below Expectations" },
+  },
+  sw: {
+    unlockTitle: "Ukurasa wa shule wa mtoto wako", unlockBody: "Mwalimu wa darasa amekutumia ukurasa huu. Andika nambari ya nyumbani iliyo kwenye karatasi ili kuufungua.",
+    codeLabel: "Nambari ya nyumbani", codeHelp: "Herufi na nambari 8, kwa mfano K7PM-3QXD. Herufi kubwa au ndogo zote zinafaa.",
+    keep: "Weka ukurasa huu kwenye simu yangu, niweze kuufungua bila kiungo. Unabaki umefungwa kwa nambari.",
+    open: "Fungua", opening: "Inafungua...",
+    wrong: "Nambari hiyo haifungui ukurasa huu. Angalia karatasi ujaribu tena.", badLink: "Kiungo hiki hakijakamilika. Muombe mwalimu wa darasa akitume tena.",
+    oldBrowser: "Kivinjari cha simu hii ni cha zamani mno. Sasisha Chrome au Safari, kisha ufungue kiungo tena.", noCrypto: "Kivinjari hiki hakiwezi kufungua kurasa zilizofungwa. Fungua kiungo kwa Chrome au Safari.",
+    noTitle: "Hatua kwa wazazi", noBody: "Ukurasa huu unaonyesha maendeleo ya mtoto wako shuleni, kutoka kwa rekodi za mwalimu wa darasa.",
+    no1: "Muombe mwalimu wa darasa akutumie kiungo chako cha Hatua kwenye WhatsApp.", no2: "Fungua kiungo kwenye simu hii.", no3: "Andika nambari ya nyumbani iliyo kwenye karatasi.",
+    privacy: "Ukurasa umefungwa kwa nambari yako ya nyumbani. Tovuti haipokei ukurasa wa mtoto wako: unasafiri ndani ya kiungo, baada ya alama #.",
+    grade: g => `Gredi ${g}`, teacherIs: n => `Mwalimu wa darasa: ${n}`, made: (d, n) => `Imetumwa na ${n} tarehe ${d}. Mwalimu atatuma kiungo kipya kukiwa na matokeo mapya.`,
+    results: "Matokeo mapya", resultsHelp: "Muhula mpya zaidi wa kila eneo la masomo. Nambari ya rekodi inaonyesha matokeo yametoka wapi.",
+    first: "Matokeo ya kwanza", same: "Sawa na muhula uliopita", up: b => `Imepanda kutoka ${b}`, down: b => `Imeshuka kutoka ${b}`,
+    days: "Siku shuleni", daysOf: (p, o, w) => [`${p} kati ya ${o}`, `siku, ${w}`], lowDays: n => `Hiyo ni chini ya siku tatu kati ya nne. Ongea na mwalimu wa darasa kama kuna kitu kinamzuia ${n} nyumbani.`, goodDays: "Kila siku shuleni ina maana.",
+    fromTeacher: "Kutoka kwa mwalimu wa darasa", comment: "Maoni ya ripoti", message: d => `Ujumbe, ${d}`, nothing: "Bado hakuna. Mwalimu akishiriki maoni ya ripoti au ujumbe, utaonekana hapa.",
+    msgTeacher: n => `Mtumie ${n} ujumbe WhatsApp`, pathways: "Mawazo ya njia za sekondari ya juu", toBuild: "kuendelea kujenga",
+    dates: "Tarehe za shule", term: n => `Muhula ${n}`, opens: "inafunguliwa", closes: "inafungwa", lock: "Funga", forget: "Ondoa kwenye simu hii",
+    promise: "Unaona mtoto wako tu, na yale tu ambayo mwalimu wa darasa ameidhinisha. Hatua haipangi watoto kwa nafasi wala kuonyesha matokeo ya watoto wengine.",
+    none: "Bado hakuna matokeo yaliyoidhinishwa.", hello: n => `Habari. Mimi ni mzazi wa ${n}. `,
+    levels: { EE: "Inazidi Matarajio", ME: "Inafikia Matarajio", AE: "Inakaribia Matarajio", BE: "Chini ya Matarajio" },
+  },
+};
+let LANG = "en", DATA = null;
+try { const l = localStorage.getItem("hatua-home-lang"); if (l === "sw" || l === "en") LANG = l; } catch (e) {}
+const t = (k, ...a) => { const v = T[LANG][k]; return typeof v === "function" ? v(...a) : v; };
+function paint() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+  if (DATA) render(DATA);
+}
+document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { LANG = b.dataset.lang; try { localStorage.setItem("hatua-home-lang", LANG); } catch (e) {} paint(); }));
+
+const STORE_KEY = "hatua-home-sealed";
+const fromHash = () => { const h = location.hash.replace(/^#/, ""); return /^[01]\.[\w-]+\.[\w-]+\.[\w-]+$/.test(h) ? h : null; };
+const kept = () => { try { return localStorage.getItem(STORE_KEY); } catch (e) { return null; } };
+let SEALED = fromHash() || kept();
+
+function show(id) { for (const x of ["unlock", "nolink", "page"]) $(x).hidden = x !== id; }
+const day = iso => { try { return new Date(iso + "T00:00:00").toLocaleDateString(LANG === "sw" ? "sw-KE" : "en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso; } };
+
+/* Code box: groups as XXXX-XXXX while typing. */
+$("code").addEventListener("input", e => {
+  const c = cleanCode(e.target.value).slice(0, 8);
+  e.target.value = c.length > 4 ? c.slice(0, 4) + "-" + c.slice(4) : c;
+  $("err").hidden = true;
+});
+$("code-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!globalThis.crypto || !crypto.subtle) { fail(t("noCrypto")); return; }
+  const btn = $("open"); btn.disabled = true; btn.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(t("opening"))}</span>`;
+  try {
+    DATA = await openPage(SEALED, $("code").value);
+    try { if ($("keep").checked) localStorage.setItem(STORE_KEY, SEALED); else localStorage.removeItem(STORE_KEY); } catch (err) {}
+    $("code").value = ""; render(DATA); show("page"); scrollTo(0, 0);
+  } catch (err) {
+    fail(t(err.message === "wrong-code" ? "wrong" : err.message === "old-browser" ? "oldBrowser" : "badLink"));
+  } finally { btn.disabled = false; btn.innerHTML = `<span>${esc(t("open"))}</span>`; }
+});
+function fail(text) { $("err").textContent = text; $("err").hidden = false; $("code").focus(); }
+
+function render(d) {
+  const L = T[LANG].levels, lvName = k => L[k] || k;
+  const att = d.days.length ? d.days[d.days.length - 1] : null;
+  const share = att ? att.present / Math.max(1, att.open) : 0;
+  const msgs = d.messages || [];
+  const wa = d.teacher_whatsapp ? `https://wa.me/${encodeURIComponent(d.teacher_whatsapp)}?text=${encodeURIComponent(t("hello", d.child))}` : null;
+  const pw = d.pathways || {};
+  $("page").innerHTML = `
+    <section style="display:grid;gap:6px">
+      <p class="sm muted">${esc(d.school)}</p>
+      <h1>${esc(d.child)}</h1>
+      <p class="sm muted">${esc(t("grade", d.grade))} · ${esc(t("teacherIs", d.teacher))}</p>
+    </section>
+
+    <section class="card" aria-labelledby="h-res">
+      <div class="card-h"><h2 id="h-res">${esc(t("results"))}</h2><p class="sm muted">${esc(t("resultsHelp"))}</p></div>
+      <div class="card-c"><div class="list">${d.latest.map(r => `
+        <div class="row"><span class="nm">${esc(r.area)}</span><span class="badge ${esc(r.level)}">${esc(lvName(r.level))}</span>
+          <div class="sub"><span class="sm ${r.change === "up" ? "up" : r.change === "down" ? "down" : "muted"}">${esc(r.change ? (r.change === "same" ? t("same") : t(r.change, lvName(r.before))) : t("first"))}</span>
+          <span class="xs muted">${esc(r.when)}</span><span class="cite" title="Record">${esc(r.id)}</span></div></div>`).join("") || `<p class="muted">${esc(t("none"))}</p>`}</div></div>
+    </section>
+
+    ${att ? `<section class="card" aria-labelledby="h-days"><div class="card-h"><h2 id="h-days">${esc(t("days"))}</h2></div>
+      <div class="card-c"><div class="stat"><b>${esc(t("daysOf", att.present, att.open, att.when)[0])}</b><span class="sm muted">${esc(t("daysOf", att.present, att.open, att.when)[1])}</span></div>
+        <div class="meter" role="img" aria-label="${Math.round(share * 100)}%"><i style="width:${Math.round(share * 100)}%"></i></div>
+        <p class="sm ${share < .75 ? "down" : "muted"}">${esc(share < .75 ? t("lowDays", d.child) : t("goodDays"))} <span class="cite">${esc(att.id)}</span></p></div></section>` : ""}
+
+    <section class="card" aria-labelledby="h-t"><div class="card-h"><h2 id="h-t">${esc(t("fromTeacher"))}</h2></div>
+      <div class="card-c">
+        ${d.comment ? `<div style="display:grid;gap:6px"><p class="xs muted">${esc(t("comment"))}</p><blockquote>${esc(d.comment.text)}</blockquote><p class="xs muted">${esc(d.comment.by)}${d.comment.at ? ", " + esc(day(d.comment.at)) : ""}</p></div>` : ""}
+        ${msgs.map(m => `${d.comment || msgs.indexOf(m) ? `<hr class="sep">` : ""}<div style="display:grid;gap:6px"><p class="xs muted">${esc(t("message", day(m.at)))}</p><p class="sm">${esc(LANG === "sw" ? m.sw : m.en)}</p></div>`).join("")}
+        ${!d.comment && !msgs.length ? `<p class="sm muted">${esc(t("nothing"))}</p>` : ""}
+        ${wa ? `<a class="btn btn-primary btn-block" href="${esc(wa)}" target="_blank" rel="noopener noreferrer">${esc(t("msgTeacher", d.teacher))}</a>` : ""}
+      </div></section>
+
+    ${pw.intro ? `<section class="card" aria-labelledby="h-pw"><div class="card-h"><h2 id="h-pw">${esc(t("pathways"))}</h2><p class="sm muted">${esc(pw.intro)}</p></div>
+      ${(pw.ideas || []).length ? `<div class="card-c">${pw.ideas.map(x => `<div class="idea"><b>${esc(x.name)}</b><p class="xs muted">${esc(x.tracks)}</p><p class="sm">${esc(x.summary)}</p>
+        ${x.lines.length ? `<ul>${x.lines.map(y => `<li>${esc(y.text)}${y.build ? ` (${esc(t("toBuild"))})` : ""} ${y.ids.map(i => `<span class="cite">${esc(i)}</span>`).join(" ")}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>` : `<div style="height:16px"></div>`}</section>` : ""}
+
+    ${(d.terms || []).length ? `<section class="card" aria-labelledby="h-dates"><div class="card-h"><h2 id="h-dates">${esc(t("dates"))}</h2>${d.now ? `<p class="sm muted">${esc(d.now)}</p>` : ""}</div>
+      <div class="card-c terms">${d.terms.map(x => `<div class="term"><b>${esc(t("term", x.term))}</b><span class="muted">${esc(day(x.opens))} ${esc(t("opens"))} · ${esc(day(x.closes))} ${esc(t("closes"))}</span></div>`).join("")}</div></section>` : ""}
+
+    <div class="foot sm muted"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>${esc(t("promise"))}</span></div>
+    <p class="xs muted">${esc(t("made", day(d.made), d.teacher))}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" type="button" id="lock">${esc(t("lock"))}</button>${kept() ? `<button class="btn btn-ghost" type="button" id="forget">${esc(t("forget"))}</button>` : ""}</div>`;
+  $("lock").onclick = () => { DATA = null; $("page").innerHTML = ""; show(SEALED ? "unlock" : "nolink"); };
+  $("forget") && ($("forget").onclick = () => { try { localStorage.removeItem(STORE_KEY); } catch (e) {} if (!fromHash()) SEALED = null; $("lock").click(); });
+}
+
+addEventListener("hashchange", () => { const h = fromHash(); if (h) { SEALED = h; DATA = null; show("unlock"); } });
+paint();
+show(SEALED ? "unlock" : "nolink");
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>

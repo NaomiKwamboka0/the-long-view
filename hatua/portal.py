@@ -42,6 +42,7 @@ from . import (
     config,
     drive,
     family,
+    homelink,
     notify,
     pathways,
     patterns,
@@ -122,6 +123,12 @@ def _did(e: dict) -> str | None:
         return f"Removed a parent's ({kwargs.get('parent_id', '')}) access to {child}"
     if tool == "parent.new_pin":
         return f"Gave a parent ({kwargs.get('parent_id', '')}) a new one-time PIN for {child}"
+    if tool == "parent.slips":
+        return f"Printed {out.get('slips', 0)} parent slip{'s' if out.get('slips') != 1 else ''}"
+    if tool == "parent.home_link":
+        return f"Made a phone link for the parent ({kwargs.get('parent_id', '')}) of {child}"
+    if tool == "parent.home_link_sent":
+        return f"Sent a phone link on WhatsApp for {child} (number ending {out.get('to_ending', '')})"
     if tool == "family.view":
         return f"Opened {learner.get('first_name', '')}'s page"
     if tool == "assistant.ask" and out.get("step") == "answer":
@@ -582,6 +589,31 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError as exc:
                 raise Refused(400, str(exc)) from None
             return self._send(200, {**out, "parents": family.parents_of(m.group(1))})
+        if method == "GET" and path == "class/parents":
+            return self._send(200, {"rows": homelink.class_parents(tid), "home_url": homelink.HOME_URL})
+        if method == "POST" and path == "class/parents/slips":
+            self._check_post()
+            try:
+                return self._send(200, homelink.slips(self._session(), self._json().get("pairs") or []))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:
+                raise Refused(400, str(exc)) from None
+        m = re.fullmatch(r"learner/(HT-\d{4})/parents/(P-\d{6})/home-link(/send)?", path)
+        if method == "POST" and m:
+            self._check_post()
+            body = self._json()
+            try:
+                if m.group(3):
+                    return self._send(200, homelink.send(self._session(), m.group(1), m.group(2),
+                                                         phone=str(body.get("phone", "")), checked=body.get("checked"),
+                                                         with_code=body.get("with_code") is True,
+                                                         save=body.get("save") is True))
+                return self._send(200, homelink.link_data(self._session(), m.group(1), m.group(2)))
+            except GateBlocked as exc:
+                raise Refused(403, str(exc)) from None
+            except ValueError as exc:  # whatsapp.Refused is a ValueError too
+                raise Refused(400, str(exc)) from None
         m = re.fullmatch(r"learner/(HT-\d{4})/whatsapp(/sent)?", path)
         if m:
             try:

@@ -328,11 +328,34 @@ a.btn { text-decoration: none; display: inline-block; }
 .msg-card { border-radius: 16px; background: var(--tint); padding: 12px 14px; display: grid; gap: 6px; }
 .promise { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--ink-soft); }
 .promise svg { flex: none; margin-top: 3px; }
+/* parent slips: tick and print many, or one; phone links */
+.ps-table { width: 100%; border-collapse: collapse; }
+.ps-table th, .ps-table td { text-align: left; padding: 10px 8px; border-top: 1px solid var(--line, rgba(0,0,0,.08)); vertical-align: middle; }
+.ps-table th { font-size: .8rem; font-weight: 600; color: var(--ink-soft); border-top: 0; }
+.ps-table td.tick-cell, .ps-table th.tick-cell { width: 34px; }
+.ps-table input[type=checkbox] { width: 20px; height: 20px; }
+.ps-table tr.none td { color: var(--ink-soft); }
+.ps-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.ps-scroll { max-height: min(52vh, 520px); overflow: auto; border-radius: 14px; }
+.slips { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.slips .slip { break-inside: avoid; page-break-inside: avoid; gap: 6px; }
+.slips .slip .big { font-size: 1.25rem; }
+.slips .slip h4 { margin: 0; font-size: .95rem; }
+.slip .part { border-top: 1px dashed currentColor; padding-top: 6px; opacity: .95; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .08em; white-space: nowrap; }
+@media (max-width: 560px) { .ps-table .hide-sm { display: none; } }
 @media print {
   body > *:not(dialog) { display: none !important; }
   dialog { position: static; box-shadow: none; width: 100%; }
   dialog .no-print { display: none !important; }
   .slip { background: none; border: 2px solid #000; }
+  .slips { grid-template-columns: 1fr 1fr; gap: 8px; }
+  /* Many slips print from #print-area, not from the dialog: an open modal dialog stays in the
+     browser's top layer and is cut off after one page. */
+  body.printing-slips { background: #fff !important; }
+  body.printing-slips > *:not(#print-area) { display: none !important; }
+  body.printing-slips #print-area { display: block !important; }
 }
 @media (max-width: 520px) { body { font-size: 16px; } .panel { padding: 16px; border-radius: 20px; } .file { grid-template-columns: minmax(0, 1fr); } }
 </style>
@@ -461,6 +484,7 @@ a.btn { text-decoration: none; display: inline-block; }
         <div class="count-line"><span id="r-class"></span><button class="link" type="button" id="clear-class">Clear</button></div>
         <ul class="people" id="people"></ul>
         <p class="small soft" style="margin-top:10px">Listed by admission number, never by marks.</p>
+        <button class="btn quiet" type="button" id="ps-open" style="margin-top:10px;width:100%">Parent slips and phone links</button>
       </aside>
       <main class="panel" id="learner" aria-live="polite"></main>
     </div>
@@ -507,6 +531,7 @@ a.btn { text-decoration: none; display: inline-block; }
   </form>
   <div class="ask-grip" id="ask-grip" title="Drag to resize" aria-hidden="true"></div>
 </section>
+<div id="print-area" hidden></div>
 <dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-body"></div></dialog>
 <div class="toast" id="idle" role="alert" hidden style="bottom:auto;top:18px"><p>You have not used Hatua for a while. You will be signed out in 1 minute. Tap anywhere to stay signed in.</p></div>
 <div class="toast" id="toast" role="status" hidden><p id="toast-text"></p><button class="btn small" type="button" id="toast-btn">Show me</button><button class="link small" type="button" id="toast-x" style="color:inherit">Close</button></div>
@@ -1091,6 +1116,7 @@ function renderLearner() {
   wireCommon(el);
   wireComment(latest);
   wireParents();
+  el.querySelectorAll("[data-phone]").forEach(b => b.addEventListener("click", () => phoneLink(l.id, b.dataset.phone)));
   $("msg-parent").addEventListener("click", () => parentDialog(null, l.id));
   $("pw-open")?.addEventListener("click", async e => {
     e.target.disabled = true;
@@ -1105,7 +1131,7 @@ function parentsBox(l) {
   return `<div class="section access"><h3>Parents who can see ${esc(l.name)}</h3>
     <p class="small soft">A parent sees only ${esc(l.name)}: approved results, days in school, the comment you approve, messages you mark as told, and pathway ideas you open. Never your notes, alerts or other learners.</p>
     ${ps.length ? `<ul>${ps.map(p => `<li><div><b>${esc(p.name)}</b> <span class="id">${esc(p.parent_id)}</span><p class="small soft">${esc(p.relation)}. ${p.waiting_first_sign_in ? "Has not signed in yet." : p.last_login ? "Last signed in " + esc(when(p.last_login)) + "." : ""} Added by ${esc(p.added_by)}.</p></div>
-      <div class="acts"><button class="btn quiet small" type="button" data-pin="${esc(p.parent_id)}">New PIN</button><button class="btn quiet small" type="button" data-unlink="${esc(p.parent_id)}">Remove</button></div></li>`).join("")}</ul>`
+      <div class="acts"><button class="btn quiet small" type="button" data-phone="${esc(p.parent_id)}">Phone link</button><button class="btn quiet small" type="button" data-pin="${esc(p.parent_id)}">New PIN</button><button class="btn quiet small" type="button" data-unlink="${esc(p.parent_id)}">Remove</button></div></li>`).join("")}</ul>`
       : `<p class="soft">No parent can see ${esc(l.name)}'s page yet.</p>`}
     <div><button class="btn" type="button" id="pa-add">Give a parent access</button></div></div>`;
 }
@@ -1534,6 +1560,164 @@ function renderChild() {
     $("child").querySelectorAll(`[data-fm="${i}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
   }));
 }
+
+/* SEAL-START: the same code is in ui/portal.html (it seals) and here (it opens).
+   Link part after "#": <format>.<salt>.<iv>.<sealed>, base64url. format 1 = deflated JSON.
+   Key: PBKDF2-SHA256(home code, salt, ROUNDS) -> AES-256-GCM. */
+const HOME_ROUNDS = 310000;
+const b64u = {
+  enc: bytes => { let s = ""; const b = new Uint8Array(bytes); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); },
+  dec: str => { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4)); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; },
+};
+const cleanCode = code => String(code || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+async function homeKey(code, salt, rounds) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(cleanCode(code)), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: rounds || HOME_ROUNDS }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function squeeze(bytes, way) {
+  const S = way === "in" ? globalThis.CompressionStream : globalThis.DecompressionStream;
+  if (!S) return null;
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new S("deflate-raw"))).arrayBuffer());
+}
+async function sealPage(obj, code, rounds) {
+  const raw = new TextEncoder().encode(JSON.stringify(obj));
+  const small = await squeeze(raw, "in");
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await homeKey(code, salt, rounds);
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, small || raw);
+  return [small ? "1" : "0", b64u.enc(salt), b64u.enc(iv), b64u.enc(ct)].join(".");
+}
+async function openPage(sealed, code, rounds) {
+  const [fmt, salt, iv, ct] = String(sealed).split(".");
+  if (!ct || !/^[01]$/.test(fmt)) throw new Error("bad-link");
+  const key = await homeKey(code, b64u.dec(salt), rounds);
+  let plain;
+  try { plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64u.dec(iv) }, key, b64u.dec(ct))); }
+  catch (e) { throw new Error("wrong-code"); }
+  if (fmt === "1") { plain = await squeeze(plain, "out"); if (!plain) throw new Error("old-browser"); }
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+/* SEAL-END */
+
+/* ---------- parent slips and phone links ----------
+   Print slips for every parent, or tick the ones you want. Or send one parent a phone link:
+   the child's page, sealed in THIS browser with the parent's home code, goes after the "#"
+   of the link, so the website that shows it never receives it (hatua/homelink.py). */
+let PS = null;
+async function slipsDialog() {
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Parent slips and phone links</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div><p class="soft">Loading your class...</p>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  if (!$("dlg").open) $("dlg").showModal();
+  try { PS = await api("class/parents"); } catch (err) { $("dlg-body").lastElementChild.textContent = err.message; return; }
+  renderSlips();
+}
+function renderSlips() {
+  const rows = PS.rows, parents = rows.filter(r => r.parent_id);
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Parent slips and phone links</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="small soft">Tick the parents you want and print their slips, or tick <b>All parents</b>. A slip has the parent number, a one-time PIN for a parent who has not signed in yet, and the <b>home code</b> that opens the phone page. To send one parent the phone page, press <b>Send to phone</b>.</p>
+    <div class="ps-bar"><label class="tick" style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="ps-all" style="width:20px;height:20px"><span>All parents (${parents.length})</span></label>
+      <button class="btn" type="button" id="ps-print" disabled>Print the ticked slips</button></div>
+    <div class="ps-scroll"><table class="ps-table"><thead><tr><th class="tick-cell"><span class="sr-only">Tick</span></th><th>Learner</th><th>Parent</th><th class="hide-sm">Phone</th><th></th></tr></thead><tbody>
+    ${rows.map((r, i) => r.parent_id ? `<tr><td class="tick-cell"><input type="checkbox" data-ps="${i}" aria-label="Print a slip for ${esc(r.name)}"></td>
+        <td><b>${esc(r.child)}</b><br><span class="small soft">${esc(r.learner_id)}</span></td>
+        <td>${esc(r.name)}<br><span class="small soft">${esc(r.relation)}, ${esc(r.parent_id)}${r.waiting_first_sign_in ? ". Not signed in yet" : ""}</span></td>
+        <td class="hide-sm small">${r.whatsapp ? esc(r.whatsapp) : `<span class="soft">Not saved</span>`}</td>
+        <td><button class="btn quiet small" type="button" data-ps-phone="${i}">Send to phone</button></td></tr>`
+      : `<tr class="none"><td></td><td><b>${esc(r.child)}</b><br><span class="small">${esc(r.learner_id)}</span></td><td colspan="3" class="small">No parent yet. Open ${esc(r.child)} and press Give a parent access.</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="small soft">Printing makes a new one-time PIN for a parent who has not signed in yet, because Hatua never keeps PINs. The old slip then stops working. Parents who have signed in keep their own PIN. Hatua records each print with your name.</p>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  const boxes = [...$("dlg-body").querySelectorAll("[data-ps]")];
+  const sync = () => { const n = boxes.filter(b => b.checked).length; $("ps-print").disabled = !n; $("ps-print").textContent = n ? `Print ${n} slip${n === 1 ? "" : "s"}` : "Print the ticked slips";
+    $("ps-all").checked = n === boxes.length && n > 0; $("ps-all").indeterminate = n > 0 && n < boxes.length; };
+  boxes.forEach(b => b.addEventListener("change", sync));
+  $("ps-all").onchange = e => { boxes.forEach(b => { b.checked = e.target.checked; }); sync(); };
+  $("ps-print").onclick = () => printSlips(boxes.filter(b => b.checked).map(b => rows[+b.dataset.ps]));
+  $("dlg-body").querySelectorAll("[data-ps-phone]").forEach(b => b.addEventListener("click", () => { const r = rows[+b.dataset.psPhone]; phoneLink(r.learner_id, r.parent_id, true); }));
+}
+async function printSlips(chosen) {
+  $("ps-print").disabled = true; $("ps-print").textContent = "Making the slips...";
+  let out;
+  try { out = await api("class/parents/slips", { method: "POST", json: { pairs: chosen.map(r => [r.learner_id, r.parent_id]) } }); }
+  catch (err) { toast(err.message); renderSlips(); return; }
+  const host = (out.home_url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  $("dlg-body").innerHTML = `<div class="dlg-head no-print"><h2 id="dlg-title" style="font-size:1.2rem">${out.slips.length} slip${out.slips.length === 1 ? "" : "s"} ready</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="small soft no-print">Hatua shows the one-time PINs only now. Print, then cut along the lines. Hand each slip to the parent yourself.</p>
+    <div class="row no-print" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="button" id="ps-go">Print</button><button class="btn quiet" type="button" id="ps-back">Back to the list</button></div>
+    <div class="slips">${out.slips.map(x => `<div class="slip">
+      <h4>Hatua parent slip${x.school ? ` · ${esc(x.school)}` : ""}</h4>
+      <p class="small">For <b>${esc(x.name)}</b>, ${esc((x.relation || "parent").toLowerCase())} of <b>${esc(x.child)}</b> (${esc(x.learner_id)}), Grade ${esc(x.grade)}. Class teacher: ${esc(x.teacher)}.</p>
+      <div class="part"><p class="small"><b>At home, on your phone</b></p><dl><dt>Home code</dt><dd class="big code">${esc(x.home_code)}</dd></dl>
+        <p class="small">The class teacher sends you a link on WhatsApp. Open it and type this code. Page: ${esc(host)}</p></div>
+      <div class="part"><p class="small"><b>At school, on the Hatua computer</b></p><dl><dt>Parent number</dt><dd class="big">${esc(x.parent_id)}</dd>
+        <dt>PIN</dt><dd>${x.one_time_pin ? `<span class="big">${esc(x.one_time_pin)}</span> <span class="small">(one time; then choose your own)</span>` : `<span class="small">Use the PIN you chose.</span>`}</dd></dl></div>
+      <p class="small"><b>Keep this slip private.</b> Anyone with the code and the link can open the page.</p></div>`).join("")}</div>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  const printNow = () => {
+    $("print-area").innerHTML = `<div class="slips">${$("dlg-body").querySelector(".slips").innerHTML}</div>`;
+    document.body.classList.add("printing-slips");
+    print();
+  };
+  $("ps-go").onclick = printNow;
+  $("ps-back").onclick = () => slipsDialog();
+  setTimeout(printNow, 300);
+}
+function homeMessage(lang, x) {
+  const code = x.withCode ? (lang === "sw" ? ` ${x.code}` : `: ${x.code}`) : (lang === "sw" ? " iliyo kwenye karatasi" : " from the paper slip");
+  return lang === "sw"
+    ? `Habari ${x.parent}. Mimi ni ${x.teacher}, mwalimu wa darasa wa ${x.child}. Sasa unaweza kuona ukurasa wa shule wa ${x.child} kwenye simu yako. Fungua kiungo hiki na uandike nambari yako ya nyumbani${code}.\n${x.link}\nTafadhali usiwape wengine nambari hiyo.`
+    : `Hello ${x.parent}. I am ${x.teacher}, ${x.child}'s class teacher. You can now see ${x.child}'s school page on your phone. Open this link and type your home code${code}.\n${x.link}\nPlease keep the code private.`;
+}
+async function phoneLink(lid, pid, fromList) {
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Phone link</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="row" style="display:flex;gap:10px;align-items:center"><span class="spin" aria-hidden="true"></span><span>Sealing the page with the parent's home code...</span></p>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  if (!$("dlg").open) $("dlg").showModal();
+  let d, link;
+  try {
+    if (!globalThis.crypto || !crypto.subtle) throw new Error("This browser cannot seal pages. Open Hatua in Chrome, Edge, Safari or Firefox.");
+    d = await api(`learner/${lid}/parents/${pid}/home-link`, { method: "POST", json: {} });
+    link = d.home_url + "#" + await sealPage(d.page, d.code, d.rounds);
+  } catch (err) { $("dlg-body").lastElementChild.innerHTML = `<span class="error">${esc(err.message)}</span>`; return; }
+  const p = d.page, x = { parent: d.parent.split(" ")[0] || d.parent, teacher: ME.name, child: p.child, code: d.pretty_code, link, withCode: false };
+  let lang = "en";
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Phone link for ${esc(d.parent)}</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <div class="slip" style="gap:6px"><p class="small"><b>${esc(p.child)}'s page is sealed</b> with ${esc(d.parent)}'s home code <span class="code"><b>${esc(d.pretty_code)}</b></span>.</p>
+      <p class="small soft">It holds what you approved: ${p.latest.length} newest result${p.latest.length === 1 ? "" : "s"}, days in school, ${p.comment ? "your report comment" : "no report comment yet"}, ${p.messages.length} message${p.messages.length === 1 ? "" : "s"} you marked as told${(p.pathways.ideas || []).length ? ", and the pathway ideas you opened" : ""}. Never your notes. It is a copy made today: send a new link when there are new results.</p></div>
+    <div class="form-grid" style="margin-top:12px">
+      <label>${esc(d.parent)}'s WhatsApp number<input type="tel" id="hl-phone" inputmode="tel" autocomplete="off" placeholder="${d.whatsapp ? esc(d.whatsapp) : "0712 345 678"}"></label>
+      ${d.whatsapp ? `<p class="small soft" style="margin-top:-6px">Leave it empty to use the saved number ${esc(d.whatsapp)}.</p>` : ""}
+      <div class="langs" role="group" aria-label="Message language"><button type="button" data-hl-lang="en" aria-pressed="true">English</button><button type="button" data-hl-lang="sw" aria-pressed="false">Kiswahili</button></div>
+      <label class="tick" style="display:flex;gap:10px;align-items:flex-start;color:var(--ink)"><input type="checkbox" id="hl-code" style="width:20px;height:20px;flex:none"><span class="small">Put the home code in the message too. Only when ${esc(x.parent)} cannot get the paper slip: then anyone who sees this chat can open the page.</span></label>
+      <label class="tick" style="display:flex;gap:10px;align-items:flex-start;color:var(--ink)"><input type="checkbox" id="hl-save" style="width:20px;height:20px;flex:none"><span class="small">Save this number for ${esc(x.parent)}. ${esc(x.parent)} agreed.</span></label>
+      <label class="tick" style="display:flex;gap:10px;align-items:flex-start;color:var(--ink)"><input type="checkbox" id="hl-ok" style="width:20px;height:20px;flex:none"><span class="small"><b>I checked this number with ${esc(x.parent)}.</b> A wrong number would send ${esc(p.child)}'s page to a stranger.</span></label>
+      <div class="small soft" style="white-space:pre-wrap;background:var(--tint);border-radius:12px;padding:10px 12px;max-height:150px;overflow:auto" id="hl-preview"></div>
+      <div class="send-row" id="hl-state" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn leaf" type="button" id="hl-wa" disabled>Send on WhatsApp</button><button class="btn quiet" type="button" id="hl-copy">Copy the link</button>${fromList ? `<button class="btn quiet" type="button" id="hl-back">Back to the list</button>` : ""}</div>
+    </div>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  const preview = () => { x.withCode = $("hl-code").checked; $("hl-preview").textContent = homeMessage(lang, { ...x, link: x.link.slice(0, 60) + "..." }); };
+  preview();
+  $("hl-code").onchange = preview;
+  $("dlg-body").querySelectorAll("[data-hl-lang]").forEach(b => b.addEventListener("click", () => { lang = b.dataset.hlLang;
+    $("dlg-body").querySelectorAll("[data-hl-lang]").forEach(y => y.setAttribute("aria-pressed", String(y === b))); preview(); }));
+  $("hl-ok").onchange = () => { $("hl-wa").disabled = !$("hl-ok").checked; };
+  $("hl-copy").onclick = async () => { try { await navigator.clipboard.writeText(link); $("hl-copy").textContent = "Link copied"; } catch (e) { toast("Copy did not work in this browser."); } };
+  if (fromList) $("hl-back").onclick = () => slipsDialog();
+  $("hl-wa").onclick = async () => {
+    const win = window.open("", "_blank");  // opened inside the press, so the browser does not block it
+    if (win) { try { win.opener = null; win.document.body.innerHTML = "<p style='font:18px system-ui;padding:24px'>Opening WhatsApp...</p>"; } catch (e) {} }
+    $("hl-wa").disabled = true;
+    try {
+      const out = await api(`learner/${lid}/parents/${pid}/home-link/send`, { method: "POST",
+        json: { phone: $("hl-phone").value, checked: $("hl-ok").checked, with_code: $("hl-code").checked, save: $("hl-save").checked } });
+      const url = `https://wa.me/${out.digits}?text=${encodeURIComponent(homeMessage(lang, x))}`;
+      if (win) win.location.href = url;
+      $("hl-state").insertAdjacentHTML("afterend", `<div class="sent ok"><span class="mark" aria-hidden="true">✓</span><div><b>WhatsApp is open with the link for ${esc(d.parent)}.</b><br><span class="small soft">${esc(out.to)}. Press Send in WhatsApp. ${win ? "WhatsApp did not open?" : "Your browser blocked the new tab."} <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Open WhatsApp</a></span></div></div>`);
+    } catch (err) { if (win) win.close(); toast(err.message); $("hl-wa").disabled = !$("hl-ok").checked; }
+  };
+}
+$("ps-open").addEventListener("click", slipsDialog);
+addEventListener("afterprint", () => { document.body.classList.remove("printing-slips"); $("print-area").innerHTML = ""; });  // no PIN left on the page
 
 /* ---------- toast ---------- */
 let toastTimer = null;

@@ -16,3 +16,6 @@ htmlcov/
 demo_school/
 site_out/
 build/
+
+# Developer walkthrough video and its sources: kept on this Mac, never pushed
+dev-video/
