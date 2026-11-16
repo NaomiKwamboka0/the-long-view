@@ -130,6 +130,8 @@ def _did(e: dict) -> str | None:
         return f"Made a phone link for the parent ({kwargs.get('parent_id', '')}) of {child}"
     if tool == "parent.home_link_sent":
         return f"Sent a phone link on WhatsApp for {child} (number ending {out.get('to_ending', '')})"
+    if tool == "school.import":
+        return f"Added {out.get('added', 0)} learners to {out.get('classes', 0)} classes"
     if tool == "teacher.add":
         return f"Created a login for a class teacher ({kwargs.get('teacher_id', '')}) for class {kwargs.get('class', '')}"
     if tool == "teacher.new_pin":
@@ -442,6 +444,8 @@ class Handler(BaseHTTPRequestHandler):
             if method == "GET" and path == "head/teachers":
                 return self._send(200, {"teachers": onboard.teachers(tid), "school": onboard.school_name()})
             self._check_post()
+            if method == "POST" and path == "head/school/learners":
+                return self._send(200, onboard.import_school(self._session(), str(self._json().get("text", ""))))
             if method == "POST" and path == "head/teachers":
                 b = self._json()
                 return self._send(200, onboard.add_teacher(self._session(), str(b.get("name", "")), str(b.get("member_no", "")),
@@ -600,7 +604,7 @@ class Handler(BaseHTTPRequestHandler):
                                    "inputs": {"kwargs": {"learner_id": n["learner_id"], "notice": n["notice_id"]}},
                                    "output": {"how": n["told_parent"]["how"], "recorded_by": who["name"]}})
             return self._send(200, {"notice": n})
-        if path == "head/teachers" or path.startswith("head/teachers/"):
+        if path.startswith("head/"):
             return self._head(method, path, who)
         if method == "POST" and path == "class/learners":
             self._check_post()

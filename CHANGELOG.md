@@ -1,3 +1,10 @@
+# The whole school at once: many classes, one list — 16 November 2026
+
+- **A school has many classes.** On the Teachers tab the head teacher presses **Add the school's learners** and pastes every learner of the school, one per line: the class, the first name, and an admission number if there is one (`6A, Wanjiku, 1042`). Rows copied from Excel work as they are, and so does a CSV file, a header row, `Grade 6A`, and a lowercase class. Hatua makes the classes, numbers the learners (HT-0001...), skips anyone already there (so importing the list twice adds nobody twice), and reports the lines it could not read. Up to 3,000 learners and 60 classes at a time.
+- **Then give each class a teacher.** The Teachers tab is sorted by class and says, for example, "3 classes, 8 learners, 3 teachers, 1 class without a class teacher". A class that has learners but no teacher has **Give this class a teacher**, which fills in the class. The teacher then sees that class's learners the first time they sign in; every other teacher sees only their own class.
+- **Tests:** a whole-school import over several classes, twice, with bad lines; classes without a teacher are listed; a class teacher cannot import; names are not written to the activity log. Checked in a real browser: head teacher imports three classes, creates Mary's and Peter's logins, and each sees only their own class.
+- **Not done:** one teacher for several classes (each class has one class teacher; a teacher has one class for now).
+
 # A head teacher creates every class teacher's login — 16 November 2026
 
 - **The first account is the head teacher's.** On a new computer the sign-in page says **Set up Hatua for your school**: school name, the head teacher's name, TSC number and own PIN (and, if they also teach a class, that class). Nobody else can create an account for themselves: the open "create an account" link from the entry below is gone.

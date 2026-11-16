@@ -22,11 +22,16 @@ send a parent a WhatsApp message.
    Hatua starts empty: there are no practice people. The first person to open it
    is the HEAD TEACHER. The sign-in page asks for the school's name, your name,
    your TSC member number and a PIN of your own.
-   Then, on the Teachers tab, press "Add a class teacher" for each class: type their
-   name, TSC number and class (for example 6A). Hatua makes a one-time PIN. Print the
-   slip and give it to the teacher. They sign in with it and choose their own PIN.
-   Each class teacher then:
-     - presses "Add your learners" and types their first names, one on each line;
+   Then, on the Teachers tab:
+     - press "Add the school's learners" and paste every learner of the school, one on
+       each line: the class, the first name, and the admission number if you have it
+       (for example: 6A, Wanjiku, 1042). Rows copied from Excel work. Do this once, for
+       all the classes of the school;
+     - for each class, press "Give this class a teacher" and type their name and TSC
+       number. Hatua makes a one-time PIN. Print the slip and give it to the teacher.
+       They sign in with it and choose their own PIN.
+   Each class teacher then sees their own class. They can:
+     - press "Add learners" if someone is missing;
      - on the School drive tab, downloads the results sheet for a term, fills in
        each learner's level (EE, ME, AE or BE), and uploads it;
      - checks the file and presses Approve. Hatua then shows each learner's long view.

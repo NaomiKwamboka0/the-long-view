@@ -284,3 +284,51 @@ def test_a_head_teacher_with_no_class_can_sign_in_but_a_classless_teacher_cannot
         assert st == 403 and "head teacher" in body["error"] and school.streams_of("TSC-7000") == []
     finally:
         srv.shutdown()
+
+
+SCHOOL = """class, name, admission
+6A, Wanjiku, 1042
+6A, Kamau, 1043
+Grade 6B\tAchieng\t1101
+7a;Otieno
+7A, Otieno
+9C, Njeri, 1300
+2A, TooYoung
+no class here
+8B, Bad<b>
+"""
+
+
+def test_the_head_teacher_adds_the_whole_school_at_once_and_then_gives_each_class_a_teacher(empty):
+    from hatua import school
+    make(stream="")
+    head = auth.login("TSC-4471", PIN)["session"]
+    out = onboard.import_school(head, SCHOOL)
+    assert out["added"] == 5 and out["skipped"] == 1 and len(out["refused"]) == 3
+    assert out["classes"] == {"6A": {"added": 2, "skipped": 0}, "6B": {"added": 1, "skipped": 0},
+                              "7A": {"added": 1, "skipped": 1}, "9C": {"added": 1, "skipped": 0}}
+    rows = store.load("learners")
+    assert [r["learner_id"] for r in rows] == ["HT-0001", "HT-0002", "HT-0003", "HT-0004", "HT-0005"]
+    assert {(r["stream"], r["current_grade"]) for r in rows} == {("6A", "6"), ("6B", "6"), ("7A", "7"), ("9C", "9")}
+    again = onboard.import_school(head, "6A, Wanjiku, 1042")
+    assert again["added"] == 0 and again["skipped"] == 1, "importing the same list twice adds nobody twice"
+    waiting = {t["classes"][0]: t["learners"] for t in onboard.teachers("TSC-4471") if t["teacher_id"] is None}
+    assert waiting == {"6A": 2, "6B": 1, "7A": 1, "9C": 1}, "every class with learners but no teacher is listed"
+    onboard.add_teacher(head, "Mary Njeri", "TSC-6001", "6A")
+    onboard.add_teacher(head, "Peter Otieno", "TSC-7001", "7A")
+    assert [l["first_name"] for l in school.learners_of("TSC-6001")] == ["Wanjiku", "Kamau"]
+    assert [l["first_name"] for l in school.learners_of("TSC-7001")] == ["Otieno"]
+    assert school.learners_of("TSC-4471") == [], "the head teacher who teaches no class sees no learners"
+    still = {t["classes"][0] for t in onboard.teachers("TSC-4471") if t["teacher_id"] is None}
+    assert still == {"6B", "9C"}
+    ev = [e for e in audit.read_events() if e["tool"] == "school.import"]
+    assert ev[0]["output"]["imported_by"] == "Jane Wanjiku" and "Achieng" not in json.dumps(ev) and "Kamau" not in json.dumps(ev), "learners' names are not logged"
+    mary = onboard.new_pin(head, "TSC-6001")
+    limited = auth.login("TSC-6001", mary["one_time_pin"])["session"]
+    auth.change_pin(limited, mary["one_time_pin"], "mary-6A-pin")
+    with pytest.raises(GateBlocked, match="head teacher"):
+        onboard.import_school(auth.login("TSC-6001", "mary-6A-pin")["session"], "6A, Sneaky")
+    with pytest.raises(ValueError, match="Paste the learners"):
+        onboard.import_school(head, "  \n")
+    with pytest.raises(ValueError, match="at most 60 classes"):
+        onboard.import_school(head, "\n".join(f"{g}{chr(65 + i)}{chr(65 + j)}, N{g}{i}{j}" for g in "456789" for i in range(5) for j in range(3)))

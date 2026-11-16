@@ -1820,7 +1820,11 @@ async function loadTeachers() {
   try { const out = await api("head/teachers"); TEACHERS = out.teachers; renderTeachers(out.school); }
   catch (err) { $("teachers").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
+const classKey = t => (t.classes[0] || "~");      // by grade then stream; the head teacher with no class first
 function renderTeachers(school) {
+  const list = [...TEACHERS].sort((a, b) => (a.classes.length ? 1 : 0) - (b.classes.length ? 1 : 0) || classKey(a).localeCompare(classKey(b)) || (a.name || "").localeCompare(b.name || ""));
+  const nClasses = new Set(TEACHERS.flatMap(t => t.classes)).size, nLearners = TEACHERS.reduce((n, t) => n + t.learners, 0);
+  const nTeachers = TEACHERS.filter(t => t.teacher_id).length, nOpen = TEACHERS.filter(t => !t.teacher_id).length;
   const row = t => t.teacher_id ? `<tr><td><b>${esc(t.name)}</b>${t.head ? ` <span class="pill approve">Head teacher</span>` : ""}<br><span class="small soft">${esc(t.teacher_id)}</span></td>
       <td>${t.classes.length ? esc(t.classes.map(c => "Grade " + c).join(", ")) : `<span class="soft">No class</span>`}<br><span class="small soft">${t.learners} learner${t.learners === 1 ? "" : "s"}</span></td>
       <td class="small">${t.waiting_first_sign_in ? `<span class="pill">Has not signed in yet</span><br><span class="soft">A one-time PIN is waiting</span>` : t.last_login ? "Last signed in<br>" + esc(when(t.last_login)) : `<span class="soft">Never</span>`}</td>
@@ -1828,13 +1832,36 @@ function renderTeachers(school) {
     : `<tr><td><b class="soft">No class teacher</b></td><td>Grade ${esc(t.classes[0])}<br><span class="small soft">${t.learners} learner${t.learners === 1 ? "" : "s"} waiting</span></td><td></td>
       <td class="acts"><button class="btn small" type="button" data-tadd="${esc(t.classes[0])}">Give this class a teacher</button></td></tr>`;
   $("teachers").innerHTML = `<div class="section" style="max-width:76ch;margin-bottom:14px"><h2>Teachers at ${esc(school || "this school")}</h2>
-    <p class="soft">You create each class teacher's login and give them their class. Hatua makes a one-time PIN for you to print or write down; the teacher then chooses their own PIN the first time they sign in. You manage accounts: you do not see a class's learners unless you teach that class yourself.</p>
-    <div><button class="btn" type="button" id="t-add">Add a class teacher</button></div></div>
-    <div class="ps-scroll"><table class="ps-table"><thead><tr><th>Teacher</th><th>Class</th><th>Sign-in</th><th></th></tr></thead><tbody>${TEACHERS.map(row).join("")}</tbody></table></div>`;
+    <p class="soft">Add the school's classes and learners, then give each class a teacher. Hatua makes a one-time PIN for you to print or write down; the teacher then chooses their own PIN the first time they sign in. You manage accounts: you do not see a class's learners unless you teach that class yourself.</p>
+    <p><b>${nClasses}</b> class${nClasses === 1 ? "" : "es"}, <b>${nLearners}</b> learner${nLearners === 1 ? "" : "s"}, <b>${nTeachers}</b> teacher${nTeachers === 1 ? "" : "s"}${nOpen ? `, <b class="error">${nOpen}</b> class${nOpen === 1 ? "" : "es"} without a class teacher` : ""}.</p>
+    <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="button" id="t-import">Add the school's learners</button><button class="btn quiet" type="button" id="t-add">Add a class teacher</button></div></div>
+    <div class="ps-scroll"><table class="ps-table"><thead><tr><th>Teacher</th><th>Class</th><th>Sign-in</th><th></th></tr></thead><tbody>${list.map(row).join("")}</tbody></table></div>`;
+  $("t-import").onclick = importDialog;
   $("t-add").onclick = () => addTeacherDialog("");
   $("teachers").querySelectorAll("[data-tadd]").forEach(b => b.addEventListener("click", () => addTeacherDialog(b.dataset.tadd)));
   $("teachers").querySelectorAll("[data-tpin]").forEach(b => b.addEventListener("click", () => teacherPin(b.dataset.tpin)));
   $("teachers").querySelectorAll("[data-tdel]").forEach(b => b.addEventListener("click", () => teacherRemove(b.dataset.tdel)));
+}
+function importDialog() {
+  $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Add the school's learners</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>
+    <p class="small soft">Every class at once: one learner on each line, with the class first, then the first name, then the admission number if you like. You can paste rows straight from Excel, or open a CSV file. Then give each class a teacher.</p>
+    <form class="form-grid" id="im-form"><label>Learners<textarea id="im-text" rows="10" placeholder="6A, Wanjiku, 1042&#10;6A, Kamau, 1043&#10;6B, Achieng, 1101&#10;7A, Otieno, 1202" required style="width:100%;font:inherit;padding:10px;border-radius:12px"></textarea></label>
+      <label>Or open a CSV file<input type="file" id="im-file" accept=".csv,text/csv,text/plain"></label>
+      <p class="error small" id="im-error" role="alert" hidden></p>
+      <div><button class="btn" type="submit" id="im-go">Add these learners</button></div></form>`;
+  $("dlg-x").onclick = () => $("dlg").close();
+  $("im-file").onchange = async e => { const f = e.target.files[0]; if (f) $("im-text").value = (await f.text()).slice(0, 400000); };
+  $("im-form").onsubmit = async e => {
+    e.preventDefault(); $("im-go").disabled = true; $("im-error").hidden = true;
+    try {
+      const out = await api("head/school/learners", { method: "POST", json: { text: $("im-text").value } });
+      $("dlg").close(); loadTeachers();
+      const n = Object.keys(out.classes).length;
+      toast(`Added ${out.added} learner${out.added === 1 ? "" : "s"} in ${n} class${n === 1 ? "" : "es"}.${out.skipped ? " Skipped " + out.skipped + " already there." : ""}${out.refused.length ? " Could not read " + out.refused.length + " line(s)." : ""}`);
+    } catch (err) { $("im-error").hidden = false; $("im-error").textContent = err.message; $("im-go").disabled = false; }
+  };
+  if (!$("dlg").open) $("dlg").showModal();
+  $("im-text").focus();
 }
 function addTeacherDialog(stream) {
   $("dlg-body").innerHTML = `<div class="dlg-head"><h2 id="dlg-title" style="font-size:1.2rem">Add a class teacher</h2><button class="btn quiet small" type="button" id="dlg-x">Close</button></div>

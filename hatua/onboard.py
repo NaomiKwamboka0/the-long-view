@@ -11,6 +11,9 @@ No practice people, no demo data. Everything stays on this computer (hatua.store
   someone else; its learners stay).
 * The head teacher manages ACCOUNTS. Seeing a class's learners is still decided only by hatua.scope: the
   class teacher of that class sees it, and a head teacher sees a class only if they teach it too.
+* A school has MANY classes (Grades 4 to 9, each with streams such as A and B). The head teacher can add the
+  whole school's learners at once, with their classes (`import_school`: one line per learner, "6A, Wanjiku, 1042"),
+  then give each class a teacher. A class that has learners but no teacher is listed for the head teacher.
 * `add_learners` lets a class teacher type their learners: first names, and an admission number if they
   like. Hatua gives each learner its own HT-number, which is what results files use.
 * `results_template` makes the Excel sheet to fill in for a term, with one row per learner and learning area.
@@ -29,6 +32,8 @@ NAME = re.compile(r"^[^\W\d_][\w'’. -]{0,39}$")
 ADMISSION = re.compile(r"^[A-Za-z0-9/_-]{1,20}$")
 MAX_TEACHERS = 60
 MAX_CLASS = 200
+MAX_CLASSES = 60
+MAX_SCHOOL_IMPORT = 3000
 MAX_PER_ADD = 100
 
 AREAS = {
@@ -252,6 +257,75 @@ def add_learners(teacher_id: str, text: str) -> dict:
     audit.write_event({"tool": "learners.add", "actor": teacher_id, "ok": True,
                        "inputs": {"kwargs": {"class": stream}}, "output": {"added": len(added), "skipped": len(skipped), "refused": len(bad)}})
     return {"added": added, "skipped": skipped, "refused": bad, "total": len(mine) + len(added)}
+
+
+def parse_school(text: str) -> tuple[list[tuple[str, str, str]], list[str]]:
+    """Lines like '6A, Wanjiku, 1042' (class, first name, optional admission number). Comma, tab or semicolon, so
+    rows pasted from Excel work. A header row (class, name) and 'Grade 6A' are accepted. Returns rows and refused lines."""
+    rows, bad = [], []
+    for raw in str(text or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in re.split(r"[,\t;]", line, maxsplit=2)]
+        if len(parts) < 2:
+            bad.append(line[:40])
+            continue
+        cls = re.sub(r"^grade\s+", "", parts[0], flags=re.I).upper().replace(" ", "")
+        if cls in ("CLASS", "STREAM", "GRADE") and parts[1].lower() in ("name", "first name", "first_name", "learner"):
+            continue                                                        # the header row
+        name, adm = parts[1], (parts[2] if len(parts) > 2 else "")
+        if not STREAM.match(cls) or not NAME.match(name) or (adm and not ADMISSION.match(adm)):
+            bad.append(line[:40])
+            continue
+        rows.append((cls, name, adm))
+    return rows, bad
+
+
+def import_school(session: str | None, text: str) -> dict:
+    """The head teacher adds the learners of the WHOLE school, class by class, in one go.
+    Returns {classes: {class: {added, skipped}}, added, skipped, refused}."""
+    who = _head(session, "add the school's learners")
+    rows, bad = parse_school(text)
+    if not rows and not bad:
+        raise ValueError("Paste the learners first: one on each line, like 6A, Wanjiku, 1042.")
+    if len(rows) > MAX_SCHOOL_IMPORT:
+        raise ValueError(f"Add at most {MAX_SCHOOL_IMPORT} learners at a time.")
+    learners = store.load("learners")
+    learners = learners if isinstance(learners, list) else []
+    taken = {(l.get("stream"), l.get("first_name", "").lower(), l.get("admission_no", "")) for l in learners if isinstance(l, dict)}
+    per_class: dict[str, int] = {}
+    for l in learners:
+        if isinstance(l, dict):
+            per_class[l.get("stream")] = per_class.get(l.get("stream"), 0) + 1
+    nums = [int(m.group(1)) for l in learners if isinstance(l, dict) and (m := re.match(r"HT-(\d{4})$", l.get("learner_id", "")))]
+    nxt = max(nums, default=0) + 1
+    summary: dict[str, dict] = {}
+    added = skipped = 0
+    for cls, name, adm in rows:
+        row = summary.setdefault(cls, {"added": 0, "skipped": 0})
+        if (cls, name.lower(), adm) in taken:
+            row["skipped"] += 1
+            skipped += 1
+            continue
+        if per_class.get(cls, 0) >= MAX_CLASS:
+            raise ValueError(f"Class {cls} can have at most {MAX_CLASS} learners here.")
+        if nxt > 9999:
+            raise ValueError("This computer has reached its limit of learners.")
+        learners.append({"learner_id": f"HT-{nxt:04d}", "first_name": name, "sex": "", "current_grade": cls[0], "stream": cls,
+                         "joined": "", "school": school_name(), "admission_no": adm})
+        nxt += 1
+        taken.add((cls, name.lower(), adm))
+        per_class[cls] = per_class.get(cls, 0) + 1
+        row["added"] += 1
+        added += 1
+    if len({l.get("stream") for l in learners if isinstance(l, dict)}) > MAX_CLASSES:
+        raise ValueError(f"A school can have at most {MAX_CLASSES} classes here.")
+    store.save("learners", learners)
+    audit.write_event({"tool": "school.import", "actor": who["teacher_id"], "ok": True,
+                       "output": {"added": added, "skipped": skipped, "refused": len(bad), "classes": len(summary),
+                                  "imported_by": who["name"]}})
+    return {"classes": summary, "added": added, "skipped": skipped, "refused": bad}
 
 
 def results_template(teacher_id: str, year: int, term: int) -> bytes:
